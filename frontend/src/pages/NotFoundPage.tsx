@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { Home, ArrowLeft, Clover } from "lucide-react";
+import { BoxButton } from "@/components/ui/box-button";
 
 export default function NotFoundPage() {
   const navigate = useNavigate();
@@ -11,13 +11,12 @@ export default function NotFoundPage() {
       <div className="relative mb-8">
         <h1 className="text-9xl font-black text-primary/20 select-none">404</h1>
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-6xl animate-bounce">
+          <span className="text-6xl animate-bounce pt-6">
             <Clover size={36} className="text-green-600" />
           </span>
         </div>
       </div>
 
-      {/* Thông điệp */}
       <h2 className="text-3xl font-bold text-foreground mb-4">
         Ối! Trang này biến mất rồi...
       </h2>
@@ -26,24 +25,16 @@ export default function NotFoundPage() {
         dưới để quay về nhà nhé!
       </p>
 
-      {/* Nhóm nút điều hướng */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <Button
-          variant="outline"
-          onClick={() => navigate(-1)}
-          className="border-primary text-primary hover:bg-primary/10 rounded-full px-6"
-        >
+      <div className="flex flex-col sm:flex-row gap-7">
+        <BoxButton variant="accent" onClick={() => navigate(-1)}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Quay lại trang cũ
-        </Button>
+        </BoxButton>
 
-        <Button
-          onClick={() => navigate("/")}
-          className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-full px-8 shadow-lg hover:scale-105 transition-transform"
-        >
+        <BoxButton onClick={() => navigate("/")} size="medium">
           <Home className="mr-2 h-4 w-4" />
           Về Trang Chủ
-        </Button>
+        </BoxButton>
       </div>
     </div>
   );
