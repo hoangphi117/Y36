@@ -53,7 +53,7 @@ export const RoundButton = ({
       )}
       {...props}
     >
-      <span className="relative z-10">{children}</span>
+      {children}
     </button>
   );
 };

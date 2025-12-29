@@ -48,7 +48,7 @@ export const BoxButton = ({
       ],
     },
     medium: {
-      base: "h-14 px-8 text-lg font-black tracking-wider",
+      base: "h-12 px-6 text-md font-black tracking-wider",
       // Dày 10px
       depth: [
         "before:w-[10px] before:left-[-10px] before:top-[5px]",
@@ -123,7 +123,7 @@ export const BoxButton = ({
       )}
       {...props}
     >
-      <span className="relative z-10">{children}</span>
+      {children}
     </button>
   );
 };
