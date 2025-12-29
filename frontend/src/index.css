@@ -1,1 +1,149 @@
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, [data-theme="dark"], [data-theme="dark"] *));
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-game-grid: var(--game-grid);
+  --color-game-x: var(--game-x);
+  --color-game-o: var(--game-o);
+  --color-game-snake: var(--game-snake);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+
+  @keyframes accordion-down {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+    }
+  }
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+    to {
+      height: 0;
+    }
+  }
+}
+
+:root {
+  /* LIGHT THEME */
+  --background: #f1f8e9; /* Nền xanh phấn nhạt */
+  --foreground: #263238; /* Chữ xám đen */
+
+  --card: #ffffff;
+  --card-foreground: #263238;
+
+  --popover: #ffffff;
+  --popover-foreground: #263238;
+
+  /* BRAND: XANH RAU MÁ */
+  --primary: #43a047;
+  --primary-foreground: #ffffff;
+
+  --secondary: #dcedc8; /* Xanh rất nhạt */
+  --secondary-foreground: #1b5e20;
+
+  --muted: #f5f5f5;
+  --muted-foreground: #78909c;
+
+  --accent: #ffca28; /* Vàng hổ phách */
+  --accent-foreground: #263238;
+
+  --destructive: #e53935;
+  --destructive-foreground: #ffffff;
+
+  --border: #cfd8dc;
+  --input: #cfd8dc;
+  --ring: #43a047;
+
+  --radius: 0.75rem;
+
+  /* Game Colors (Light) */
+  --game-grid: #b0bec5;
+  --game-x: #e53935;
+  --game-o: #1e88e5;
+  --game-snake: #2e7d32;
+}
+
+.dark,
+[data-theme="dark"] {
+  /* DARK THEME */
+  --background: #2f2e2a; /* Đen dịu */
+  --foreground: #e0e0e0; /* Trắng xám */
+
+  --card: #1e1e1e;
+  --card-foreground: #e0e0e0;
+
+  --popover: #1e1e1e;
+  --popover-foreground: #e0e0e0;
+
+  --primary: #66bb6a;
+  --primary-foreground: #121212;
+
+  --secondary: #1b5e20;
+  --secondary-foreground: #e0e0e0;
+
+  --muted: #263238;
+  --muted-foreground: #90a4ae;
+
+  --accent: #ffb300;
+  --accent-foreground: #121212;
+
+  --destructive: #ef5350;
+  --destructive-foreground: #ffffff;
+
+  --border: #37474f;
+  --input: #37474f;
+  --ring: #66bb6a;
+
+  /* Game Colors (Dark) */
+  --game-grid: #424242;
+  --game-x: #ef5350;
+  --game-o: #42a5f5;
+  --game-snake: #00e676; /* Neon Green */
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
