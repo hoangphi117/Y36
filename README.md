@@ -169,6 +169,14 @@ index.css
 * **Không sử dụng `dark:` trong Tailwind**
 * Tránh viết logic theme rườm rà
 * Ưu tiên dùng biến CSS
+* 
+### 4.3. Hiệu ứng pháo hoa
+
+```ts
+import { triggerWinEffects } from "@/lib/fireworks";
+```
+* Sử dụng: triggerWinEffects();
+* Win hoặc mở thành tựu mới 
 
 ---
 
