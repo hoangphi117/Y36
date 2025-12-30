@@ -64,80 +64,78 @@
 }
 
 :root {
-  /* LIGHT THEME */
-  --background: #f1f8e9; /* Nền xanh phấn nhạt */
-  --foreground: #263238; /* Chữ xám đen */
+  /* --- GIAO DIỆN CHUNG (LIGHT MODE) --- */
+  --background: #f1f8e9; /* Màu nền chính của toàn bộ trang web (Xanh lá cực nhạt) */
+  --foreground: #263238; /* Màu chữ chính (Xám đen) */
 
-  --card: #ffffff;
-  --card-foreground: #263238;
+  --card: #ffffff; /* Nền của các thẻ (Card) hiển thị nội dung */
+  --card-foreground: #263238; /* Màu chữ trên nền Card */
 
-  --popover: #ffffff;
-  --popover-foreground: #263238;
+  --popover: #ffffff; /* Nền của các menu phụ hoặc tooltip */
+  --popover-foreground: #263238; /* Màu chữ trên menu phụ */
 
-  /* BRAND: XANH RAU MÁ */
-  --primary: #43a047;
-  --primary-foreground: #ffffff;
+  /* --- MÀU THƯƠNG HIỆU & TRẠNG THÁI --- */
+  --primary: #43a047; /* Màu chủ đạo (Xanh rau má) - Dùng cho nút chính, icon quan trọng */
+  --primary-foreground: #ffffff; /* Màu chữ hiển thị trên nền màu Primary */
 
-  --secondary: #dcedc8; /* Xanh rất nhạt */
+  --secondary: #dcedc8; /* Màu phụ (Xanh nhạt) - Dùng cho các thành phần ít nổi bật hơn */
   --secondary-foreground: #1b5e20;
 
-  --muted: #f5f5f5;
-  --muted-foreground: #78909c;
+  --muted: #f5f5f5; /* Màu làm mờ - Dùng cho nền của các thanh công cụ hoặc phần bổ trợ */
+  --muted-foreground: #78909c; /* Chữ ghi chú nhỏ, màu nhạt */
 
-  --accent: #ffca28; /* Vàng hổ phách */
+  --accent: #ffca28; /* Màu nhấn (Vàng hổ phách) - Dùng để gây chú ý hoặc nút đổi chế độ */
   --accent-foreground: #263238;
 
-  --destructive: #e53935;
+  --destructive: #e53935; /* Màu cảnh báo/xóa (Đỏ) */
   --destructive-foreground: #ffffff;
 
-  --border: #cfd8dc;
-  --input: #cfd8dc;
-  --ring: #43a047;
+  --border: #cfd8dc; /* Màu đường viền của nút, ô nhập liệu */
+  --input: #cfd8dc; /* Nền của ô nhập liệu */
+  --ring: #43a047; /* Màu vòng sáng khi click (focus) vào phần tử */
 
-  --radius: 0.75rem;
+  --radius: 0.75rem; /* Độ bo góc mặc định */
 
-  /* Game Colors (Light) */
-  --game-grid: #b0bec5;
-  --game-x: #e53935;
-  --game-o: #1e88e5;
-  --game-snake: #2e7d32;
+  /* --- CẤU HÌNH GAME CARO (LIGHT) --- */
+  --board-bg: #ffffff; /* Nền trắng của bàn cờ Caro */
+  --board-grid: #e5e7eb; /* Màu đường kẻ lưới bàn cờ */
+  --cell-hover: #f0fdf4; /* Màu nền khi di chuột qua ô cờ */
+  --game-x: #e53935; /* Màu của quân X (Đỏ) */
+  --game-o: #1e88e5; /* Màu của quân O (Xanh biển) */
 
-  --board-bg: #ffffff;
-  --board-grid: #e5e7eb;
-  --cell-hover: #f0fdf4;
-
-  --ttt-bg-gradient: linear-gradient(to bottom right, #eff6ff, #fef2f2);
-  --ttt-board-bg: #ffffff;
-  --ttt-cell-bg: #f9fafb;
-  --ttt-cell-hover: #f3f4f6;
-  --ttt-text-x: #ef4444; /* Red-500 */
-  --ttt-text-o: #3b82f6; /* Blue-500 */
+  /* --- CẤU HÌNH GAME TICTACTOE (LỬA & BĂNG) --- */
+  --ttt-bg-gradient: linear-gradient(
+    to bottom right,
+    #eff6ff,
+    #fef2f2
+  ); /* Nền chuyển màu xanh-đỏ nhạt */
+  --ttt-board-bg: #ffffff; /* Khung chứa bàn cờ */
+  --ttt-cell-bg: #f9fafb; /* Nền của từng ô cờ */
+  --ttt-cell-hover: #f3f4f6; /* Hiệu ứng di chuột ô cờ */
+  --ttt-text-x: #ef4444; /* Quân X - Đại diện cho Lửa */
+  --ttt-text-o: #3b82f6; /* Quân O - Đại diện cho Băng */
   --ttt-shadow: rgba(0, 0, 0, 0.05);
 
-  --snake-bg: #2d5a27; /* Xanh rừng đậm */
-  --snake-grid: #3a6b33; /* Xanh lưới */
-  --snake-body: #38bdf8; /* Xanh trời (Sky Blue) */
-  --snake-head: #0ea5e9; /* Đầu rắn đậm hơn */
-  --snake-food: #ef4444;
-  --forest-light: #4caf50;
-  --forest-dark: #43a047;
-  --snake-sky: #38bdf8;
-  --apple-red: #ff4d4d;
+  /* --- CẤU HÌNH GAME RẮN SĂN MỒI (RỪNG XANH) --- */
+  --snake-bg: #2d5a27; /* Nền xanh rừng rậm của bàn cờ */
+  --snake-grid: #3a6b33; /* Đường kẻ lưới trong rừng */
+  --snake-body: #38bdf8; /* Thân rắn màu Xanh trời */
+  --snake-head: #0ea5e9; /* Đầu rắn (Xanh trời đậm hơn) */
+  --snake-food: #ef4444; /* Thức ăn (Quả táo đỏ) */
+  --forest-light: #4caf50; /* Màu cỏ nhạt (dùng cho hiệu ứng Caro bàn cờ) */
+  --forest-dark: #43a047; /* Màu cỏ đậm (dùng cho hiệu ứng Caro bàn cờ) */
 }
 
 .dark,
 [data-theme="dark"] {
-  /* DARK THEME */
-  --background: #2f2e2a; /* Đen dịu */
-  --foreground: #e0e0e0; /* Trắng xám */
+  /* --- GIAO DIỆN CHUNG (DARK MODE) --- */
+  --background: #2f2e2a; /* Nền tối (Đen chocolate/than chì) */
+  --foreground: #e0e0e0; /* Chữ trắng xám để không bị lóa mắt */
 
-  --card: #1e1e1e;
+  --card: #1e1e1e; /* Nền Card tối */
   --card-foreground: #e0e0e0;
 
-  --popover: #1e1e1e;
-  --popover-foreground: #e0e0e0;
-
-  --primary: #60d166;
+  --primary: #60d166; /* Xanh lá Neon nhẹ cho chế độ tối */
   --primary-foreground: #121212;
 
   --secondary: #1b5e20;
@@ -146,39 +144,34 @@
   --muted: #263238;
   --muted-foreground: #d4e5d5;
 
-  --accent: #ffb300;
+  --accent: #ffb300; /* Vàng rực hơn trong bóng tối */
   --accent-foreground: #121212;
 
-  --destructive: #ef5350;
-  --destructive-foreground: #ffffff;
-
   --border: #37474f;
-  --input: #37474f;
   --ring: #66bb6a;
 
-  /* Game Colors (Dark) */
-  --game-grid: #424242;
-  --game-x: #ef5350;
-  --game-o: #42a5f5;
-  --game-snake: #00e676; /* Neon Green */
+  /* --- CẤU HÌNH GAME CARO (DARK) --- */
+  --board-bg: #1e1e1e; /* Bàn cờ nền tối */
+  --board-grid: #374151; /* Lưới kẻ màu xám đậm */
+  --cell-hover: #14532d; /* Hover màu xanh rừng sâu */
 
-  --board-bg: #1e1e1e;
-  --board-grid: #374151;
-  --cell-hover: #14532d;
-
-  --ttt-bg-gradient: linear-gradient(to bottom right, #172554, #450a0a);
+  /* --- CẤU HÌNH GAME TICTACTOE (DARK) --- */
+  --ttt-bg-gradient: linear-gradient(
+    to bottom right,
+    #172554,
+    #450a0a
+  ); /* Nền chuyển màu Đỏ-Xanh cực đậm */
   --ttt-board-bg: #1e1e1e;
   --ttt-cell-bg: #262626;
-  --ttt-cell-hover: #323232;
-  --ttt-text-x: #f87171; /* Red-400 Neon */
-  --ttt-text-o: #60a5fa; /* Blue-400 Neon */
-  --ttt-shadow: rgba(0, 0, 0, 0.4);
+  --ttt-text-x: #f87171; /* X màu Đỏ Neon */
+  --ttt-text-o: #60a5fa; /* O màu Xanh Neon */
 
-  --snake-bg: #14532d;
+  /* --- CẤU HÌNH GAME RẮN SĂN MỒI (DARK) --- */
+  --snake-bg: #14532d; /* Nền rừng ban đêm */
   --snake-grid: #166534;
-  --snake-body: #7dd3fc;
+  --snake-body: #7dd3fc; /* Thân rắn phát sáng màu Cyan */
   --snake-head: #38bdf8;
-  --snake-food: #f87171;
+  --snake-food: #f87171; /* Mồi đỏ hồng Neon */
 }
 
 @layer base {
