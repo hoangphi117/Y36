@@ -22,6 +22,7 @@
   --color-muted-foreground: var(--muted-foreground);
 
   --color-accent: var(--accent);
+  --color-accent-side: var(--accent-side);
   --color-accent-foreground: var(--accent-foreground);
 
   --color-destructive: var(--destructive);
@@ -85,6 +86,7 @@
   --muted-foreground: #78909c; /* Chữ ghi chú nhỏ, màu nhạt */
 
   --accent: #ffca28; /* Màu nhấn (Vàng hổ phách) - Dùng để gây chú ý hoặc nút đổi chế độ */
+  --accent-side: #d4a026;
   --accent-foreground: #263238;
 
   --destructive: #e53935; /* Màu cảnh báo/xóa (Đỏ) */
@@ -128,50 +130,57 @@
 
 .dark,
 [data-theme="dark"] {
-  /* --- GIAO DIỆN CHUNG (DARK MODE) --- */
-  --background: #2f2e2a; /* Nền tối (Đen chocolate/than chì) */
-  --foreground: #e0e0e0; /* Chữ trắng xám để không bị lóa mắt */
+  /* --- GIAO DIỆN CHUNG (DARK MODE - NEON 90s) --- */
+  --background: #090014; /* Nền đen tím thẫm (Deep Void) */
+  --foreground: #e0e7ff; /* Chữ trắng ám xanh */
 
-  --card: #1e1e1e; /* Nền Card tối */
-  --card-foreground: #e0e0e0;
+  --card: #1a0b2e; /* Nền Card màu tím than */
+  --card-foreground: #e0e7ff;
 
-  --primary: #60d166; /* Xanh lá Neon nhẹ cho chế độ tối */
-  --primary-foreground: #121212;
+  /* Neon Cyan - Dùng cho nút chính */
+  --primary: #06b6d4;
+  --primary-foreground: #000000;
 
-  --secondary: #1b5e20;
-  --secondary-foreground: #e0e0e0;
+  /* Deep Purple - Dùng cho nút phụ */
+  --secondary: #4c1d95;
+  --secondary-foreground: #e0e7ff;
 
-  --muted: #263238;
-  --muted-foreground: #d4e5d5;
+  /* Grid Lines màu tím phát sáng */
+  --muted: #2e1065;
+  --muted-foreground: #a78bfa;
 
-  --accent: #ffb300; /* Vàng rực hơn trong bóng tối */
-  --accent-foreground: #121212;
+  /* Hot Pink - Dùng cho điểm nhấn */
+  --accent: #d946ef;
+  --accent-side: #9833a8d1;
+  --accent-foreground: #ffffff;
 
-  --border: #37474f;
-  --ring: #66bb6a;
+  --destructive: #ff0055; /* Đỏ neon */
+  --destructive-foreground: #ffffff;
 
-  /* --- CẤU HÌNH GAME CARO (DARK) --- */
-  --board-bg: #1e1e1e; /* Bàn cờ nền tối */
-  --board-grid: #374151; /* Lưới kẻ màu xám đậm */
-  --cell-hover: #14532d; /* Hover màu xanh rừng sâu */
+  --border: #4c1d95; /* Viền tím */
+  --ring: #d946ef; /* Focus ring màu hồng */
 
-  /* --- CẤU HÌNH GAME TICTACTOE (DARK) --- */
-  --ttt-bg-gradient: linear-gradient(
-    to bottom right,
-    #172554,
-    #450a0a
-  ); /* Nền chuyển màu Đỏ-Xanh cực đậm */
-  --ttt-board-bg: #1e1e1e;
-  --ttt-cell-bg: #262626;
-  --ttt-text-x: #f87171; /* X màu Đỏ Neon */
-  --ttt-text-o: #60a5fa; /* O màu Xanh Neon */
+  /* --- CẤU HÌNH GAME CARO (NEON) --- */
+  --board-bg: #130024; /* Bàn cờ tối hơn nền card một chút */
+  --board-grid: #4c1d95; /* Lưới kẻ màu tím đậm */
+  --cell-hover: #2e1065; /* Hover ra màu tím sáng hơn */
 
-  /* --- CẤU HÌNH GAME RẮN SĂN MỒI (DARK) --- */
-  --snake-bg: #14532d; /* Nền rừng ban đêm */
-  --snake-grid: #166534;
-  --snake-body: #7dd3fc; /* Thân rắn phát sáng màu Cyan */
-  --snake-head: #38bdf8;
-  --snake-food: #f87171; /* Mồi đỏ hồng Neon */
+  --game-x: #ff00ff; /* Quân X: Magenta Neon (Hồng tím) */
+  --game-o: #00ffff; /* Quân O: Cyan Neon (Xanh lơ) */
+
+  /* --- CẤU HÌNH GAME TICTACTOE (NEON) --- */
+  --ttt-bg-gradient: linear-gradient(to bottom right, #2e1065, #be185d);
+  --ttt-board-bg: #1a0b2e;
+  --ttt-cell-bg: #2e1065;
+  --ttt-text-x: #ff00ff;
+  --ttt-text-o: #00ffff;
+
+  /* --- CẤU HÌNH GAME RẮN (NEON - TRON STYLE) --- */
+  --snake-bg: #000000;
+  --snake-grid: #1e1b4b;
+  --snake-body: #00ffff; /* Rắn phát sáng xanh */
+  --snake-head: #ffffff;
+  --snake-food: #ff00ff; /* Mồi hồng neon */
 }
 
 @layer base {
