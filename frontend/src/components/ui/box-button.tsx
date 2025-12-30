@@ -15,20 +15,20 @@ export const BoxButton = ({
 }: BoxButtonProps) => {
   const variants = {
     primary: {
-      face: "bg-green-500 text-white",
-      side: "before:bg-green-700 after:bg-green-800",
+      face: "bg-primary text-primary-foreground border-black/30 hover:bg-primary/90 shadow-[0_0_15px_rgba(var(--primary),0.2)]",
+      side: "before:bg-primary/80 after:bg-primary/80",
     },
     accent: {
-      face: "bg-yellow-400 text-yellow-900",
-      side: "before:bg-yellow-600 after:bg-yellow-700",
+      face: "bg-accent text-accent-foreground border-black/30 hover:bg-accent/90 shadow-[0_0_15px_rgba(var(--accent),0.2)]",
+      side: "before:bg-accent-side after:bg-accent-side",
     },
     danger: {
-      face: "bg-red-500 text-white",
-      side: "before:bg-red-700 after:bg-red-800",
+      face: "bg-destructive text-destructive-foreground border-black/30 hover:bg-destructive/90",
+      side: "before:bg-destructive/80 after:bg-destructive/80",
     },
     neutral: {
-      face: "bg-gray-200 text-gray-700",
-      side: "before:bg-gray-400 after:bg-gray-500",
+      face: "bg-muted text-muted-foreground",
+      side: "before:bg-gray-600 after:bg-gray-600",
     },
   };
 
