@@ -5,9 +5,17 @@ import win from "@/assets/sounds/win.mp3";
 import lose from "@/assets/sounds/lose.mp3";
 import button from "@/assets/sounds/button.mp3";
 import button1 from "@/assets/sounds/button1.mp3";
+import button2 from "@/assets/sounds/button2.mp3";
 import draw from "@/assets/sounds/draw.mp3";
 
-type SoundType = "pop" | "win" | "lose" | "draw" | "button" | "button1";
+type SoundType =
+  | "pop"
+  | "win"
+  | "lose"
+  | "draw"
+  | "button"
+  | "button1"
+  | "button2";
 
 export const useGameSound = (enabled: boolean = true) => {
   const sounds = useRef<Record<SoundType, HTMLAudioElement>>({
@@ -16,6 +24,7 @@ export const useGameSound = (enabled: boolean = true) => {
     lose: new Audio(lose),
     button: new Audio(button),
     button1: new Audio(button1),
+    button2: new Audio(button2),
     draw: new Audio(draw),
   });
 
@@ -37,6 +46,7 @@ export const useGameSound = (enabled: boolean = true) => {
     sounds.current.win.volume = 0.5;
     sounds.current.lose.volume = 0.5;
     sounds.current.draw.volume = 0.5;
+    sounds.current.button2.volume = 0.4;
   }, []);
 
   return { playSound };
