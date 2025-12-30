@@ -44,7 +44,7 @@ export const Header = () => {
         {/* ACTIONS */}
         <div className="flex items-center gap-4">
           <ModeToggle />
-          <Link to="/login">
+          <Link to="/auth/login">
             <RoundButton
               size="medium"
               variant="primary"
