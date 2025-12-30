@@ -179,14 +179,16 @@ export default function CaroGame() {
   };
 
   return (
-    <>
+    <div className="flex flex-col items-center min-h-screen bg-background text-foreground transition-colors duration-300">
       <GameHeader />
-      <div className="flex flex-col items-center justify-center min-h-screen py-8 px-4 bg-background">
-        <div className="text-center mb-8 space-y-2">
-          <h1 className="text-4xl font-black text-primary uppercase tracking-wider italic">
+
+      <div className="flex flex-col items-center justify-center py-4 px-4 w-full max-w-4xl">
+        {/* HEADER & STATUS */}
+        <div className="text-center mb-6 space-y-2">
+          <h1 className="text-4xl sm:text-5xl font-black text-primary uppercase tracking-wider italic drop-shadow-[0_2px_10px_rgba(var(--primary),0.5)]">
             CARO {winCondition}
           </h1>
-          <p className="text-muted-foreground font-bold h-6">
+          <p className="text-muted-foreground font-bold h-6 flex items-center justify-center gap-2">
             {winner ? (
               <span
                 className={cn(
@@ -197,13 +199,22 @@ export default function CaroGame() {
                 {winner === playerPiece ? "🎉 CHIẾN THẮNG!" : "🤖 BOT THẮNG!"}
               </span>
             ) : (
-              `Lượt đi: ${
-                isPlayerTurn ? "Bạn (" + playerPiece + ")" : "Bot..."
-              }`
+              <>
+                Lượt đi:
+                <span
+                  className={cn(
+                    "ml-1",
+                    isPlayerTurn ? "text-primary" : "text-muted-foreground"
+                  )}
+                >
+                  {isPlayerTurn ? "Bạn (" + playerPiece + ")" : "Bot..."}
+                </span>
+              </>
             )}
           </p>
         </div>
 
+        {/* CONTROLS */}
         <div className="flex flex-wrap gap-4 mb-8 justify-center items-center">
           <RoundButton
             size="small"
@@ -216,7 +227,7 @@ export default function CaroGame() {
             <RefreshCcw className="w-4 h-4 mr-2" /> CHƠI LẠI
           </RoundButton>
 
-          <div className="flex bg-muted p-1 rounded-2xl border-2 border-border">
+          <div className="flex bg-muted p-1 rounded-2xl border-2 border-border shadow-sm">
             {(["X", "O"] as const).map((p) => (
               <button
                 key={p}
@@ -228,8 +239,8 @@ export default function CaroGame() {
                 className={cn(
                   "px-5 py-1 rounded-xl font-black transition-all cursor-pointer",
                   playerPiece === p
-                    ? "bg-primary text-white shadow-md"
-                    : "opacity-40"
+                    ? "bg-background text-primary shadow-md scale-105"
+                    : "opacity-50 hover:opacity-100"
                 )}
               >
                 {p}
@@ -246,7 +257,7 @@ export default function CaroGame() {
               playSound("button1");
             }}
           >
-            <Settings2 className="w-4 h-4 mr-2" />{" "}
+            <Settings2 className="w-4 h-4 mr-2" />
             {winCondition === 5 ? "CỬA 4" : "CỬA 5"}
           </RoundButton>
 
@@ -264,9 +275,10 @@ export default function CaroGame() {
           </RoundButton>
         </div>
 
-        <div className="relative p-4 bg-white rounded-[2rem] shadow-[-12px_12px_0_rgba(0,0,0,0.1)] border-4 border-primary/20">
+        {/* BÀN CỜ CARO */}
+        <div className="relative p-3 sm:p-4 bg-[var(--board-bg)] rounded-[2rem] shadow-2xl border-4 border-primary/30 transition-colors duration-300">
           <div
-            className="grid gap-[1px] bg-gray-200 border-2 border-gray-200"
+            className="grid gap-[1px] bg-border border-2 border-border"
             style={{
               gridTemplateColumns: `repeat(${BOARD_SIZE}, minmax(0, 1fr))`,
             }}
@@ -277,9 +289,10 @@ export default function CaroGame() {
                 disabled={!!cell || !!winner || !isPlayerTurn}
                 onClick={() => handleMove(index, playerPiece)}
                 className={cn(
-                  "w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center text-lg sm:text-xl md:text-2xl font-black leading-none transition-colors",
-                  "bg-white hover:bg-green-50",
-                  winningLine.includes(index) && "bg-yellow-300 animate-pulse"
+                  "w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center text-lg sm:text-xl md:text-2xl font-black leading-none transition-colors duration-200",
+                  "bg-[var(--board-bg)] hover:bg-[var(--cell-hover)]", // Dùng biến CSS để đổi màu nền
+                  winningLine.includes(index) &&
+                    "bg-accent/80 animate-pulse z-10" // Dùng accent color (Vàng ở Light, Hồng ở Dark)
                 )}
               >
                 <AnimatePresence mode="wait">
@@ -294,8 +307,10 @@ export default function CaroGame() {
                         damping: 15,
                       }}
                       className={cn(
-                        "font-black text-2xl select-none",
-                        cell === playerPiece ? "text-game-x" : "text-game-o"
+                        "font-black text-2xl select-none drop-shadow-md",
+                        cell === playerPiece
+                          ? "text-[var(--game-x)]"
+                          : "text-[var(--game-o)]"
                       )}
                     >
                       {cell}
@@ -306,29 +321,30 @@ export default function CaroGame() {
             ))}
           </div>
 
+          {/* GAME OVER MODAL */}
           <AnimatePresence>
             {winner && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm rounded-[1.8rem]"
+                className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm rounded-[1.8rem]"
               >
                 <motion.div
                   initial={{ scale: 0.5, y: 50 }}
                   animate={{ scale: 1, y: 0 }}
-                  className="bg-secondary p-8 rounded-[3rem] text-center shadow-2xl border-8 border-yellow-400"
+                  className="bg-card p-8 rounded-[3rem] text-center shadow-2xl border-4 border-accent"
                 >
                   {winner === playerPiece ? (
-                    <Trophy className="w-20 h-20 text-yellow-500 mx-auto mb-4" />
+                    <Trophy className="w-20 h-20 text-accent mx-auto mb-4" />
                   ) : (
-                    <Frown className="w-20 h-20 text-red-500 mx-auto mb-4" />
+                    <Frown className="w-20 h-20 text-destructive mx-auto mb-4" />
                   )}
-                  <h2 className="text-4xl font-black mb-6 uppercase">
+                  <h2 className="text-4xl font-black mb-6 uppercase text-card-foreground">
                     {winner === playerPiece ? (
                       <span className="text-primary">XUẤT SẮC!</span>
                     ) : (
-                      <span className="text-red-500">TIẾC QUÁ!</span>
+                      <span className="text-destructive">TIẾC QUÁ!</span>
                     )}
                   </h2>
                   <RoundButton
@@ -347,6 +363,6 @@ export default function CaroGame() {
           </AnimatePresence>
         </div>
       </div>
-    </>
+    </div>
   );
 }

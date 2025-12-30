@@ -17,11 +17,11 @@ export const GameCard = ({
   onClick,
   className,
 }: GameCardProps) => {
-  const shadowColors = {
-    primary: "shadow-[-8px_8px_0_#15803d]", // Green-700
-    accent: "shadow-[-8px_8px_0_#b45309]", // Amber-700
-    danger: "shadow-[-8px_8px_0_#b91c1c]", // Red-700
-  };
+  const shadowStyle = {
+    primary: "shadow-[-8px_8px_0_var(--primary)]",
+    accent: "shadow-[-8px_8px_0_var(--accent)]",
+    danger: "shadow-[-8px_8px_0_var(--destructive)]",
+  }[variant];
 
   return (
     <div
@@ -29,26 +29,31 @@ export const GameCard = ({
         "relative group flex flex-col bg-card rounded-[2.5rem] border-2 border-border",
         "transition-all duration-300 ease-out",
         "hover:-translate-y-2 hover:translate-x-2",
-        shadowColors[variant],
+        "hover:shadow-none",
+        shadowStyle,
         className
       )}
     >
       <div className="p-5">
-        <div className="relative aspect-square rounded-[1.5rem] overflow-hidden bg-muted border-2 border-border/40">
-          <img src={image} alt={title} className="w-full h-full object-cover" />
-          <div className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300 bg-current pointer-events-none" />
+        <div className="relative aspect-square rounded-[1.5rem] overflow-hidden bg-muted border-2 border-border/40 shadow-inner">
+          <img
+            src={image}
+            alt={title}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          />
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300 bg-primary pointer-events-none" />
         </div>
       </div>
 
       <div className="px-6 pb-6 flex flex-col items-center">
-        <h3 className="text-xl font-black text-foreground tracking-tight mb-4 uppercase italic text-center line-clamp-1">
+        <h3 className="text-xl font-black text-foreground tracking-tight mb-4 uppercase italic text-center line-clamp-1 drop-shadow-sm">
           {title}
         </h3>
 
         <RoundButton
           variant={variant}
           size="medium"
-          className="w-full gap-2 shadow-sm"
+          className="w-full gap-2 shadow-sm active:shadow-none"
           onClick={onClick}
         >
           <Play className="w-5 h-5 fill-current shrink-0" />
