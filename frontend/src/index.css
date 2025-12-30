@@ -36,6 +36,8 @@
   --color-game-o: var(--game-o);
   --color-game-snake: var(--game-snake);
 
+  --color-button-1: var(--button-1);
+
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
@@ -99,6 +101,28 @@
   --game-x: #e53935;
   --game-o: #1e88e5;
   --game-snake: #2e7d32;
+
+  --board-bg: #ffffff;
+  --board-grid: #e5e7eb;
+  --cell-hover: #f0fdf4;
+
+  --ttt-bg-gradient: linear-gradient(to bottom right, #eff6ff, #fef2f2);
+  --ttt-board-bg: #ffffff;
+  --ttt-cell-bg: #f9fafb;
+  --ttt-cell-hover: #f3f4f6;
+  --ttt-text-x: #ef4444; /* Red-500 */
+  --ttt-text-o: #3b82f6; /* Blue-500 */
+  --ttt-shadow: rgba(0, 0, 0, 0.05);
+
+  --snake-bg: #2d5a27; /* Xanh rừng đậm */
+  --snake-grid: #3a6b33; /* Xanh lưới */
+  --snake-body: #38bdf8; /* Xanh trời (Sky Blue) */
+  --snake-head: #0ea5e9; /* Đầu rắn đậm hơn */
+  --snake-food: #ef4444;
+  --forest-light: #4caf50;
+  --forest-dark: #43a047;
+  --snake-sky: #38bdf8;
+  --apple-red: #ff4d4d;
 }
 
 .dark,
@@ -137,6 +161,24 @@
   --game-x: #ef5350;
   --game-o: #42a5f5;
   --game-snake: #00e676; /* Neon Green */
+
+  --board-bg: #1e1e1e;
+  --board-grid: #374151;
+  --cell-hover: #14532d;
+
+  --ttt-bg-gradient: linear-gradient(to bottom right, #172554, #450a0a);
+  --ttt-board-bg: #1e1e1e;
+  --ttt-cell-bg: #262626;
+  --ttt-cell-hover: #323232;
+  --ttt-text-x: #f87171; /* Red-400 Neon */
+  --ttt-text-o: #60a5fa; /* Blue-400 Neon */
+  --ttt-shadow: rgba(0, 0, 0, 0.4);
+
+  --snake-bg: #14532d;
+  --snake-grid: #166534;
+  --snake-body: #7dd3fc;
+  --snake-head: #38bdf8;
+  --snake-food: #f87171;
 }
 
 @layer base {
@@ -146,4 +188,14 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.forest-grid {
+  background-image: conic-gradient(
+    var(--forest-dark) 90deg,
+    var(--forest-light) 90deg 180deg,
+    var(--forest-dark) 180deg 270deg,
+    var(--forest-light) 270deg
+  );
+  background-size: calc(100% / 10) calc(100% / 10); /* Khớp với GRID_SIZE */
 }
