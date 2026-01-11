@@ -1,4 +1,4 @@
 @echo off
 cd backend
-node app.js
+npm run start
 pause

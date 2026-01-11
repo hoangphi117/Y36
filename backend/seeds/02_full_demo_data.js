@@ -213,7 +213,10 @@ exports.seed = async function (knex) {
   // =========================
   // 2) Users
   // =========================
-  const passwordHash = "$2b$10$EpMq.02Yf.5.5.5.5.5.5.5.5.5.5.5.5.5.5.5.5.5";
+  const bcrypt = require("bcryptjs");
+  const salt = await bcrypt.genSalt(10);
+  const passwordPlain = "123456";
+  const passwordHash = await bcrypt.hash(passwordPlain, salt);
 
   const usersData = [
     {
@@ -228,7 +231,7 @@ exports.seed = async function (knex) {
       email: "nam.nguyen@test.com",
       password_hash: passwordHash,
       username: "nam_player",
-      role: "client",
+      role: "customer",
       avatar_url: "https://i.pravatar.cc/150?u=nam_player",
       dark_mode: true,
     },
@@ -236,7 +239,7 @@ exports.seed = async function (knex) {
       email: "lan.tran@test.com",
       password_hash: passwordHash,
       username: "lan_snake_pro",
-      role: "client",
+      role: "customer",
       avatar_url: "https://i.pravatar.cc/150?u=lan_snake_pro",
       dark_mode: false,
     },
@@ -244,7 +247,7 @@ exports.seed = async function (knex) {
       email: "huy.le@test.com",
       password_hash: passwordHash,
       username: "huy_newbie",
-      role: "client",
+      role: "customer",
       avatar_url: "https://i.pravatar.cc/150?u=huy_newbie",
       dark_mode: false,
     },
@@ -252,7 +255,7 @@ exports.seed = async function (knex) {
       email: "minh.pham@test.com",
       password_hash: passwordHash,
       username: "minh_combo",
-      role: "client",
+      role: "customer",
       avatar_url: "https://i.pravatar.cc/150?u=minh_combo",
       dark_mode: true,
     },
@@ -260,7 +263,7 @@ exports.seed = async function (knex) {
       email: "thao.vo@test.com",
       password_hash: passwordHash,
       username: "thao_artist",
-      role: "client",
+      role: "customer",
       avatar_url: "https://i.pravatar.cc/150?u=thao_artist",
       dark_mode: true,
     },
@@ -268,7 +271,7 @@ exports.seed = async function (knex) {
       email: "khoa.do@test.com",
       password_hash: passwordHash,
       username: "khoa_ttt",
-      role: "client",
+      role: "customer",
       avatar_url: "https://i.pravatar.cc/150?u=khoa_ttt",
       dark_mode: false,
     },
@@ -276,7 +279,7 @@ exports.seed = async function (knex) {
       email: "vy.ngo@test.com",
       password_hash: passwordHash,
       username: "vy_flip",
-      role: "client",
+      role: "customer",
       avatar_url: "https://i.pravatar.cc/150?u=vy_flip",
       dark_mode: false,
     },
@@ -284,7 +287,7 @@ exports.seed = async function (knex) {
       email: "son.bui@test.com",
       password_hash: passwordHash,
       username: "son_caro",
-      role: "client",
+      role: "customer",
       avatar_url: "https://i.pravatar.cc/150?u=son_caro",
       dark_mode: true,
     },
@@ -292,7 +295,7 @@ exports.seed = async function (knex) {
 
   const insertedUsers = await knex("users").insert(usersData).returning("*");
   const uAdmin = insertedUsers.find((u) => u.role === "admin");
-  const clients = insertedUsers.filter((u) => u.role === "client");
+  const customers = insertedUsers.filter((u) => u.role === "customer");
   console.log(`Đã add ${insertedUsers.length} Users ༼ つ ◕_◕ ༽つ`);
 
   // =========================
@@ -419,8 +422,8 @@ exports.seed = async function (knex) {
   };
 
   while (pairs.size < randInt(10, 14)) {
-    const a = pick(clients);
-    const b = pick(clients);
+    const a = pick(customers);
+    const b = pick(customers);
     if (a.id === b.id) continue;
     pairs.add(mkPairKey(a.id, b.id));
   }
@@ -493,7 +496,7 @@ exports.seed = async function (knex) {
 
   // --- Caro 5 ô ---
   for (let i = 0; i < 16; i++) {
-    const user = pick(clients);
+    const user = pick(customers);
     const status = pickSessionStatus();
 
     const startedAt = daysAgo(randInt(1, 45));
@@ -532,7 +535,7 @@ exports.seed = async function (knex) {
 
   // --- Caro 4 ô ---
   for (let i = 0; i < 14; i++) {
-    const user = pick(clients);
+    const user = pick(customers);
     const status = pickSessionStatus();
 
     const startedAt = daysAgo(randInt(1, 45));
@@ -571,7 +574,7 @@ exports.seed = async function (knex) {
 
   // --- TicTacToe ---
   for (let i = 0; i < 16; i++) {
-    const user = pick(clients);
+    const user = pick(customers);
     const status = pickSessionStatus();
 
     const startedAt = daysAgo(randInt(1, 30));
@@ -621,7 +624,7 @@ exports.seed = async function (knex) {
 
   // --- Snake ---
   for (let i = 0; i < 22; i++) {
-    const user = pick(clients);
+    const user = pick(customers);
     const status = pickSessionStatus();
 
     const startedAt = daysAgo(randInt(1, 40));
@@ -661,7 +664,7 @@ exports.seed = async function (knex) {
 
   // --- Match3 ---
   for (let i = 0; i < 20; i++) {
-    const user = pick(clients);
+    const user = pick(customers);
     const status = pickSessionStatus();
 
     const startedAt = daysAgo(randInt(1, 35));
@@ -697,7 +700,7 @@ exports.seed = async function (knex) {
 
   // --- Memory ---
   for (let i = 0; i < 14; i++) {
-    const user = pick(clients);
+    const user = pick(customers);
     const status = pickSessionStatus();
 
     const startedAt = daysAgo(randInt(1, 25));
@@ -732,7 +735,7 @@ exports.seed = async function (knex) {
 
   // --- Drawing ---
   for (let i = 0; i < 10; i++) {
-    const user = pick(clients);
+    const user = pick(customers);
     const status = pickSessionStatus();
 
     const startedAt = daysAgo(randInt(1, 20));
@@ -778,7 +781,7 @@ exports.seed = async function (knex) {
   ];
 
   const chat = [];
-  for (const u of clients) {
+  for (const u of customers) {
     const count = randInt(2, 5);
     for (let i = 0; i < count; i++) {
       chat.push({
@@ -800,8 +803,8 @@ exports.seed = async function (knex) {
     "TicTacToe AI hơi khó chịu nha.",
   ];
   for (let i = 0; i < 16; i++) {
-    const a = pick(clients);
-    const b = pick(clients);
+    const a = pick(customers);
+    const b = pick(customers);
     if (a.id === b.id) continue;
     chat.push({
       sender_id: a.id,
@@ -910,7 +913,7 @@ exports.seed = async function (knex) {
 
   const gameCodes = Object.keys(badges);
 
-  for (const u of clients) {
+  for (const u of customers) {
     const want = randInt(3, 8);
     const used = new Set();
 

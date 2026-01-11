@@ -12,9 +12,10 @@ exports.up = async function (knex) {
     table.string("email").unique().notNullable(); // Dùng để đăng nhập
     table.string("password_hash").notNullable(); // Mật khẩu đã mã hóa
     table.string("username"); // Tên định danh ngắn gọn (optional)
-    table.string("role").defaultTo("client"); // 'admin' hoặc 'client'
+    table.string("role").defaultTo("customer"); // 'admin' hoặc 'customer'
     table.text("avatar_url"); // Link ảnh đại diện
     table.boolean("dark_mode").defaultTo(false); // Cấu hình giao diện
+    table.string("status").defaultTo("active"); // active, banned
     table.timestamp("created_at").defaultTo(knex.fn.now()); // Ngày tham gia
   });
 
