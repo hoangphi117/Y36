@@ -10,7 +10,7 @@ const getGames = async (req, res) => {
   }
 };
 
-// Cập nhật Game (Bật/Tắt, Sửa kích thước bàn cờ trong default_config)
+// Cập nhật Game (Bật/Tắt, Sửa default_config)
 const updateGame = async (req, res) => {
   try {
     const { id } = req.params;

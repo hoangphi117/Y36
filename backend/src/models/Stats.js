@@ -16,26 +16,26 @@ class Stats {
     };
   }
 
-  //Lấy số lượng phiên chơi game mới trong ngày cụ thể
-  static async getDailyNewGameSessions(date) {
+  //Lấy số lượng phiên chơi game mới trong khoảng thời gian cụ thể
+  static async getDailyNewGameSessions(startDate, endDate) {
     const [result] = await db('game_sessions')
-      .whereRaw('DATE(created_at) = ?', [date])
+      .whereRaw('DATE(created_at) BETWEEN ? AND ?', [startDate, endDate])
       .count('id as count');
     return parseInt(result.count);
   }
 
-  //Lấy số lượng user mới đăng ký trong ngày cụ thể
-  static async getDailyNewUsers(date) {
+  //Lấy số lượng user mới đăng ký trong khoảng thời gian cụ thể
+  static async getDailyNewUsers(startDate, endDate) {
     const [result] = await db('users')
-      .whereRaw('DATE(created_at) = ?', [date])
+      .whereRaw('DATE(created_at) BETWEEN ? AND ?', [startDate, endDate])
       .count('id as count');
     return parseInt(result.count);
   }
 
-  //Lấy tổng thời gian chơi game trong ngày cụ thể
-  static async getDailyTotalPlayTime(date) {
+  //Lấy tổng thời gian chơi game trong khoảng thời gian cụ thể
+  static async getDailyTotalPlayTime(startDate, endDate) {
     const [result] = await db('game_sessions')
-      .whereRaw('DATE(created_at) = ?', [date])
+      .whereRaw('DATE(created_at) BETWEEN ? AND ?', [startDate, endDate])
       .sum('play_time_seconds as total');
     return parseInt(result.total || 0);
   }

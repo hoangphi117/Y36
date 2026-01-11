@@ -11,10 +11,10 @@ const getDashboardStats = async (req, res) => {
 
 const getDailyStats = async (req, res) => {
   try {
-    const { date } = req.params;
-    const newUsers = await Stats.getDailyNewUsers(date);
-    const newGameSessions = await Stats.getDailyNewGameSessions(date);
-    const totalPlayTime = await Stats.getDailyTotalPlayTime(date);
+    const { startDate, endDate } = req.body;
+    const newUsers = await Stats.getDailyNewUsers(startDate, endDate);
+    const newGameSessions = await Stats.getDailyNewGameSessions(startDate, endDate);
+    const totalPlayTime = await Stats.getDailyTotalPlayTime(startDate, endDate);
     res.json({ newUsers, newGameSessions, totalPlayTime });
   } catch (error) {
     res.status(500).json({ message: error.message });
