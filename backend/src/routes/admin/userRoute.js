@@ -5,3 +5,5 @@ const { getUsers, deleteUser, changeStatus } = require('../../controllers/admin/
 router.get('/users', getUsers);
 router.put('/users/:id', changeStatus);
 router.delete('/users/:id', deleteUser);
+
+module.exports = router;
