@@ -5,9 +5,12 @@ const port = process.env.PORT || 3000;
 const router = require('./routes/index');
 const cors = require('cors');
 const checkApiKey = require('./middlewares/apiKeyMiddleware');
+const swaggerConfig = require('./config/swagger');
 
 app.use(cors());
 app.use(express.json());
+
+app.use('/api-docs', swaggerConfig.serve, swaggerConfig.setup);
 
 app.use('/api',checkApiKey, router);
 
