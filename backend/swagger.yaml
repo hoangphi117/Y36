@@ -11,6 +11,9 @@ servers:
   - url: http://localhost:3000/api
     description: Local Development Server
 
+security:
+  - ApiKeyAuth: []
+
 # --- CẤU HÌNH BẢO MẬT ---
 components:
   securitySchemes:
@@ -72,7 +75,7 @@ components:
 # --- ĐƯỜNG DẪN API ---
 paths:
   # 1. AUTHENTICATION
-  /login:
+  /auth/login:
     post:
       summary: Đăng nhập hệ thống
       tags: [Auth]
@@ -127,6 +130,61 @@ paths:
             type: boolean
           description: Lọc game theo trạng thái hoạt động
         - in: query
+          name: id[gte]
+          schema:
+            type: integer
+          description: Lọc game có ID lớn hơn hoặc bằng
+        - in: query
+          name: id[gt]
+          schema:
+            type: integer
+          description: Lọc game có ID lớn hơn
+        - in: query
+          name: id[lte]
+          schema:
+            type: integer
+          description: Lọc game có ID nhỏ hơn hoặc bằng
+        - in: query
+          name: id[lt]
+          schema:
+            type: integer
+          description: Lọc game có ID nhỏ hơn
+        - in: query
+          name: id[neq]
+          schema:
+            type: integer
+          description: Lọc game có ID khác
+        - in: query
+          name: created_at[gte]
+          schema:
+            type: string
+            format: date-time
+          description: Lọc game tạo từ ngày trở đi
+        - in: query
+          name: created_at[gt]
+          schema:
+            type: string
+            format: date-time
+          description: Lọc game tạo sau ngày
+        - in: query
+          name: created_at[lte]
+          schema:
+            type: string
+            format: date-time
+          description: Lọc game tạo đến ngày
+        - in: query
+          name: created_at[lt]
+          schema:
+            type: string
+            format: date-time
+          description: Lọc game tạo trước ngày
+        - in: query
+          name: created_at[neq]
+          schema:
+            type: string
+            format: date-time
+          description: Lọc game tạo không phải ngày này
+        - in: query
           name: page
           schema:
             type: integer
@@ -142,14 +200,13 @@ paths:
           name: sort
           schema:
             type: string
-            enum: [id, name, code, created_at]
-          description: Sắp xếp theo trường
+            enum: [id, name, code, created_at, -id, -name, -code, -created_at]
+          description: Sắp xếp theo trường (vd: sort=name,-created_at)
         - in: query
-          name: order
+          name: fields
           schema:
             type: string
-            enum: [asc, desc]
-          description: Thứ tự sắp xếp (tăng dần/giảm dần)
+          description: Chọn các trường cần hiển thị, cách nhau bởi dấu phẩy (vd: fields=name,code)
       responses:
         200:
           description: Thành công
@@ -260,14 +317,73 @@ paths:
           name: sort
           schema:
             type: string
-            enum: [id, email, username, role, status, created_at]
-          description: Sắp xếp theo trường
+            enum: [id, email, username, role, status, created_at, -id, -email, -username, -role, -status, -created_at]
+          description: Sắp xếp theo trường (vd: sort=email,-created_at)
         - in: query
-          name: order
+          name: fields
           schema:
             type: string
-            enum: [asc, desc]
-          description: Thứ tự sắp xếp (tăng dần/giảm dần)
+          description: Chọn các trường cần hiển thị, cách nhau bởi dấu phẩy (vd: fields=id,email,username)
+        - in: query
+          name: id[gte]
+          schema:
+            type: string
+            format: uuid
+          description: Lọc người dùng có ID lớn hơn hoặc bằng
+        - in: query
+          name: id[gt]
+          schema:
+            type: string
+            format: uuid
+          description: Lọc người dùng có ID lớn hơn
+        - in: query
+          name: id[lte]
+          schema:
+            type: string
+            format: uuid
+          description: Lọc người dùng có ID nhỏ hơn hoặc bằng
+        - in: query
+          name: id[lt]
+          schema:
+            type: string
+            format: uuid
+          description: Lọc người dùng có ID nhỏ hơn
+        - in: query
+          name: id[neq]
+          schema:
+            type: string
+            format: uuid
+          description: Lọc người dùng có ID khác
+        - in: query
+          name: created_at[gte]
+          schema:
+            type: string
+            format: date-time
+          description: Lọc người dùng tạo từ ngày trở đi
+        - in: query
+          name: created_at[gt]
+          schema:
+            type: string
+            format: date-time
+          description: Lọc người dùng tạo sau ngày
+        - in: query
+          name: created_at[lte]
+          schema:
+            type: string
+            format: date-time
+          description: Lọc người dùng tạo đến ngày
+        - in: query
+          name: created_at[lt]
+          schema:
+            type: string
+            format: date-time
+          description: Lọc người dùng tạo trước ngày
+        - in: query
+          name: created_at[neq]
+          schema:
+            type: string
+            format: date-time
+          description: Lọc người dùng tạo không phải ngày này
       responses:
         200:
           description: Thành công
@@ -293,6 +409,8 @@ paths:
                       $ref: '#/components/schemas/User'
         401:
           description: Không được phép
+
+  /admin/users/{id}:
     put:
       summary: Cập nhật trạng thái người dùng
       tags: [Admin-Users]
@@ -336,8 +454,6 @@ paths:
           description: Không được phép
         404:
           description: Không tìm thấy người dùng
-
-  /admin/users/{id}:
     delete:
       summary: Xóa User
       tags: [Admin-Users]
