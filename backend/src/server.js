@@ -6,11 +6,12 @@ const router = require('./routes/index');
 const cors = require('cors');
 const checkApiKey = require('./middlewares/apiKeyMiddleware');
 const swaggerConfig = require('./config/swagger');
+const basicAuth = require('./middlewares/basicAuthMiddleware');
 
 app.use(cors());
 app.use(express.json());
 
-app.use('/api-docs', swaggerConfig.serve, swaggerConfig.setup);
+app.use('/api-docs', basicAuth, swaggerConfig.serve, swaggerConfig.setup);
 
 app.use('/api',checkApiKey, router);
 
