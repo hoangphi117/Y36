@@ -1,0 +1,577 @@
+openapi: 3.0.0
+info:
+  title: Board Game API Documentation
+  version: 1.0.0
+  description: Tài liệu API cho dự án Board Game.
+  contact:
+    name: Y36 Dev Team
+    email: vquan27112005@gmail.com
+
+servers:
+  - url: http://localhost:3000/api
+    description: Local Development Server
+
+security:
+  - ApiKeyAuth: []
+
+# --- CẤU HÌNH BẢO MẬT ---
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: API Key bảo mật
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  # --- ĐỊNH NGHĨA CÁC SCHEMA DÙNG CHUNG (TÁI SỬ DỤNG) ---
+  schemas:
+    Game:
+      type: object
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        is_active:
+          type: boolean
+        default_config:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+    
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        username:
+          type: string
+        role:
+          type: string
+          enum: [admin, customer]
+        avatar_url:
+          type: string
+        dark_mode:
+          type: boolean
+        status:
+          type: string
+          enum: [active, banned]
+        created_at:
+          type: string
+          format: date-time
+
+# --- ĐƯỜNG DẪN API ---
+paths:
+  # 1. AUTHENTICATION
+  /auth/login:
+    post:
+      summary: Đăng nhập hệ thống
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  default: admin@game.com
+                password:
+                  type: string
+                  default: 123456
+      responses:
+        200:
+          description: Đăng nhập thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+        400:
+          description: Sai thông tin đăng nhập
+
+  # 2. ADMIN - GAMES
+  /admin/games:
+    get:
+      summary: Lấy danh sách Game
+      tags: [Admin-Games]
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Tìm kiếm game theo tên hoặc mã
+        - in: query
+          name: is_active
+          schema:
+            type: boolean
+          description: Lọc game theo trạng thái hoạt động
+        - in: query
+          name: id[gte]
+          schema:
+            type: integer
+          description: Lọc game có ID lớn hơn hoặc bằng
+        - in: query
+          name: id[gt]
+          schema:
+            type: integer
+          description: Lọc game có ID lớn hơn
+        - in: query
+          name: id[lte]
+          schema:
+            type: integer
+          description: Lọc game có ID nhỏ hơn hoặc bằng
+        - in: query
+          name: id[lt]
+          schema:
+            type: integer
+          description: Lọc game có ID nhỏ hơn
+        - in: query
+          name: id[neq]
+          schema:
+            type: integer
+          description: Lọc game có ID khác
+        - in: query
+          name: created_at[gte]
+          schema:
+            type: string
+            format: date-time
+          description: Lọc game tạo từ ngày trở đi
+        - in: query
+          name: created_at[gt]
+          schema:
+            type: string
+            format: date-time
+          description: Lọc game tạo sau ngày
+        - in: query
+          name: created_at[lte]
+          schema:
+            type: string
+            format: date-time
+          description: Lọc game tạo đến ngày
+        - in: query
+          name: created_at[lt]
+          schema:
+            type: string
+            format: date-time
+          description: Lọc game tạo trước ngày
+        - in: query
+          name: created_at[neq]
+          schema:
+            type: string
+            format: date-time
+          description: Lọc game tạo không phải ngày này
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+          description: Số trang
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+          description: Số lượng mục trên mỗi trang
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [id, name, code, created_at, -id, -name, -code, -created_at]
+          description: Sắp xếp theo trường (vd: sort=name,-created_at)
+        - in: query
+          name: fields
+          schema:
+            type: string
+          description: Chọn các trường cần hiển thị, cách nhau bởi dấu phẩy (vd: fields=name,code)
+      responses:
+        200:
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  paginate:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      totalGames:
+                        type: integer
+                      totalPages:
+                        type: integer
+                  games:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Game'
+        401:
+          description: Không được phép
+
+  /admin/games/{id}:
+    put:
+      summary: Cập nhật Game
+      tags: [Admin-Games]
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: ID của Game cần cập nhật
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                is_active:
+                  type: boolean
+                  description: Trạng thái hoạt động của Game
+                default_config:
+                  type: object
+                  description: Cấu hình mặc định của Game (JSONB)
+      responses:
+        200:
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Game'
+        400:
+          description: Yêu cầu không hợp lệ
+        401:
+          description: Không được phép
+        404:
+          description: Không tìm thấy Game
+
+  # 3. ADMIN - USERS
+  /admin/users:
+    get:
+      summary: Lấy danh sách User
+      tags: [Admin-Users]
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Tìm kiếm người dùng theo email hoặc username
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [active, banned]
+          description: Lọc người dùng theo trạng thái
+        - in: query
+          name: role
+          schema:
+            type: string
+            enum: [admin, customer]
+          description: Lọc người dùng theo vai trò
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+          description: Số trang
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+          description: Số lượng mục trên mỗi trang
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [id, email, username, role, status, created_at, -id, -email, -username, -role, -status, -created_at]
+          description: Sắp xếp theo trường (vd: sort=email,-created_at)
+        - in: query
+          name: fields
+          schema:
+            type: string
+          description: Chọn các trường cần hiển thị, cách nhau bởi dấu phẩy (vd: fields=id,email,username)
+        - in: query
+          name: id[gte]
+          schema:
+            type: string
+            format: uuid
+          description: Lọc người dùng có ID lớn hơn hoặc bằng
+        - in: query
+          name: id[gt]
+          schema:
+            type: string
+            format: uuid
+          description: Lọc người dùng có ID lớn hơn
+        - in: query
+          name: id[lte]
+          schema:
+            type: string
+            format: uuid
+          description: Lọc người dùng có ID nhỏ hơn hoặc bằng
+        - in: query
+          name: id[lt]
+          schema:
+            type: string
+            format: uuid
+          description: Lọc người dùng có ID nhỏ hơn
+        - in: query
+          name: id[neq]
+          schema:
+            type: string
+            format: uuid
+          description: Lọc người dùng có ID khác
+        - in: query
+          name: created_at[gte]
+          schema:
+            type: string
+            format: date-time
+          description: Lọc người dùng tạo từ ngày trở đi
+        - in: query
+          name: created_at[gt]
+          schema:
+            type: string
+            format: date-time
+          description: Lọc người dùng tạo sau ngày
+        - in: query
+          name: created_at[lte]
+          schema:
+            type: string
+            format: date-time
+          description: Lọc người dùng tạo đến ngày
+        - in: query
+          name: created_at[lt]
+          schema:
+            type: string
+            format: date-time
+          description: Lọc người dùng tạo trước ngày
+        - in: query
+          name: created_at[neq]
+          schema:
+            type: string
+            format: date-time
+          description: Lọc người dùng tạo không phải ngày này
+      responses:
+        200:
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  paginate:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      totalUsers:
+                        type: integer
+                      totalPages:
+                        type: integer
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+        401:
+          description: Không được phép
+
+  /admin/users/{id}:
+    put:
+      summary: Cập nhật trạng thái người dùng
+      tags: [Admin-Users]
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID của người dùng
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [active, banned]
+      responses:
+        200:
+          description: Cập nhật trạng thái thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User status updated successfully
+        400:
+          description: Yêu cầu không hợp lệ
+        401:
+          description: Không được phép
+        404:
+          description: Không tìm thấy người dùng
+    delete:
+      summary: Xóa User
+      tags: [Admin-Users]
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID của người dùng cần xóa
+      responses:
+        200:
+          description: Xóa thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User deleted successfully
+        401:
+          description: Không được phép
+        404:
+          description: Không tìm thấy người dùng
+
+  # 4. ADMIN - STATS
+  /admin/stats/dashboard:
+    get:
+      summary: Thống kê Dashboard
+      tags: [Admin-Stats]
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      responses:
+        200:
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalUsers:
+                    type: integer
+                  totalGames:
+                    type: integer
+                  totalGameSessions:
+                    type: integer
+        401:
+          description: Không được phép
+  
+  /admin/stats/daily:
+    post:
+      summary: Thống kê hàng ngày theo khoảng thời gian
+      tags: [Admin-Stats]
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        description: Khoảng thời gian thống kê
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - startDate
+                - endDate
+              properties:
+                startDate:
+                  type: string
+                  format: date
+                  example: 2023-01-01
+                endDate:
+                  type: string
+                  format: date
+                  example: 2023-01-31
+      responses:
+        200:
+          description: Thống kê hàng ngày thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  newUsers:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        date:
+                          type: string
+                          format: date
+                        count:
+                          type: integer
+                  newGameSessions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        date:
+                          type: string
+                          format: date
+                        count:
+                          type: integer
+                  totalPlayTime:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        date:
+                          type: string
+                          format: date
+                        total_play_time:
+                          type: integer
+        400:
+          description: Dữ liệu đầu vào không hợp lệ
