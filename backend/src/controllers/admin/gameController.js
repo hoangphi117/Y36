@@ -3,8 +3,16 @@ const Game = require('../../models/Game');
 // Lấy danh sách game
 const getGames = async (req, res) => {
   try {
-    const games = await Game.getAll();
-    res.json(games);
+    const queryString = req.query;
+    const games = await Game.getAll(queryString);
+    const totalGames = await Game.countAll(queryString);
+    const paginate = {
+      page: queryString.page ? parseInt(queryString.page) : 1,
+      limit: queryString.limit ? parseInt(queryString.limit) : games.length,
+      totalGames,
+      totalPages: queryString.limit ? Math.ceil(totalGames / parseInt(queryString.limit)) : 1
+    };
+    res.status(200).json({ paginate,  games });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
