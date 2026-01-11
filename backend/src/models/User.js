@@ -9,7 +9,7 @@ class User {
   // Lấy danh sách user (trừ password)
   static async getAllUsers() {
     return db('users')
-      .select('id', 'email', 'display_name', 'username', 'role', 'avatar_url', 'created_at', 'dark_mode', 'status')
+      .select('id', 'email', 'username', 'role', 'avatar_url', 'created_at', 'dark_mode', 'status')
       .orderBy('created_at', 'desc');
   }
 

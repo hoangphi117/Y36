@@ -213,7 +213,10 @@ exports.seed = async function (knex) {
   // =========================
   // 2) Users
   // =========================
-  const passwordHash = "$2b$10$EpMq.02Yf.5.5.5.5.5.5.5.5.5.5.5.5.5.5.5.5.5";
+  const bcrypt = require("bcryptjs");
+  const salt = await bcrypt.genSalt(10);
+  const passwordPlain = "123456";
+  const passwordHash = await bcrypt.hash(passwordPlain, salt);
 
   const usersData = [
     {
