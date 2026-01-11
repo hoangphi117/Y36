@@ -10,30 +10,35 @@ class APIFeatures {
     const excludedFields = ['page', 'sort', 'limit', 'fields', 'search'];
     excludedFields.forEach((el) => delete queryObj[el]);
 
+    const operatorsMap = {
+      gte: '>=',
+      gt: '>',
+      lte: '<=',
+      lt: '<',
+      neq: '<>',
+      eq: '='
+    };
+
     // Xử lý các toán tử so sánh (gte, gt, lte, lt, neq)
     // Ví dụ cách sử dụng: ?score[gte]=10&score[lte]=100 hoặc ?status=active
     Object.keys(queryObj).forEach((key) => {
-      const value = queryObj[key];
+      let value = queryObj[key];
+      let field = key;
+      let operator = '=';
 
-      if (typeof value === 'object') {
-        // Trường hợp có toán tử: VD:score[gte]=10
-        const operators = {
-          gte: '>=',
-          gt: '>',
-          lte: '<=',
-          lt: '<',
-          neq: '<>',
-        };
+      // Vd: req.query = { 'id[gte]': '2' }
+      const match = key.match(/^(.+)\[(gte|gt|lte|lt|neq)\]$/);
+      
+      if (match) {
+        field = match[1]; // Lấy tên cột: "id"
+        const opString = match[2]; // Lấy toán tử: "gte"
+        operator = operatorsMap[opString]; // Map sang ">="
         
-        Object.keys(value).forEach((op) => {
-          if (operators[op]) {
-            this.query.where(key, operators[op], value[op]);
-          }
-        });
-      } else {
-        // Trường hợp bằng thông thường: VD:status=active
-        this.query.where(key, '=', value);
+        this.query.where(field, operator, value);
+        return;
       }
+
+      this.query.where(key, '=', value);
     });
 
     return this;
@@ -52,8 +57,6 @@ class APIFeatures {
       });
       
       this.query.orderBy(sortBy);
-    } else {
-      this.query.orderBy('created_at', 'desc');
     }
 
     return this;
