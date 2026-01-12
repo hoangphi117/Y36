@@ -2,12 +2,16 @@ import { Area, AreaChart, Bar, BarChart, Line, LineChart, XAxis, YAxis, Cartesia
 import type { DailyStats } from '@/services/admin/statsService';
 import { motion } from 'framer-motion';
 import { Users, Gamepad2, Clock } from 'lucide-react';
+import { useAdminTheme } from '@/hooks/admin/useAdminTheme';
 
 interface DailyStatsChartProps {
   data: DailyStats;
 }
 
 export const DailyStatsChart = ({ data }: DailyStatsChartProps) => {
+  const { theme } = useAdminTheme();
+  const isDark = theme === 'dark';
+
   // Prepare chart data
   const allDates = new Set([
     ...Object.keys(data.newUsers || {}),
@@ -29,11 +33,20 @@ export const DailyStatsChart = ({ data }: DailyStatsChartProps) => {
       }),
       newUsers: data.newUsers[date] || 0,
       newSessions: data.newGameSessions[date] || 0,
-      playTime: Math.round((data.totalPlayTime[date] || 0) / 3600), // Convert to hours
+      playTime: Math.round((data.totalPlayTime[date] || 0) / 3600),
     };
   });
 
-  // Custom Tooltip Component
+  // Theme-aware colors
+  const colors = {
+    users: isDark ? '#06B6D4' : '#2DB5A3',
+    sessions: isDark ? '#22C55E' : '#43A047',
+    playTime: isDark ? '#EC4899' : '#E9714D',
+    grid: isDark ? '#333' : '#D3CFC7',
+    text: isDark ? '#F2F4F7' : '#1D2430',
+  };
+
+  // Custom Tooltip
   const CustomTooltip = ({ active, payload }: any) => {
     if (!active || !payload || !payload.length) return null;
 
@@ -41,19 +54,16 @@ export const DailyStatsChart = ({ data }: DailyStatsChartProps) => {
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-black/95 backdrop-blur-xl border border-cyan-500/50 rounded-lg p-4 shadow-[0_0_30px_rgba(0,255,255,0.4)]"
+        className="admin-surface p-4 shadow-lg"
       >
-        <p className="text-cyan-300 font-mono text-xs font-bold mb-2">
+        <p className="admin-primary font-mono text-xs font-bold mb-2">
           {payload[0].payload.fullDate}
         </p>
         {payload.map((entry: any, index: number) => (
           <div key={index} className="flex items-center gap-2 mt-1.5">
             <div
               className="w-3 h-3 rounded-full"
-              style={{ 
-                backgroundColor: entry.color,
-                boxShadow: `0 0 8px ${entry.color}`
-              }}
+              style={{ backgroundColor: entry.color }}
             />
             <span className="text-muted-foreground font-mono text-xs">
               {entry.name}:
@@ -104,10 +114,10 @@ export const DailyStatsChart = ({ data }: DailyStatsChartProps) => {
     >
       {/* Chart 1: Người dùng mới */}
       <motion.div variants={itemVariants}>
-        <div className="bg-card/50 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-6 hover:border-cyan-500/40 transition-all duration-300 hover:shadow-[0_0_30px_rgba(0,255,255,0.15)]">
+        <div className="admin-glass p-6 rounded-2xl hover:border-primary/40 transition-all duration-300">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.3)]">
-              <Users className="w-6 h-6 text-cyan-400" />
+            <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
+              <Users className="w-6 h-6 admin-primary" />
             </div>
             <div>
               <h3 className="text-xl font-black text-foreground font-mono uppercase tracking-wider">
@@ -123,37 +133,30 @@ export const DailyStatsChart = ({ data }: DailyStatsChartProps) => {
             <AreaChart data={chartData}>
               <defs>
                 <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#06B6D4" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#06B6D4" stopOpacity={0}/>
+                  <stop offset="5%" stopColor={colors.users} stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor={colors.users} stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#333" opacity={0.2} />
+              <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} opacity={0.3} />
               <XAxis 
                 dataKey="date" 
-                stroke="#00FFFF" 
+                stroke={colors.text}
                 style={{ fontSize: '11px', fontFamily: 'monospace' }}
-                tick={{ fill: '#06B6D4' }}
               />
               <YAxis 
-                stroke="#00FFFF"
+                stroke={colors.text}
                 style={{ fontSize: '11px', fontFamily: 'monospace' }}
-                tick={{ fill: '#06B6D4' }}
               />
               <Tooltip content={<CustomTooltip />} />
               <Area
                 type="monotone"
                 dataKey="newUsers"
                 name="Người dùng mới"
-                stroke="#06B6D4"
+                stroke={colors.users}
                 strokeWidth={3}
                 fill="url(#colorUsers)"
-                dot={{ fill: '#06B6D4', r: 4, strokeWidth: 2, stroke: '#000' }}
-                activeDot={{ 
-                  r: 6, 
-                  fill: '#06B6D4',
-                  stroke: '#fff',
-                  strokeWidth: 2
-                }}
+                dot={{ fill: colors.users, r: 4 }}
+                activeDot={{ r: 6, fill: colors.users, stroke: '#fff', strokeWidth: 2 }}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -162,10 +165,10 @@ export const DailyStatsChart = ({ data }: DailyStatsChartProps) => {
 
       {/* Chart 2: Phiên chơi mới */}
       <motion.div variants={itemVariants}>
-        <div className="bg-card/50 backdrop-blur-xl border border-green-500/20 rounded-2xl p-6 hover:border-green-500/40 transition-all duration-300 hover:shadow-[0_0_30px_rgba(34,197,94,0.15)]">
+        <div className="admin-glass p-6 rounded-2xl hover:border-green-500/40 transition-all duration-300">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center shadow-[0_0_20px_rgba(34,197,94,0.3)]">
-              <Gamepad2 className="w-6 h-6 text-green-400" />
+            <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center">
+              <Gamepad2 className="w-6 h-6 text-green-500" />
             </div>
             <div>
               <h3 className="text-xl font-black text-foreground font-mono uppercase tracking-wider">
@@ -181,21 +184,19 @@ export const DailyStatsChart = ({ data }: DailyStatsChartProps) => {
             <BarChart data={chartData}>
               <defs>
                 <linearGradient id="colorSessions" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#22C55E" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#22C55E" stopOpacity={0.2}/>
+                  <stop offset="5%" stopColor={colors.sessions} stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor={colors.sessions} stopOpacity={0.2}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#333" opacity={0.2} />
+              <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} opacity={0.3} />
               <XAxis 
                 dataKey="date" 
-                stroke="#00FF00"
+                stroke={colors.text}
                 style={{ fontSize: '11px', fontFamily: 'monospace' }}
-                tick={{ fill: '#22C55E' }}
               />
               <YAxis 
-                stroke="#00FF00"
+                stroke={colors.text}
                 style={{ fontSize: '11px', fontFamily: 'monospace' }}
-                tick={{ fill: '#22C55E' }}
               />
               <Tooltip content={<CustomTooltip />} />
               <Bar
@@ -211,10 +212,10 @@ export const DailyStatsChart = ({ data }: DailyStatsChartProps) => {
 
       {/* Chart 3: Thời gian chơi */}
       <motion.div variants={itemVariants}>
-        <div className="bg-card/50 backdrop-blur-xl border border-pink-500/20 rounded-2xl p-6 hover:border-pink-500/40 transition-all duration-300 hover:shadow-[0_0_30px_rgba(236,72,153,0.15)]">
+        <div className="admin-glass p-6 rounded-2xl hover:border-accent/40 transition-all duration-300">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-xl bg-pink-500/20 flex items-center justify-center shadow-[0_0_20px_rgba(236,72,153,0.3)]">
-              <Clock className="w-6 h-6 text-pink-400" />
+            <div className="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center">
+              <Clock className="w-6 h-6 admin-accent" />
             </div>
             <div>
               <h3 className="text-xl font-black text-foreground font-mono uppercase tracking-wider">
@@ -228,43 +229,25 @@ export const DailyStatsChart = ({ data }: DailyStatsChartProps) => {
 
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={chartData}>
-              <defs>
-                <linearGradient id="colorPlayTime" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#EC4899" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#EC4899" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#333" opacity={0.2} />
+              <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} opacity={0.3} />
               <XAxis 
                 dataKey="date" 
-                stroke="#FF00FF"
+                stroke={colors.text}
                 style={{ fontSize: '11px', fontFamily: 'monospace' }}
-                tick={{ fill: '#EC4899' }}
               />
               <YAxis 
-                stroke="#FF00FF"
+                stroke={colors.text}
                 style={{ fontSize: '11px', fontFamily: 'monospace' }}
-                tick={{ fill: '#EC4899' }}
               />
               <Tooltip content={<CustomTooltip />} />
               <Line
                 type="monotone"
                 dataKey="playTime"
                 name="Giờ chơi"
-                stroke="#EC4899"
+                stroke={colors.playTime}
                 strokeWidth={3}
-                dot={{ 
-                  fill: '#EC4899', 
-                  r: 5,
-                  strokeWidth: 2,
-                  stroke: '#000'
-                }}
-                activeDot={{ 
-                  r: 7, 
-                  fill: '#EC4899',
-                  stroke: '#fff',
-                  strokeWidth: 2
-                }}
+                dot={{ fill: colors.playTime, r: 5, strokeWidth: 2, stroke: '#fff' }}
+                activeDot={{ r: 7, fill: colors.playTime, stroke: '#fff', strokeWidth: 2 }}
               />
             </LineChart>
           </ResponsiveContainer>

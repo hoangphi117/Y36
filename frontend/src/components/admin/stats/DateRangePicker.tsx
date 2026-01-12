@@ -48,10 +48,10 @@ export const DateRangePicker = ({ startDate, endDate, onRangeChange, className }
             onClick={() => handlePreset(preset.days, index)}
             className={cn(
               "px-3 py-1.5 text-xs font-mono font-medium rounded-lg transition-all duration-200",
-              "border backdrop-blur-sm",
+              "border",
               activePreset === index
-                ? "bg-cyan-500/20 border-cyan-500/60 text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.4)]"
-                : "bg-black/30 border-border/50 text-muted-foreground hover:border-cyan-500/40 hover:text-cyan-400"
+                ? "bg-primary/20 border-primary text-primary font-bold"
+                : "bg-muted border-border text-muted-foreground hover:border-primary/50 hover:text-foreground"
             )}
           >
             {preset.label}
@@ -61,46 +61,34 @@ export const DateRangePicker = ({ startDate, endDate, onRangeChange, className }
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label className="text-sm font-mono text-muted-foreground uppercase tracking-wider">
+          <label className="text-sm font-mono text-muted-foreground uppercase tracking-wider font-bold">
             Ngày bắt đầu
           </label>
           <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cyan-400" />
+            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 admin-primary" />
             <input
               type="date"
               value={startDate}
               onChange={(e) => handleCustomChange('start', e.target.value)}
               max={endDate}
-              className={cn(
-                'w-full pl-10 pr-4 py-2.5 rounded-lg font-mono text-sm',
-                'bg-black/40 backdrop-blur-sm border border-border/50',
-                'text-foreground',
-                'focus:outline-none focus:border-cyan-500/60 focus:shadow-[0_0_15px_rgba(6,182,212,0.3)]',
-                'transition-all duration-200'
-              )}
+              className="admin-input pl-10"
             />
           </div>
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-mono text-muted-foreground uppercase tracking-wider">
+          <label className="text-sm font-mono text-muted-foreground uppercase tracking-wider font-bold">
             Ngày kết thúc
           </label>
           <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cyan-400" />
+            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 admin-primary" />
             <input
               type="date"
               value={endDate}
               onChange={(e) => handleCustomChange('end', e.target.value)}
               min={startDate}
               max={new Date().toISOString().split('T')[0]}
-              className={cn(
-                'w-full pl-10 pr-4 py-2.5 rounded-lg font-mono text-sm',
-                'bg-black/40 backdrop-blur-sm border border-border/50',
-                'text-foreground',
-                'focus:outline-none focus:border-cyan-500/60 focus:shadow-[0_0_15px_rgba(6,182,212,0.3)]',
-                'transition-all duration-200'
-              )}
+              className="admin-input pl-10"
             />
           </div>
         </div>
