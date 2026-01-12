@@ -1,4 +1,4 @@
-import { User } from '@/services/admin/userService';
+import type { User } from '@/services/admin/userService';
 import { UserTableRow } from './UserTableRow';
 
 interface UserTableProps {

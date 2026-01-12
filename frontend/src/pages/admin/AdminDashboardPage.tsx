@@ -1,6 +1,6 @@
 import { useDashboardStats } from '@/hooks/admin/useStats';
 import { StatCard } from '@/components/admin/stats/StatCard';
-import { Users, Gamepad2, Trophy, Clock } from 'lucide-react';
+import { Users, Gamepad2, Trophy, Clock, BarChart3 } from 'lucide-react';
 
 export const AdminDashboardPage = () => {
   const { data, isLoading, error } = useDashboardStats();

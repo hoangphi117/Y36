@@ -1,5 +1,6 @@
-import { api } from '@/lib/api';
+import apiClient from '@/lib/admin/apiClient';
 
+// ===== EXPORTS =====
 export interface User {
   id: string;
   email: string;
@@ -28,19 +29,19 @@ export interface UsersResponse {
   };
 }
 
+// ===== SERVICE IMPLEMENTATION =====
 export const userService = {
-  getUsers: async (params: UserFilters): Promise<UsersResponse> => {
-    const { data } = await api.get('/admin/users', { params });
+  async getUsers(params: UserFilters): Promise<UsersResponse> {
+    const { data } = await apiClient.get('/admin/users', { params });
     return data;
   },
 
-  updateStatus: async (userId: string, status: 'active' | 'banned') => {
-    const { data } = await api.put(`/admin/users/${userId}`, { status });
+  async updateStatus(userId: string, status: 'active' | 'banned'): Promise<User> {
+    const { data } = await apiClient.put(`/admin/users/${userId}`, { status });
     return data;
   },
 
-  deleteUser: async (userId: string) => {
-    const { data } = await api.delete(`/admin/users/${userId}`);
-    return data;
+  async deleteUser(userId: string): Promise<void> {
+    await apiClient.delete(`/admin/users/${userId}`);
   },
 };

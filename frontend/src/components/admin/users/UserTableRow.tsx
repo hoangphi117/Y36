@@ -1,5 +1,5 @@
 import { MoreVertical, Shield, Ban, Trash2, CheckCircle } from 'lucide-react';
-import { User } from '@/services/admin/userService';
+import type { User } from '@/services/admin/userService';
 import { UserStatusBadge } from './UserStatusBadge';
 import { useState } from 'react';
 import { ConfirmDialog } from './ConfirmDialog';
