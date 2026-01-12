@@ -44,6 +44,10 @@ class User {
   static async createUser(userData) {
     return db('users').insert(userData).returning('*');
   }
+
+  static async findByUserName(username) {
+    return db('users').where({ username }).first();
+  }
 }
 
 module.exports = User;
