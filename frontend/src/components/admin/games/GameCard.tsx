@@ -57,17 +57,17 @@ export const GameCard = ({ game, onToggle, onEdit, isUpdating }: GameCardProps) 
       </p>
 
       {/* Config Preview */}
-      <div className="bg-black/30 backdrop-blur-sm rounded-lg p-3 mb-4 border border-border/30">
-        <p className="text-xs font-mono text-cyan-400 mb-2 uppercase tracking-wider">
+      <div className="admin-surface p-3 mb-4">
+        <p className="text-xs font-mono admin-primary mb-2 uppercase tracking-wider font-bold">
           Cấu hình:
         </p>
         <div className="flex flex-wrap gap-2">
           {Object.entries(game.default_config).slice(0, 3).map(([key, value]) => (
             <span
               key={key}
-              className="text-xs font-mono bg-muted/50 border border-border/50 px-2 py-1 rounded"
+              className="text-xs font-mono bg-muted border border-border px-2 py-1 rounded"
             >
-              <span className="text-purple-400">{key}:</span>{' '}
+              <span className="admin-accent font-bold">{key}:</span>{' '}
               <span className="text-foreground">{String(value)}</span>
             </span>
           ))}
@@ -104,10 +104,10 @@ export const GameCard = ({ game, onToggle, onEdit, isUpdating }: GameCardProps) 
           disabled={isUpdating}
           className={cn(
             'p-2 rounded-lg transition-all disabled:opacity-50',
-            'hover:bg-primary/10 hover:shadow-[0_0_15px_rgba(6,182,212,0.3)]'
+            'hover:bg-primary/10'
           )}
         >
-          <Settings className="w-5 h-5 text-muted-foreground hover:text-cyan-400 transition-colors" />
+          <Settings className="w-5 h-5 text-muted-foreground hover:text-primary transition-colors" />
         </motion.button>
       </div>
     </motion.div>

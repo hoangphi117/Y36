@@ -288,3 +288,53 @@
   
   --radius: 0.75rem;
 }
+
+/* ========================================
+   ADMIN UTILITIES (Support both themes)
+   ======================================== */
+
+@layer components {
+  /* Admin Input/Select Style */
+  .admin-input {
+    @apply w-full px-4 py-2.5 rounded-lg font-mono text-sm;
+    @apply bg-input border border-border;
+    @apply text-foreground placeholder:text-muted-foreground;
+    @apply focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20;
+    @apply transition-all duration-200;
+  }
+
+  /* Admin Card/Surface */
+  .admin-surface {
+    @apply bg-card backdrop-blur-xl border border-border rounded-xl;
+  }
+
+  /* Admin Glass Effect */
+  .admin-glass {
+    @apply bg-card/50 backdrop-blur-xl border border-border/50;
+  }
+
+  /* Primary Button */
+  .admin-btn-primary {
+    @apply px-4 py-2.5 rounded-xl font-mono font-bold;
+    @apply bg-primary text-primary-foreground;
+    @apply hover:opacity-90 transition-all;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary/50;
+  }
+
+  /* Secondary Button */
+  .admin-btn-secondary {
+    @apply px-4 py-2.5 rounded-xl font-mono;
+    @apply bg-muted text-muted-foreground border border-border;
+    @apply hover:bg-muted/80 transition-all;
+  }
+
+  /* Accent Text */
+  .admin-accent {
+    @apply text-accent;
+  }
+
+  /* Primary Text */
+  .admin-primary {
+    @apply text-primary;
+  }
+}

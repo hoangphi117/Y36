@@ -55,19 +55,15 @@ export const GameConfigForm = ({ game, onSubmit, onCancel }: GameConfigFormProps
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.05 }}
             >
-              <label className="block text-sm font-bold mb-2 font-mono text-cyan-400 uppercase tracking-wider">
+              <label className="block text-sm font-bold mb-2 font-mono admin-primary uppercase tracking-wider">
                 {field.replace(/_/g, ' ')}
               </label>
               <select
                 value={value}
                 onChange={(e) => handleChange(field, e.target.value)}
                 className={cn(
-                  'w-full px-4 py-2.5 rounded-lg font-mono text-sm transition-all',
-                  'bg-black/40 backdrop-blur-sm border',
-                  hasError
-                    ? 'border-red-500/60 focus:border-red-500 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]'
-                    : 'border-border/50 focus:border-purple-500/60 focus:shadow-[0_0_15px_rgba(168,85,247,0.3)]',
-                  'focus:outline-none'
+                  'admin-input',
+                  hasError && 'border-destructive focus:border-destructive focus:ring-destructive/20'
                 )}
               >
                 {'values' in rules && rules.values.map((opt) => (
@@ -95,7 +91,7 @@ export const GameConfigForm = ({ game, onSubmit, onCancel }: GameConfigFormProps
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.05 }}
             >
-              <label className="block text-sm font-bold mb-2 font-mono text-cyan-400 uppercase tracking-wider">
+              <label className="block text-sm font-bold mb-2 font-mono admin-primary uppercase tracking-wider">
                 {field.replace(/_/g, ' ')}
               </label>
               <div className="flex gap-2">
@@ -103,19 +99,15 @@ export const GameConfigForm = ({ game, onSubmit, onCancel }: GameConfigFormProps
                   type="color"
                   value={value}
                   onChange={(e) => handleChange(field, e.target.value)}
-                  className="w-16 h-10 rounded-lg cursor-pointer border-2 border-border/50"
+                  className="w-16 h-10 rounded-lg cursor-pointer border-2 border-border bg-input"
                 />
                 <input
                   type="text"
                   value={value}
                   onChange={(e) => handleChange(field, e.target.value)}
                   className={cn(
-                    'flex-1 px-4 py-2.5 rounded-lg font-mono text-sm transition-all',
-                    'bg-black/40 backdrop-blur-sm border',
-                    hasError
-                      ? 'border-red-500/60 focus:border-red-500 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]'
-                      : 'border-border/50 focus:border-cyan-500/60 focus:shadow-[0_0_15px_rgba(6,182,212,0.3)]',
-                    'focus:outline-none'
+                    'flex-1 admin-input',
+                    hasError && 'border-destructive focus:border-destructive focus:ring-destructive/20'
                   )}
                   placeholder="#FFFFFF"
                 />
@@ -140,7 +132,7 @@ export const GameConfigForm = ({ game, onSubmit, onCancel }: GameConfigFormProps
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.05 }}
           >
-            <label className="block text-sm font-bold mb-2 font-mono text-cyan-400 uppercase tracking-wider">
+            <label className="block text-sm font-bold mb-2 font-mono admin-primary uppercase tracking-wider">
               {field.replace(/_/g, ' ')}
             </label>
             <input
@@ -151,12 +143,8 @@ export const GameConfigForm = ({ game, onSubmit, onCancel }: GameConfigFormProps
               max={'max' in rules ? rules.max : undefined}
               step={'even' in rules && rules.even ? 2 : 1}
               className={cn(
-                'w-full px-4 py-2.5 rounded-lg font-mono text-sm transition-all',
-                'bg-black/40 backdrop-blur-sm border',
-                hasError
-                  ? 'border-red-500/60 focus:border-red-500 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]'
-                  : 'border-border/50 focus:border-green-500/60 focus:shadow-[0_0_15px_rgba(34,197,94,0.3)]',
-                'focus:outline-none'
+                'admin-input',
+                hasError && 'border-destructive focus:border-destructive focus:ring-destructive/20'
               )}
             />
             {'min' in rules && 'max' in rules && (
@@ -193,7 +181,7 @@ export const GameConfigForm = ({ game, onSubmit, onCancel }: GameConfigFormProps
           whileTap={{ scale: 0.98 }}
           type="button"
           onClick={onCancel}
-          className="flex-1 px-4 py-2.5 bg-muted/50 hover:bg-muted border border-border/50 rounded-xl font-mono transition-all"
+          className="admin-btn-secondary flex-1"
         >
           Hủy bỏ
         </motion.button>
@@ -201,7 +189,7 @@ export const GameConfigForm = ({ game, onSubmit, onCancel }: GameConfigFormProps
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           type="submit"
-          className="flex-1 px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white rounded-xl font-mono font-bold transition-all shadow-[0_0_20px_rgba(6,182,212,0.3)]"
+          className="admin-btn-primary flex-1"
         >
           Lưu thay đổi
         </motion.button>

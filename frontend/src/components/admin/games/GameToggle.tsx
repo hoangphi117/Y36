@@ -29,7 +29,7 @@ export const GameToggle = ({ isActive, onToggle, disabled }: GameToggleProps) =>
           'shadow-lg',
           isActive
             ? 'translate-x-8 bg-white'
-            : 'translate-x-1 bg-gray-300'
+            : 'translate-x-1 bg-foreground/30'
         )}
       />
     </button>
