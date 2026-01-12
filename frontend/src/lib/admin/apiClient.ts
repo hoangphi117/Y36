@@ -28,7 +28,11 @@ apiClient.interceptors.response.use(
       // Token hết hạn hoặc không hợp lệ
       localStorage.removeItem('authToken');
       localStorage.removeItem('user');
-      window.location.href = '/auth/login';
+      
+      // Redirect về admin login nếu đang ở admin routes
+      if (window.location.pathname.startsWith('/admin')) {
+        window.location.href = '/admin/login';
+      }
     }
     return Promise.reject(error);
   }

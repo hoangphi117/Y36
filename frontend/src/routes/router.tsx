@@ -14,6 +14,7 @@ import { AdminGuard } from "@/components/admin/auth/AdminGuard";
 import { AdminLayout } from "@/components/admin/layout/AdminLayout";
 import { AdminDashboardPage } from "@/pages/admin/AdminDashboardPage";
 import { AdminUsersPage } from "@/pages/admin/AdminUsersPage";
+import { AdminLoginPage } from "@/pages/admin/AdminLoginPage";
 
 const router = createBrowserRouter([
   {
@@ -44,6 +45,10 @@ const router = createBrowserRouter([
   },
 
   // ===== ADMIN ROUTES =====
+  {
+    path: "/admin/login",
+    element: <AdminLoginPage />,
+  },
   {
     path: "/admin",
     element: <AdminGuard />,
