@@ -4,18 +4,11 @@ import type { UserFilters } from '@/services/admin/userService';
 import toast from 'react-hot-toast';
 
 export const useUsers = (filters: UserFilters) => {
-  console.log('🔍 useUsers called with filters:', filters); // ← DEBUG LOG
-
   return useQuery({
     queryKey: ['admin-users', filters],
-    queryFn: async () => {
-      console.log('📡 Calling API with filters:', filters); // ← DEBUG LOG
-      const result = await userService.getUsers(filters);
-      console.log('✅ API Response:', result); // ← DEBUG LOG
-      return result;
-    },
+    queryFn: () => userService.getUsers(filters),
     retry: 1,
-    staleTime: 0, // ← Force refetch
+    staleTime: 0,
   });
 };
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { useUsers, useUpdateUserStatus, useDeleteUser } from '@/hooks/admin/useUsers';
 import { UserFilters } from '@/components/admin/users/UserFilters';
@@ -25,24 +25,15 @@ export const AdminUsersPage = () => {
     search: debouncedSearch || undefined,
   };
 
-  console.log('🔍 AdminUsersPage - queryFilters:', queryFilters); // ← DEBUG LOG
-
   const { data, isLoading, error, isError } = useUsers(queryFilters);
-
-  useEffect(() => {
-    console.log('📊 Data state:', { data, isLoading, error, isError }); // ← DEBUG LOG
-  }, [data, isLoading, error, isError]);
-
   const updateStatusMutation = useUpdateUserStatus();
   const deleteMutation = useDeleteUser();
 
   const handleFilterChange = (key: string, value: any) => {
-    console.log('🔄 Filter changed:', key, value); // ← DEBUG LOG
     setFilters(prev => ({ ...prev, [key]: value, page: 1 }));
   };
 
   const handlePageChange = (page: number) => {
-    console.log('📄 Page changed to:', page); // ← DEBUG LOG
     setFilters(prev => ({ ...prev, page }));
   };
 
