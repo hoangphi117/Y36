@@ -9,6 +9,11 @@ import SnakeGame from "@/pages/games/Snake";
 import LoginPage from "@/pages/auth/LoginPage";
 import RegisterPage from "@/pages/auth/RegisterPage";
 
+// ===== ADMIN IMPORTS =====
+import { AdminGuard } from "@/components/admin/auth/AdminGuard";
+import { AdminLayout } from "@/components/admin/layout/AdminLayout";
+import { AdminDashboardPage } from "@/pages/admin/AdminDashboardPage";
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -35,6 +40,25 @@ const router = createBrowserRouter([
   {
     path: "/auth/register",
     element: <RegisterPage />,
+  },
+
+  // ===== ADMIN ROUTES (MỚI THÊM) =====
+  {
+    path: "/admin",
+    element: <AdminGuard />,
+    errorElement: <NotFoundPage />,
+    children: [
+      {
+        element: <AdminLayout />,
+        children: [
+          { index: true, element: <AdminDashboardPage /> },
+          // TODO: Thêm routes khác
+          // { path: "users", element: <AdminUsersPage /> },
+          // { path: "games", element: <AdminGamesPage /> },
+          // { path: "stats", element: <AdminStatsPage /> },
+        ],
+      },
+    ],
   },
 ]);
 
