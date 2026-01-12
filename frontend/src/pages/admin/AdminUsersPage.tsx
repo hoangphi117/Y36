@@ -42,7 +42,22 @@ export const AdminUsersPage = () => {
   if (isError) {
     return (
       <>
-        <Toaster position="top-right" />
+        <Toaster 
+          position="top-right"
+          toastOptions={{
+            duration: 3000,
+            style: {
+              background: 'hsl(var(--card))',
+              color: 'hsl(var(--foreground))',
+              border: '1px solid hsl(var(--border))',
+              fontFamily: 'monospace',
+            },
+          }}
+          containerStyle={{
+            top: 80,
+            zIndex: 9999,
+          }}
+        />
         <div className="flex items-center justify-center min-h-[60vh]">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -72,7 +87,22 @@ export const AdminUsersPage = () => {
 
   return (
     <>
-      <Toaster position="top-right" />
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: 'hsl(var(--card))',
+            color: 'hsl(var(--foreground))',
+            border: '1px solid hsl(var(--border))',
+            fontFamily: 'monospace',
+          },
+        }}
+        containerStyle={{
+          top: 80,
+          zIndex: 9999,
+        }}
+      />
       
       <div className="space-y-6">
         {/* Header */}

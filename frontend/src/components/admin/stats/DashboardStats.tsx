@@ -23,25 +23,25 @@ export const DashboardStats = () => {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       <StatCard
         icon={Users}
-        label="Total Users"
+        label="Tổng người dùng"
         value={stats.totalUsers}
         color="cyan"
       />
       <StatCard
         icon={Gamepad2}
-        label="Active Games"
+        label="Trò chơi hoạt động"
         value={stats.activeGames}
         color="green"
       />
       <StatCard
         icon={Swords}
-        label="Total Matches"
+        label="Tổng trận đấu"
         value={stats.totalMatches}
         color="purple"
       />
       <StatCard
         icon={Clock}
-        label="Total Play Time"
+        label="Tổng thời gian chơi"
         value={stats.totalPlayTime}
         color="magenta"
         formatter={formatPlayTime}

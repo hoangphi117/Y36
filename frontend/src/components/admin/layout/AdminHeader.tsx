@@ -6,7 +6,7 @@ export const AdminHeader = () => {
   const { theme, setTheme } = useAdminTheme();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-card/50 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 border-b border-border bg-card/50 backdrop-blur-xl">
       <div className="flex items-center justify-between px-6 py-4">
         <div>
           <p className="text-sm text-muted-foreground font-mono">

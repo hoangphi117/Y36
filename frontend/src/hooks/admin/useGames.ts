@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { gameService } from '@/services/admin/gameService';
 import type { GameFilters, UpdateGamePayload, Game } from '@/services/admin/gameService';
 import toast from 'react-hot-toast';
-import { CheckCircle, XCircle } from 'lucide-react';
+import { CheckCircle, XCircle, ToggleLeft, ToggleRight } from 'lucide-react';
 import { createElement } from 'react';
 
 export const useGames = (filters: GameFilters = {}) => {
@@ -48,9 +48,9 @@ export const useUpdateGame = () => {
     },
 
     onSuccess: (_, variables) => {
-      // Only show toast for config updates, not toggle actions
+      // Show toast for BOTH config updates AND toggle actions
       if (variables.payload.default_config) {
-        toast.success('Cập nhật trò chơi thành công', {
+        toast.success('Cập nhật cấu hình thành công', {
           icon: createElement(CheckCircle, { className: "w-5 h-5 text-green-500" }),
           style: {
             background: 'hsl(var(--card))',
@@ -59,6 +59,25 @@ export const useUpdateGame = () => {
             fontFamily: 'monospace',
           },
           duration: 3000,
+        });
+      } else if (variables.payload.is_active !== undefined) {
+        // Toggle toast with dynamic icon
+        const isActive = variables.payload.is_active;
+        const message = isActive ? 'Đã bật trò chơi' : 'Đã tắt trò chơi';
+        const icon = createElement(
+          isActive ? ToggleRight : ToggleLeft,
+          { className: `w-5 h-5 ${isActive ? 'text-green-500' : 'text-gray-500'}` }
+        );
+
+        toast.success(message, {
+          icon,
+          style: {
+            background: 'hsl(var(--card))',
+            color: 'hsl(var(--foreground))',
+            border: '1px solid hsl(var(--border))',
+            fontFamily: 'monospace',
+          },
+          duration: 2000,
         });
       }
       
