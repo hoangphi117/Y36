@@ -5,6 +5,7 @@ import { DailyStatsChart } from '@/components/admin/stats/DailyStatsChart';
 import { DateRangePicker } from '@/components/admin/stats/DateRangePicker';
 import { ExportButton } from '@/components/admin/stats/ExportButton';
 import { useDailyStats } from '@/hooks/admin/useStats';
+import { exportToCSV, exportToJSON } from '@/lib/admin/statsUtils';
 
 const StatsPage = () => {
   const [dateRange, setDateRange] = useState({
@@ -12,62 +13,89 @@ const StatsPage = () => {
     endDate: new Date().toISOString().split('T')[0]
   });
 
-  const { data: dailyStats, isLoading } = useDailyStats(dateRange.startDate, dateRange.endDate);
+  const { data: dailyStats, isLoading, error } = useDailyStats(dateRange.startDate, dateRange.endDate);
+
+  const handleExportCSV = () => {
+    if (!dailyStats) return;
+
+    const allDates = new Set([
+      ...Object.keys(dailyStats.newUsers || {}),
+      ...Object.keys(dailyStats.newGameSessions || {}),
+      ...Object.keys(dailyStats.totalPlayTime || {}),
+    ]);
+
+    const csvData = Array.from(allDates)
+      .sort()
+      .map((date) => ({
+        'Ngày': new Date(date).toLocaleDateString('vi-VN'),
+        'Người dùng mới': dailyStats.newUsers[date] || 0,
+        'Phiên chơi mới': dailyStats.newGameSessions[date] || 0,
+        'Thời gian chơi (giây)': dailyStats.totalPlayTime[date] || 0,
+      }));
+
+    exportToCSV(csvData, `thong-ke-${dateRange.startDate}-den-${dateRange.endDate}`);
+  };
+
+  const handleExportJSON = () => {
+    if (!dailyStats) return;
+    exportToJSON(dailyStats, `thong-ke-${dateRange.startDate}-den-${dateRange.endDate}`);
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-purple-500/20 rounded-lg shadow-[0_0_15px_rgba(168,85,247,0.3)]">
-              <TrendingUp className="w-6 h-6 text-purple-400" />
-            </div>
-            <h1 className="text-3xl font-black tracking-tight text-foreground">
-              STATISTICS <span className="text-primary">DASHBOARD</span>
-            </h1>
-          </div>
-          <p className="text-muted-foreground font-mono">
-            Real-time analytics and platform insights
-          </p>
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.3)]">
+          <TrendingUp className="w-6 h-6 text-purple-400" />
         </div>
-
-        <div className="flex items-center gap-4">
-          <DateRangePicker
-            startDate={dateRange.startDate}
-            endDate={dateRange.endDate}
-            onRangeChange={(start, end) => setDateRange({ startDate: start, endDate: end })}
-          />
-          <ExportButton 
-            data={dailyStats} 
-            filename={`stats-${dateRange.startDate}-to-${dateRange.endDate}`}
-            disabled={!dailyStats}
-          />
+        <div>
+          <h1 className="text-3xl font-black text-foreground font-mono uppercase tracking-wider">
+            Thống kê hệ thống
+          </h1>
+          <p className="text-muted-foreground font-mono text-sm">
+            Phân tích và số liệu hoạt động nền tảng
+          </p>
         </div>
       </div>
 
       {/* Overview Cards */}
       <DashboardStats />
 
-      {/* Daily Chart */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold tracking-wide flex items-center gap-2">
-          <span className="w-1 h-6 bg-primary rounded-full" />
-          ACTIVITY TRENDS
-        </h2>
-        
-        {isLoading ? (
-          <div className="h-[400px] w-full bg-card/30 backdrop-blur-sm border border-border rounded-2xl animate-pulse flex items-center justify-center">
-            <div className="text-muted-foreground font-mono">Loading chart data...</div>
-          </div>
-        ) : dailyStats ? (
-          <DailyStatsChart data={dailyStats} />
-        ) : (
-          <div className="h-[400px] w-full bg-card/30 backdrop-blur-sm border border-border rounded-2xl flex items-center justify-center">
-            <div className="text-muted-foreground font-mono">No data available for selected range</div>
-          </div>
-        )}
+      {/* Date Range & Export */}
+      <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 bg-card/30 backdrop-blur-sm border border-border/50 rounded-2xl p-6">
+        <div className="flex-1">
+          <DateRangePicker
+            startDate={dateRange.startDate}
+            endDate={dateRange.endDate}
+            onRangeChange={(start, end) => setDateRange({ startDate: start, endDate: end })}
+          />
+        </div>
+        <ExportButton 
+          onExportCSV={handleExportCSV}
+          onExportJSON={handleExportJSON}
+          disabled={!dailyStats}
+        />
       </div>
+
+      {/* Daily Chart */}
+      {isLoading && (
+        <div className="bg-card/30 backdrop-blur-sm border border-border/50 rounded-2xl p-6 h-96 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-muted-foreground font-mono text-sm">Đang tải dữ liệu biểu đồ...</p>
+          </div>
+        </div>
+      )}
+
+      {error && (
+        <div className="bg-red-500/10 backdrop-blur-sm border border-red-500/20 rounded-2xl p-6">
+          <p className="text-red-400 font-mono text-sm">
+            Không thể tải thống kê. Vui lòng thử lại sau.
+          </p>
+        </div>
+      )}
+
+      {dailyStats && !isLoading && <DailyStatsChart data={dailyStats} />}
     </div>
   );
 };

@@ -1,73 +1,87 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Download, FileJson, FileSpreadsheet } from 'lucide-react';
-import { exportToCSV, exportToJSON } from '@/lib/admin/statsUtils';
 import { cn } from '@/lib/utils';
 
 interface ExportButtonProps {
-  data: any;
-  filename?: string;
+  onExportCSV: () => void;
+  onExportJSON: () => void;
   disabled?: boolean;
 }
 
-export const ExportButton = ({ data, filename = 'stats-export', disabled }: ExportButtonProps) => {
+export const ExportButton = ({ onExportCSV, onExportJSON, disabled }: ExportButtonProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const handleExport = (type: 'csv' | 'json') => {
-    if (type === 'csv') {
-      if (data.newUsers) {
-        const dates = Object.keys(data.newUsers).sort();
-        const csvData = dates.map(date => ({
-          date,
-          newUsers: data.newUsers[date],
-          newGameSessions: data.newGameSessions[date],
-          totalPlayTime: data.totalPlayTime[date]
-        }));
-        exportToCSV(csvData, filename);
-      } else {
-         exportToCSV(Array.isArray(data) ? data : [data], filename);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
       }
-    } else {
-      exportToJSON(data, filename);
-    }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleExport = (callback: () => void) => {
+    callback();
     setIsOpen(false);
   };
 
   return (
-    <div className="relative">
+    <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         disabled={disabled}
         className={cn(
-          "flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-mono text-sm font-bold",
-          "bg-purple-500/20 text-purple-400 border border-purple-500/50",
-          "hover:bg-purple-500/30 hover:shadow-[0_0_15px_rgba(168,85,247,0.3)]",
-          disabled && "opacity-50 cursor-not-allowed"
+          'flex items-center gap-2 px-4 py-2.5 rounded-lg font-mono text-sm',
+          'bg-purple-500/20 border border-purple-500/40 text-purple-300',
+          'hover:bg-purple-500/30 hover:border-purple-500/60',
+          'hover:shadow-[0_0_20px_rgba(168,85,247,0.4)]',
+          'transition-all duration-200',
+          'disabled:opacity-50 disabled:cursor-not-allowed'
         )}
       >
         <Download className="w-4 h-4" />
-        EXPORT
+        Xuất dữ liệu
       </button>
 
+      {/* Dropdown Menu */}
       {isOpen && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 mt-2 w-32 bg-card border border-border rounded-xl shadow-xl z-20 overflow-hidden">
-            <button
-              onClick={() => handleExport('csv')}
-              className="flex items-center gap-2 w-full px-4 py-2 text-sm hover:bg-white/5 text-left transition-colors"
-            >
-              <FileSpreadsheet className="w-4 h-4 text-green-400" />
-              CSV
-            </button>
-            <button
-              onClick={() => handleExport('json')}
-              className="flex items-center gap-2 w-full px-4 py-2 text-sm hover:bg-white/5 text-left transition-colors"
-            >
-              <FileJson className="w-4 h-4 text-yellow-400" />
-              JSON
-            </button>
-          </div>
-        </>
+        <div
+          className={cn(
+            'absolute right-0 mt-2 w-48 py-2 rounded-lg',
+            'bg-black/90 backdrop-blur-xl border border-border/50',
+            'shadow-[0_0_30px_rgba(0,0,0,0.5)]',
+            'z-50'
+          )}
+        >
+          <button
+            onClick={() => handleExport(onExportCSV)}
+            className={cn(
+              'w-full flex items-center gap-3 px-4 py-2.5',
+              'text-left font-mono text-sm text-foreground',
+              'hover:bg-green-500/20 hover:text-green-300',
+              'transition-colors duration-150'
+            )}
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            Xuất file CSV
+          </button>
+
+          <button
+            onClick={() => handleExport(onExportJSON)}
+            className={cn(
+              'w-full flex items-center gap-3 px-4 py-2.5',
+              'text-left font-mono text-sm text-foreground',
+              'hover:bg-cyan-500/20 hover:text-cyan-300',
+              'transition-colors duration-150'
+            )}
+          >
+            <FileJson className="w-4 h-4" />
+            Xuất file JSON
+          </button>
+        </div>
       )}
     </div>
   );
