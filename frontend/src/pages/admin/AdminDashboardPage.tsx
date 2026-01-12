@@ -84,7 +84,7 @@ export const AdminDashboardPage = () => {
           </div>
           <div>
             <h1 className="text-3xl font-black text-foreground font-mono uppercase tracking-wider">
-              {greeting}, Admin! 👋
+              {greeting}, Admin!
             </h1>
             <p className="text-muted-foreground font-mono text-sm">
               Tổng quan hệ thống ngày {new Date().toLocaleDateString('vi-VN')}

@@ -14,7 +14,7 @@ export const AdminGamesPage = () => {
   const [filters, setFilters] = useState<GameFiltersType>({
     search: '',
     is_active: undefined,
-    sort: '-created_at',
+    sort: 'id',
   });
 
   const debouncedSearch = useDebounce(filters.search || '', 500);
