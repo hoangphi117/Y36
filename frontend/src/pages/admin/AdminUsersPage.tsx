@@ -1,0 +1,66 @@
+import { useState } from 'react';
+import { useUsers, useUpdateUserStatus, useDeleteUser } from '@/hooks/admin/useUsers';
+import { UserFilters } from '@/components/admin/users/UserFilters';
+import { UserTable } from '@/components/admin/users/UserTable';
+import { Pagination } from '@/components/admin/users/Pagination';
+import { useDebounce } from '@/hooks/useDebounce';
+
+export const AdminUsersPage = () => {
+  const [filters, setFilters] = useState({
+    page: 1,
+    limit: 10,
+    search: '',
+    role: '',
+    status: '',
+    sort: '-created_at'
+  });
+
+  const debouncedSearch = useDebounce(filters.search, 500);
+  
+  const { data, isLoading } = useUsers({
+    ...filters,
+    search: debouncedSearch
+  });
+
+  const updateStatusMutation = useUpdateUserStatus();
+  const deleteMutation = useDeleteUser();
+
+  const handleFilterChange = (key: string, value: any) => {
+    setFilters(prev => ({ ...prev, [key]: value, page: 1 }));
+  };
+
+  const handlePageChange = (page: number) => {
+    setFilters(prev => ({ ...prev, page }));
+  };
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div>
+        <h1 className="text-3xl font-black text-primary font-mono mb-2">
+          USER_MANAGEMENT
+        </h1>
+        <p className="text-muted-foreground font-mono text-sm">
+          Quản lý tài khoản người dùng và phân quyền
+        </p>
+      </div>
+
+      <UserFilters filters={filters} onChange={handleFilterChange} />
+
+      <UserTable
+        users={data?.users || []}
+        isLoading={isLoading}
+        onUpdateStatus={(id, status) => updateStatusMutation.mutate({ userId: id, status })}
+        onDelete={(id) => deleteMutation.mutate(id)}
+        isProcessing={updateStatusMutation.isPending || deleteMutation.isPending}
+      />
+
+      {data?.paginate && (
+        <Pagination
+          page={data.paginate.page}
+          totalPages={data.paginate.totalPages}
+          onPageChange={handlePageChange}
+        />
+      )}
+    </div>
+  );
+};

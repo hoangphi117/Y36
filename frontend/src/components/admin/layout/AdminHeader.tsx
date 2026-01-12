@@ -1,11 +1,11 @@
 import { Moon, Sun, Menu } from 'lucide-react';
-import { useTheme } from '@/components/theme-provider';
+import { useTheme as useNextTheme } from 'next-themes';
 import { RoundButton } from '@/components/ui/round-button';
 import { useGameSound } from '@/hooks/useGameSound';
 import { useEffect, useState } from 'react';
 
 export const AdminHeader = () => {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme } = useNextTheme();
   const { playSound } = useGameSound(true);
   const [user, setUser] = useState<any>(null);
 

@@ -13,6 +13,7 @@ import RegisterPage from "@/pages/auth/RegisterPage";
 import { AdminGuard } from "@/components/admin/auth/AdminGuard";
 import { AdminLayout } from "@/components/admin/layout/AdminLayout";
 import { AdminDashboardPage } from "@/pages/admin/AdminDashboardPage";
+import { AdminUsersPage } from "@/pages/admin/AdminUsersPage";
 
 const router = createBrowserRouter([
   {
@@ -42,7 +43,7 @@ const router = createBrowserRouter([
     element: <RegisterPage />,
   },
 
-  // ===== ADMIN ROUTES (MỚI THÊM) =====
+  // ===== ADMIN ROUTES =====
   {
     path: "/admin",
     element: <AdminGuard />,
@@ -52,8 +53,8 @@ const router = createBrowserRouter([
         element: <AdminLayout />,
         children: [
           { index: true, element: <AdminDashboardPage /> },
+          { path: "users", element: <AdminUsersPage /> },
           // TODO: Thêm routes khác
-          // { path: "users", element: <AdminUsersPage /> },
           // { path: "games", element: <AdminGamesPage /> },
           // { path: "stats", element: <AdminStatsPage /> },
         ],
