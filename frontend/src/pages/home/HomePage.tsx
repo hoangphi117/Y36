@@ -27,6 +27,14 @@ const MY_GAMES = [
     variant: "danger" as const,
     url: "/snake",
   },
+  {
+    id: 4,
+    title: "Ghép hàng 3",
+    image:
+      "https://play-lh.googleusercontent.com/xx5tqp1jQ2NhaRRoa4vpyI4SbdQn2TcSFRju5VBdi2GO38SI-FqwKKuUg0qtetnNnkdU",
+    variant: "primary" as const,
+    url: "/match-3",
+  },
 ];
 
 export default function HomePage() {
