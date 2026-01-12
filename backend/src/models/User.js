@@ -41,6 +41,9 @@ class User {
   static async deleteUser(id) {
     return db('users').where({ id }).del();
   }
+  static async createUser(userData) {
+    return db('users').insert(userData).returning('*');
+  }
 }
 
 module.exports = User;
