@@ -3,13 +3,31 @@ import { Toaster } from 'react-hot-toast';
 import { useGames, useUpdateGame } from '@/hooks/admin/useGames';
 import { GameGrid } from '@/components/admin/games/GameGrid';
 import { GameConfigModal } from '@/components/admin/games/GameConfigModal';
-import type { Game } from '@/services/admin/gameService';
+import { GameFilters } from '@/components/admin/games/GameFilters';
+import { useDebounce } from '@/hooks/useDebounce';
+import type { Game, GameFilters as GameFiltersType } from '@/services/admin/gameService';
 
 export const AdminGamesPage = () => {
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
+  const [filters, setFilters] = useState<GameFiltersType>({
+    search: '',
+    is_active: undefined,
+    sort: '-created_at',
+  });
 
-  const { data, isLoading, isError, error } = useGames();
+  const debouncedSearch = useDebounce(filters.search || '', 500);
+
+  const queryFilters = {
+    ...filters,
+    search: debouncedSearch || undefined,
+  };
+
+  const { data, isLoading, isError, error } = useGames(queryFilters);
   const updateMutation = useUpdateGame();
+
+  const handleFilterChange = (key: string, value: any) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
 
   const handleToggle = (id: number, isActive: boolean) => {
     updateMutation.mutate({ id, payload: { is_active: isActive } });
@@ -46,15 +64,29 @@ export const AdminGamesPage = () => {
       <Toaster position="top-right" />
 
       <div className="space-y-6 animate-in fade-in duration-500">
-        <div>
-          <h1 className="text-3xl font-black text-primary font-mono mb-2">
-            GAME_MANAGEMENT
-          </h1>
-          <p className="text-muted-foreground font-mono text-sm">
-            Quản lý cấu hình và trạng thái trò chơi
-          </p>
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-black text-primary font-mono mb-2">
+              GAME_MANAGEMENT
+            </h1>
+            <p className="text-muted-foreground font-mono text-sm">
+              Quản lý cấu hình và trạng thái trò chơi
+            </p>
+          </div>
+          {data?.games && (
+            <div className="text-right">
+              <p className="text-sm text-muted-foreground font-mono">
+                Tổng: <span className="text-primary font-bold">{data.games.length}</span> games
+              </p>
+            </div>
+          )}
         </div>
 
+        {/* Filters */}
+        <GameFilters filters={filters} onChange={handleFilterChange} />
+
+        {/* Grid */}
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
