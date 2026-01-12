@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { useUsers, useUpdateUserStatus, useDeleteUser } from '@/hooks/admin/useUsers';
 import { UserFilters } from '@/components/admin/users/UserFilters';
@@ -19,21 +19,55 @@ export const AdminUsersPage = () => {
 
   const debouncedSearch = useDebounce(filters.search || '', 500);
   
-  const { data, isLoading } = useUsers({
+  // Chỉ truyền search nếu có giá trị
+  const queryFilters = {
     ...filters,
-    search: debouncedSearch
-  });
+    search: debouncedSearch || undefined,
+  };
+
+  console.log('🔍 AdminUsersPage - queryFilters:', queryFilters); // ← DEBUG LOG
+
+  const { data, isLoading, error, isError } = useUsers(queryFilters);
+
+  useEffect(() => {
+    console.log('📊 Data state:', { data, isLoading, error, isError }); // ← DEBUG LOG
+  }, [data, isLoading, error, isError]);
 
   const updateStatusMutation = useUpdateUserStatus();
   const deleteMutation = useDeleteUser();
 
   const handleFilterChange = (key: string, value: any) => {
+    console.log('🔄 Filter changed:', key, value); // ← DEBUG LOG
     setFilters(prev => ({ ...prev, [key]: value, page: 1 }));
   };
 
   const handlePageChange = (page: number) => {
+    console.log('📄 Page changed to:', page); // ← DEBUG LOG
     setFilters(prev => ({ ...prev, page }));
   };
+
+  // Error state
+  if (isError) {
+    return (
+      <>
+        <Toaster position="top-right" />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-6 max-w-md">
+            <h3 className="text-lg font-bold text-destructive mb-2">Error Loading Users</h3>
+            <p className="text-sm text-muted-foreground">
+              {error instanceof Error ? error.message : 'Failed to load users'}
+            </p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-lg"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -50,6 +84,13 @@ export const AdminUsersPage = () => {
         </div>
 
         <UserFilters filters={filters} onChange={handleFilterChange} />
+
+        {/* Debug info */}
+        <div className="bg-muted/50 p-4 rounded-lg text-xs font-mono">
+          <p>Loading: {isLoading ? 'Yes' : 'No'}</p>
+          <p>Users: {data?.users?.length || 0}</p>
+          <p>Total: {data?.paginate?.totalUsers || 0}</p>
+        </div>
 
         <UserTable
           users={data?.users || []}

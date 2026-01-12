@@ -32,8 +32,26 @@ export interface UsersResponse {
 // ===== SERVICE IMPLEMENTATION =====
 export const userService = {
   async getUsers(params: UserFilters): Promise<UsersResponse> {
-    const { data } = await apiClient.get('/admin/users', { params });
-    return data;
+    console.log('🌐 userService.getUsers called with params:', params); // ← DEBUG LOG
+
+    // LỌC BỎ undefined, empty string, null
+    const cleanParams = Object.entries(params).reduce((acc, [key, value]) => {
+      if (value !== undefined && value !== '' && value !== null) {
+        acc[key] = value;
+      }
+      return acc;
+    }, {} as Record<string, any>);
+
+    console.log('🧹 Cleaned params:', cleanParams);
+
+    try {
+      const { data } = await apiClient.get('/admin/users', { params: cleanParams });
+      console.log('✅ API Success:', data); // ← DEBUG LOG
+      return data;
+    } catch (error) {
+      console.error('❌ API Error:', error); // ← DEBUG LOG
+      throw error;
+    }
   },
 
   async updateStatus(userId: string, status: 'active' | 'banned'): Promise<User> {
