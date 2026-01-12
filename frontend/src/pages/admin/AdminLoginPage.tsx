@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { useAdminLogin } from '@/hooks/admin/useAdminAuth';
 import { adminAuthService } from '@/services/admin/authService';
+import { useAdminTheme } from '@/hooks/admin/useAdminTheme';
 import { Eye, EyeOff, Lock, Mail, Shield } from 'lucide-react';
 import { useGameSound } from '@/hooks/useGameSound';
 
@@ -15,6 +16,20 @@ export const AdminLoginPage = () => {
   const navigate = useNavigate();
   const { playSound } = useGameSound(true);
   const loginMutation = useAdminLogin();
+  const { theme } = useAdminTheme();
+
+  // Force apply admin theme
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.remove('light', 'dark');
+    root.classList.add(`admin-${theme}`);
+    
+    return () => {
+      root.classList.remove('admin-light', 'admin-dark');
+      const customerTheme = localStorage.getItem('vite-ui-theme') || 'dark';
+      root.classList.add(customerTheme);
+    };
+  }, [theme]);
 
   // Redirect if already logged in
   useEffect(() => {

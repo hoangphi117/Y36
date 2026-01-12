@@ -201,3 +201,68 @@
   );
   background-size: calc(100% / 10) calc(100% / 10); /* Khớp với GRID_SIZE */
 }
+
+
+/* --- ADMIN LIGHT MODE (Data-Dense) --- */
+.admin-light {
+  --background: #F8FAFC;           /* Slate 50 */
+  --foreground: #1E293B;           /* Slate 800 */
+  
+  --card: rgba(255, 255, 255, 0.8);
+  --card-foreground: #1E293B;
+  
+  --popover: #FFFFFF;
+  --popover-foreground: #1E293B;
+  
+  --primary: #3B82F6;              /* Blue 500 */
+  --primary-foreground: #FFFFFF;
+  
+  --secondary: #60A5FA;            /* Blue 400 */
+  --secondary-foreground: #1E293B;
+  
+  --muted: #F1F5F9;                /* Slate 100 */
+  --muted-foreground: #64748B;     /* Slate 500 */
+  
+  --accent: #F97316;               /* Orange 500 */
+  --accent-side: #EA580C;          /* Orange 600 */
+  --accent-foreground: #FFFFFF;
+  
+  --destructive: #EF4444;          /* Red 500 */
+  --destructive-foreground: #FFFFFF;
+  
+  --border: #E2E8F0;               /* Slate 200 */
+  --input: #E2E8F0;
+  --ring: #3B82F6;
+}
+
+/* --- ADMIN DARK MODE (Cyberpunk Neon) --- */
+.admin-dark {
+  --background: #050510;           /* Deep Void */
+  --foreground: #E0E0FF;           /* Light Purple Tint */
+  
+  --card: rgba(13, 13, 13, 0.6);   /* Glassmorphism */
+  --card-foreground: #E0E0FF;
+  
+  --popover: #0D0D0D;
+  --popover-foreground: #E0E0FF;
+  
+  --primary: #00FFFF;              /* Cyan Neon */
+  --primary-foreground: #000000;
+  
+  --secondary: #7B61FF;            /* Purple Neon */
+  --secondary-foreground: #FFFFFF;
+  
+  --muted: #1A1A2E;
+  --muted-foreground: #A0A0B0;
+  
+  --accent: #FF00FF;               /* Magenta Neon */
+  --accent-side: #CC00CC;
+  --accent-foreground: #FFFFFF;
+  
+  --destructive: #FF0055;          /* Neon Red */
+  --destructive-foreground: #FFFFFF;
+  
+  --border: #333344;               /* Purple-ish Gray */
+  --input: #1A1A2E;
+  --ring: #00FFFF;
+}

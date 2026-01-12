@@ -1,11 +1,11 @@
 import { Moon, Sun, Menu } from 'lucide-react';
-import { useTheme as useNextTheme } from 'next-themes';
 import { RoundButton } from '@/components/ui/round-button';
 import { useGameSound } from '@/hooks/useGameSound';
 import { useEffect, useState } from 'react';
+import { useAdminTheme } from '@/hooks/admin/useAdminTheme';
 
 export const AdminHeader = () => {
-  const { theme, setTheme } = useNextTheme();
+  const { theme, toggleTheme } = useAdminTheme();
   const { playSound } = useGameSound(true);
   const [user, setUser] = useState<any>(null);
 
@@ -16,9 +16,9 @@ export const AdminHeader = () => {
     }
   }, []);
 
-  const toggleTheme = () => {
+  const handleToggleTheme = () => {
     playSound('button1');
-    setTheme(theme === 'dark' ? 'light' : 'dark');
+    toggleTheme();
   };
 
   return (
@@ -42,7 +42,7 @@ export const AdminHeader = () => {
           <RoundButton
             size="small"
             variant="neutral"
-            onClick={toggleTheme}
+            onClick={handleToggleTheme}
             className="gap-2"
           >
             {theme === 'dark' ? (
