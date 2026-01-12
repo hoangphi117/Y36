@@ -16,6 +16,7 @@ import { AdminDashboardPage } from "@/pages/admin/AdminDashboardPage";
 import { AdminUsersPage } from "@/pages/admin/AdminUsersPage";
 import { AdminGamesPage } from "@/pages/admin/AdminGamesPage";
 import { AdminLoginPage } from "@/pages/admin/AdminLoginPage";
+import StatsPage from "@/pages/admin/StatsPage";
 
 const router = createBrowserRouter([
   {
@@ -61,8 +62,7 @@ const router = createBrowserRouter([
           { index: true, element: <AdminDashboardPage /> },
           { path: "users", element: <AdminUsersPage /> },
           { path: "games", element: <AdminGamesPage /> },
-          // TODO: Thêm routes khác
-          // { path: "stats", element: <AdminStatsPage /> },
+          { path: "stats", element: <StatsPage /> },
         ],
       },
     ],
