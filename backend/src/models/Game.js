@@ -32,6 +32,10 @@ class Game {
   static async update(id, data) {
     return db('games').where({ id }).update(data).returning('*');
   }
+
+  static async findByCode(code) {
+    return db('games').where({ code,is_active: true }).first(); 
+  }
 }
 
 module.exports = Game;
