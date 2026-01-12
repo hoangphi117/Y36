@@ -54,19 +54,16 @@ export const AdminGamesPage = () => {
     return (
       <>
         <Toaster 
-          position="top-right"
-          toastOptions={{
-            duration: 3000,
-            style: {
-              background: 'hsl(var(--card))',
-              color: 'hsl(var(--foreground))',
-              border: '1px solid hsl(var(--border))',
-              fontFamily: 'monospace',
-            },
-          }}
+          position="top-center"
           containerStyle={{
-            top: 80,
+            top: 20,
             zIndex: 9999,
+          }}
+          toastOptions={{
+            style: {
+              background: 'transparent',
+              boxShadow: 'none',
+            },
           }}
         />
         <div className="flex items-center justify-center min-h-[60vh]">
@@ -112,19 +109,16 @@ export const AdminGamesPage = () => {
   return (
     <>
       <Toaster 
-        position="top-right"
-        toastOptions={{
-          duration: 3000,
-          style: {
-            background: 'hsl(var(--card))',
-            color: 'hsl(var(--foreground))',
-            border: '1px solid hsl(var(--border))',
-            fontFamily: 'monospace',
-          },
-        }}
+        position="top-center"
         containerStyle={{
-          top: 80,
+          top: 20,
           zIndex: 9999,
+        }}
+        toastOptions={{
+          style: {
+            background: 'transparent',
+            boxShadow: 'none',
+          },
         }}
       />
 

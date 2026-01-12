@@ -1,9 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { gameService } from '@/services/admin/gameService';
 import type { GameFilters, UpdateGamePayload, Game } from '@/services/admin/gameService';
-import toast from 'react-hot-toast';
-import { CheckCircle, XCircle, ToggleLeft, ToggleRight } from 'lucide-react';
-import { createElement } from 'react';
+import { showToast } from '@/components/admin/ui/Toast';
 
 export const useGames = (filters: GameFilters = {}) => {
   return useQuery({
@@ -50,35 +48,12 @@ export const useUpdateGame = () => {
     onSuccess: (_, variables) => {
       // Show toast for BOTH config updates AND toggle actions
       if (variables.payload.default_config) {
-        toast.success('Cập nhật cấu hình thành công', {
-          icon: createElement(CheckCircle, { className: "w-5 h-5 text-green-500" }),
-          style: {
-            background: 'hsl(var(--card))',
-            color: 'hsl(var(--foreground))',
-            border: '1px solid hsl(var(--border))',
-            fontFamily: 'monospace',
-          },
-          duration: 3000,
-        });
+        showToast.success('Cập nhật cấu hình thành công');
       } else if (variables.payload.is_active !== undefined) {
         // Toggle toast with dynamic icon
         const isActive = variables.payload.is_active;
         const message = isActive ? 'Đã bật trò chơi' : 'Đã tắt trò chơi';
-        const icon = createElement(
-          isActive ? ToggleRight : ToggleLeft,
-          { className: `w-5 h-5 ${isActive ? 'text-green-500' : 'text-gray-500'}` }
-        );
-
-        toast.success(message, {
-          icon,
-          style: {
-            background: 'hsl(var(--card))',
-            color: 'hsl(var(--foreground))',
-            border: '1px solid hsl(var(--border))',
-            fontFamily: 'monospace',
-          },
-          duration: 2000,
-        });
+        showToast.success(message, 2000);
       }
       
       // Invalidate to sync with server (but optimistic update already shown)
@@ -94,16 +69,7 @@ export const useUpdateGame = () => {
         });
       }
 
-      toast.error(error.response?.data?.message || 'Không thể cập nhật trò chơi', {
-        icon: createElement(XCircle, { className: "w-5 h-5 text-red-500" }),
-        style: {
-          background: 'hsl(var(--card))',
-          color: 'hsl(var(--foreground))',
-          border: '1px solid hsl(var(--destructive) / 0.5)',
-          fontFamily: 'monospace',
-        },
-        duration: 4000,
-      });
+      showToast.error(error.response?.data?.message || 'Không thể cập nhật trò chơi');
     },
   });
 };

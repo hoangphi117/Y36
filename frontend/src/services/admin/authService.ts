@@ -24,7 +24,7 @@ export const adminAuthService = {
     
     // Kiểm tra role phải là admin
     if (data.user.role !== 'admin') {
-      throw new Error('Access denied. Admin privileges required.');
+      throw new Error('Truy cập bị từ chối. Yêu cầu quyền quản trị viên.');
     }
     
     return data;

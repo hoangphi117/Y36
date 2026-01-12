@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { TrendingUp } from 'lucide-react';
+import { Toaster } from 'react-hot-toast';
 import { DashboardStats } from '@/components/admin/stats/DashboardStats';
 import { DailyStatsChart } from '@/components/admin/stats/DailyStatsChart';
 import { DateRangePicker } from '@/components/admin/stats/DateRangePicker';
@@ -42,8 +43,22 @@ const StatsPage = () => {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      {/* Header */}
+    <>
+      <Toaster 
+        position="top-center"
+        containerStyle={{
+          top: 20,
+          zIndex: 9999,
+        }}
+        toastOptions={{
+          style: {
+            background: 'transparent',
+            boxShadow: 'none',
+          },
+        }}
+      />
+      
+      <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.3)]">
           <TrendingUp className="w-6 h-6 text-purple-400" />
@@ -96,7 +111,8 @@ const StatsPage = () => {
       )}
 
       {dailyStats && !isLoading && <DailyStatsChart data={dailyStats} />}
-    </div>
+      </div>
+    </>
   );
 };
 
