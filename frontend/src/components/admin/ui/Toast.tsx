@@ -1,5 +1,6 @@
 import { CheckCircle, XCircle, AlertCircle, Info, X } from 'lucide-react';
-import { toast as hotToast, Toast as HotToast } from 'react-hot-toast';
+import { toast as hotToast } from 'react-hot-toast';
+import type { Toast as HotToast } from 'react-hot-toast';
 import { motion } from 'framer-motion';
 
 interface ToastProps {
