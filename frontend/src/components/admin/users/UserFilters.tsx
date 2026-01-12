@@ -1,4 +1,6 @@
 import { Search } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 interface UserFiltersProps {
   filters: any;
@@ -7,37 +9,65 @@ interface UserFiltersProps {
 
 export const UserFilters = ({ filters, onChange }: UserFiltersProps) => {
   return (
-    <div className="flex flex-col sm:flex-row gap-4 mb-6">
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="flex flex-col sm:flex-row gap-4 mb-6"
+    >
+      {/* Search Input */}
       <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cyan-400" />
         <input
           type="text"
-          placeholder="Search by username or email..."
+          placeholder="Tìm kiếm theo tên hoặc email..."
           value={filters.search || ''}
           onChange={(e) => onChange('search', e.target.value)}
-          className="w-full pl-10 pr-4 py-2 bg-card border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
+          className={cn(
+            'w-full pl-10 pr-4 py-2.5 rounded-lg font-mono text-sm',
+            'bg-black/40 backdrop-blur-sm border border-border/50',
+            'text-foreground placeholder:text-muted-foreground',
+            'focus:outline-none focus:border-cyan-500/60 focus:shadow-[0_0_15px_rgba(6,182,212,0.3)]',
+            'transition-all duration-200'
+          )}
         />
       </div>
       
+      {/* Role Filter */}
       <select
         value={filters.role || ''}
         onChange={(e) => onChange('role', e.target.value)}
-        className="px-4 py-2 bg-card border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
+        className={cn(
+          'px-4 py-2.5 rounded-lg font-mono text-sm',
+          'bg-black/40 backdrop-blur-sm border border-border/50',
+          'text-foreground',
+          'focus:outline-none focus:border-purple-500/60 focus:shadow-[0_0_15px_rgba(168,85,247,0.3)]',
+          'transition-all duration-200',
+          'cursor-pointer'
+        )}
       >
-        <option value="">All Roles</option>
-        <option value="admin">Admin</option>
-        <option value="customer">Customer</option>
+        <option value="">Tất cả vai trò</option>
+        <option value="admin">Quản trị viên</option>
+        <option value="customer">Người dùng</option>
       </select>
 
+      {/* Status Filter */}
       <select
         value={filters.status || ''}
         onChange={(e) => onChange('status', e.target.value)}
-        className="px-4 py-2 bg-card border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
+        className={cn(
+          'px-4 py-2.5 rounded-lg font-mono text-sm',
+          'bg-black/40 backdrop-blur-sm border border-border/50',
+          'text-foreground',
+          'focus:outline-none focus:border-green-500/60 focus:shadow-[0_0_15px_rgba(34,197,94,0.3)]',
+          'transition-all duration-200',
+          'cursor-pointer'
+        )}
       >
-        <option value="">All Status</option>
-        <option value="active">Active</option>
-        <option value="banned">Banned</option>
+        <option value="">Tất cả trạng thái</option>
+        <option value="active">Hoạt động</option>
+        <option value="banned">Bị khóa</option>
       </select>
-    </div>
+    </motion.div>
   );
 };

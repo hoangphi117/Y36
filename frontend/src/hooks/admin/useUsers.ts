@@ -22,12 +22,12 @@ export const useUpdateUserStatus = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       toast.success(
         variables.status === 'banned' 
-          ? '✅ User banned successfully' 
-          : '✅ User activated successfully'
+          ? '✅ Đã khóa tài khoản thành công' 
+          : '✅ Đã mở khóa tài khoản thành công'
       );
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || '❌ Failed to update user status');
+      toast.error(error.response?.data?.message || '❌ Không thể cập nhật trạng thái');
     },
   });
 };
@@ -39,10 +39,10 @@ export const useDeleteUser = () => {
     mutationFn: (userId: string) => userService.deleteUser(userId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      toast.success('✅ User deleted successfully');
+      toast.success('✅ Đã xóa người dùng thành công');
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || '❌ Failed to delete user');
+      toast.error(error.response?.data?.message || '❌ Không thể xóa người dùng');
     },
   });
 };
