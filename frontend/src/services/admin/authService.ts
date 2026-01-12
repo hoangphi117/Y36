@@ -1,5 +1,6 @@
 import apiClient from '@/lib/admin/apiClient';
 
+// Auth types definition
 export interface AdminLoginRequest {
   email: string;
   password: string;

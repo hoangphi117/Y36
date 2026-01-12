@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { adminAuthService, AdminLoginRequest } from '@/services/admin/authService';
+import { adminAuthService, type AdminLoginRequest } from '@/services/admin/authService';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
