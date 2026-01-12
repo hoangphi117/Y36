@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { userService } from '@/services/admin/userService';
 import type { UserFilters } from '@/services/admin/userService';
-import toast from 'react-hot-toast';
+import { showToast } from '@/components/admin/ui/Toast';
 
 export const useUsers = (filters: UserFilters) => {
   return useQuery({
@@ -20,14 +20,15 @@ export const useUpdateUserStatus = () => {
       userService.updateStatus(userId, status),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      toast.success(
-        variables.status === 'banned' 
-          ? '✅ User banned successfully' 
-          : '✅ User activated successfully'
-      );
+      
+      const message = variables.status === 'banned' 
+        ? 'Đã khóa tài khoản thành công' 
+        : 'Đã mở khóa tài khoản thành công';
+      
+      showToast.success(message);
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || '❌ Failed to update user status');
+      showToast.error(error.response?.data?.message || 'Không thể cập nhật trạng thái');
     },
   });
 };
@@ -39,10 +40,10 @@ export const useDeleteUser = () => {
     mutationFn: (userId: string) => userService.deleteUser(userId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      toast.success('✅ User deleted successfully');
+      showToast.success('Đã xóa người dùng thành công');
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || '❌ Failed to delete user');
+      showToast.error(error.response?.data?.message || 'Không thể xóa người dùng');
     },
   });
 };

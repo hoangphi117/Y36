@@ -203,66 +203,138 @@
 }
 
 
-/* --- ADMIN LIGHT MODE (Data-Dense) --- */
+/* --- ADMIN LIGHT MODE (Warm Professional) --- */
 .admin-light {
-  --background: #F8FAFC;           /* Slate 50 */
-  --foreground: #1E293B;           /* Slate 800 */
+  /* Base Colors - Soft Beige/Taupe palette */
+  --background: hsl(40, 15%, 96%);              /* #F7F6F4 - Soft warm ivory */
+  --foreground: hsl(215, 25%, 15%);             /* #1D2430 - Deep blue-gray */
   
-  --card: rgba(255, 255, 255, 0.8);
-  --card-foreground: #1E293B;
+  /* Surface/Card - Slightly darker than background for depth */
+  --card: hsl(40, 18%, 92%);                    /* #F0EDE7 - Warm pearl */
+  --card-foreground: hsl(215, 25%, 15%);
   
-  --popover: #FFFFFF;
-  --popover-foreground: #1E293B;
+  /* Popover - Clean white with warmth */
+  --popover: hsl(40, 30%, 98%);                 /* #FAF9F7 - Warm white */
+  --popover-foreground: hsl(215, 25%, 15%);
   
-  --primary: #3B82F6;              /* Blue 500 */
-  --primary-foreground: #FFFFFF;
+  /* Primary - Teal for professionalism */
+  --primary: hsl(175, 60%, 45%);                /* #2DB5A3 - Teal */
+  --primary-foreground: hsl(0, 0%, 100%);
   
-  --secondary: #60A5FA;            /* Blue 400 */
-  --secondary-foreground: #1E293B;
+  /* Secondary - Muted Teal */
+  --secondary: hsl(175, 40%, 70%);              /* #8FCFC4 - Light teal */
+  --secondary-foreground: hsl(215, 25%, 15%);
   
-  --muted: #F1F5F9;                /* Slate 100 */
-  --muted-foreground: #64748B;     /* Slate 500 */
+  /* Muted - For subtle backgrounds */
+  --muted: hsl(40, 12%, 88%);                   /* #E5E2DC - Warm gray */
+  --muted-foreground: hsl(215, 15%, 45%);       /* #5F6B7A - Medium gray */
   
-  --accent: #F97316;               /* Orange 500 */
-  --accent-side: #EA580C;          /* Orange 600 */
-  --accent-foreground: #FFFFFF;
+  /* Accent - Coral for CTAs */
+  --accent: hsl(12, 76%, 61%);                  /* #E9714D - Coral */
+  --accent-side: hsl(12, 76%, 55%);             /* #E55C36 - Darker coral */
+  --accent-foreground: hsl(0, 0%, 100%);
   
-  --destructive: #EF4444;          /* Red 500 */
-  --destructive-foreground: #FFFFFF;
+  /* Destructive - Red */
+  --destructive: hsl(0, 72%, 51%);              /* #DC2626 - Red */
+  --destructive-foreground: hsl(0, 0%, 100%);
   
-  --border: #E2E8F0;               /* Slate 200 */
-  --input: #E2E8F0;
-  --ring: #3B82F6;
+  /* Borders & Inputs */
+  --border: hsl(40, 12%, 80%);                  /* #D3CFC7 - Warm border */
+  --input: hsl(40, 18%, 92%);                   /* Same as card */
+  --ring: hsl(175, 60%, 45%);                   /* Primary teal */
+  
+  --radius: 0.75rem;
 }
 
-/* --- ADMIN DARK MODE (Cyberpunk Neon) --- */
+/* --- ADMIN DARK MODE (Cool Professional Slate) --- */
 .admin-dark {
-  --background: #050510;           /* Deep Void */
-  --foreground: #E0E0FF;           /* Light Purple Tint */
+  /* Base Colors - Deep blue-gray slate */
+  --background: hsl(220, 40%, 8%);              /* #0C1018 - Deep slate */
+  --foreground: hsl(210, 30%, 96%);             /* #F2F4F7 - Almost white */
   
-  --card: rgba(13, 13, 13, 0.6);   /* Glassmorphism */
-  --card-foreground: #E0E0FF;
+  /* Surface/Card - Elevated slate */
+  --card: hsl(220, 35%, 12%);                   /* #14181F - Lighter slate */
+  --card-foreground: hsl(210, 30%, 96%);
   
-  --popover: #0D0D0D;
-  --popover-foreground: #E0E0FF;
+  /* Popover - Solid dark surface */
+  --popover: hsl(220, 40%, 10%);                /* #0F131A - Dark popover */
+  --popover-foreground: hsl(210, 30%, 96%);
   
-  --primary: #00FFFF;              /* Cyan Neon */
-  --primary-foreground: #000000;
+  /* Primary - Electric Blue */
+  --primary: hsl(200, 95%, 50%);                /* #0EA5E9 - Bright blue */
+  --primary-foreground: hsl(220, 40%, 8%);      /* Dark text on bright bg */
   
-  --secondary: #7B61FF;            /* Purple Neon */
-  --secondary-foreground: #FFFFFF;
+  /* Secondary - Muted Blue */
+  --secondary: hsl(200, 60%, 30%);              /* #1E5A7A - Muted blue */
+  --secondary-foreground: hsl(210, 30%, 96%);
   
-  --muted: #1A1A2E;
-  --muted-foreground: #A0A0B0;
+  /* Muted - Subtle slate */
+  --muted: hsl(220, 30%, 16%);                  /* #1D232E - Subtle slate */
+  --muted-foreground: hsl(215, 15%, 65%);       /* #939BA8 - Medium slate */
   
-  --accent: #FF00FF;               /* Magenta Neon */
-  --accent-side: #CC00CC;
-  --accent-foreground: #FFFFFF;
+  /* Accent - Vibrant Purple */
+  --accent: hsl(270, 70%, 60%);                 /* #A855F7 - Purple */
+  --accent-side: hsl(270, 70%, 50%);            /* #8B33D9 - Darker purple */
+  --accent-foreground: hsl(0, 0%, 100%);
   
-  --destructive: #FF0055;          /* Neon Red */
-  --destructive-foreground: #FFFFFF;
+  /* Destructive - Bright Red */
+  --destructive: hsl(0, 85%, 60%);              /* #EF4444 - Bright red */
+  --destructive-foreground: hsl(0, 0%, 100%);
   
-  --border: #333344;               /* Purple-ish Gray */
-  --input: #1A1A2E;
-  --ring: #00FFFF;
+  /* Borders & Inputs */
+  --border: hsl(220, 25%, 22%);                 /* #2A3140 - Slate border */
+  --input: hsl(220, 35%, 12%);                  /* Same as card */
+  --ring: hsl(200, 95%, 50%);                   /* Primary blue */
+  
+  --radius: 0.75rem;
+}
+
+/* ========================================
+   ADMIN UTILITIES (Support both themes)
+   ======================================== */
+
+@layer components {
+  /* Admin Input/Select Style */
+  .admin-input {
+    @apply w-full px-4 py-2.5 rounded-lg font-mono text-sm;
+    @apply bg-input border border-border;
+    @apply text-foreground placeholder:text-muted-foreground;
+    @apply focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20;
+    @apply transition-all duration-200;
+  }
+
+  /* Admin Card/Surface */
+  .admin-surface {
+    @apply bg-card backdrop-blur-xl border border-border rounded-xl;
+  }
+
+  /* Admin Glass Effect */
+  .admin-glass {
+    @apply bg-card/50 backdrop-blur-xl border border-border/50;
+  }
+
+  /* Primary Button */
+  .admin-btn-primary {
+    @apply px-4 py-2.5 rounded-xl font-mono font-bold;
+    @apply bg-primary text-primary-foreground;
+    @apply hover:opacity-90 transition-all;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary/50;
+  }
+
+  /* Secondary Button */
+  .admin-btn-secondary {
+    @apply px-4 py-2.5 rounded-xl font-mono;
+    @apply bg-muted text-muted-foreground border border-border;
+    @apply hover:bg-muted/80 transition-all;
+  }
+
+  /* Accent Text */
+  .admin-accent {
+    @apply text-accent;
+  }
+
+  /* Primary Text */
+  .admin-primary {
+    @apply text-primary;
+  }
 }

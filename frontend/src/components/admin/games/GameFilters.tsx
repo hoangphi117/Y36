@@ -1,6 +1,8 @@
 import { Search } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
+import { cn } from '@/lib/utils';
 
 interface GameFiltersProps {
   filters: any;
@@ -16,17 +18,21 @@ export const GameFilters = ({ filters, onChange }: GameFiltersProps) => {
   }, [debouncedSearch]);
 
   return (
-    <div className="bg-card/50 backdrop-blur-xl border border-border rounded-xl p-4">
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="admin-glass p-4"
+    >
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 admin-primary" />
           <input
             type="text"
             placeholder="Tìm theo tên, mã game..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 font-mono text-sm"
+            className="admin-input pl-10"
           />
         </div>
 
@@ -34,7 +40,7 @@ export const GameFilters = ({ filters, onChange }: GameFiltersProps) => {
         <select
           value={filters.is_active ?? ''}
           onChange={(e) => onChange('is_active', e.target.value === '' ? undefined : e.target.value === 'true')}
-          className="px-4 py-2 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 font-mono text-sm"
+          className="admin-input cursor-pointer"
         >
           <option value="">Tất cả trạng thái</option>
           <option value="true">Đang hoạt động</option>
@@ -45,7 +51,7 @@ export const GameFilters = ({ filters, onChange }: GameFiltersProps) => {
         <select
           value={filters.sort || '-created_at'}
           onChange={(e) => onChange('sort', e.target.value)}
-          className="px-4 py-2 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 font-mono text-sm"
+          className="admin-input cursor-pointer"
         >
           <option value="-created_at">Mới nhất</option>
           <option value="created_at">Cũ nhất</option>
@@ -56,18 +62,20 @@ export const GameFilters = ({ filters, onChange }: GameFiltersProps) => {
         </select>
 
         {/* Clear Filters */}
-        <button
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={() => {
             setSearchInput('');
             onChange('search', '');
             onChange('is_active', undefined);
             onChange('sort', '-created_at');
           }}
-          className="px-4 py-2 bg-muted hover:bg-muted/80 rounded-xl font-mono text-sm transition-colors"
+          className="admin-btn-secondary"
         >
           Xóa bộ lọc
-        </button>
+        </motion.button>
       </div>
-    </div>
+    </motion.div>
   );
 };
