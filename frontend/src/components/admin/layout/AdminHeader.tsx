@@ -1,68 +1,38 @@
-import { Moon, Sun, Menu } from 'lucide-react';
-import { RoundButton } from '@/components/ui/round-button';
-import { useGameSound } from '@/hooks/useGameSound';
-import { useEffect, useState } from 'react';
+import { Sun, Moon } from 'lucide-react';
 import { useAdminTheme } from '@/hooks/admin/useAdminTheme';
+import { motion } from 'framer-motion';
 
 export const AdminHeader = () => {
-  const { theme, toggleTheme } = useAdminTheme();
-  const { playSound } = useGameSound(true);
-  const [user, setUser] = useState<any>(null);
-
-  useEffect(() => {
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      setUser(JSON.parse(userStr));
-    }
-  }, []);
-
-  const handleToggleTheme = () => {
-    playSound('button1');
-    toggleTheme();
-  };
+  const { theme, setTheme } = useAdminTheme();
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-card/50 backdrop-blur-xl">
       <div className="flex items-center justify-between px-6 py-4">
-        {/* Mobile menu */}
-        <button className="lg:hidden p-2 hover:bg-primary/10 rounded-lg transition-colors">
-          <Menu className="w-6 h-6" />
-        </button>
-
-        {/* Breadcrumb / Title */}
-        <div className="hidden lg:block">
-          <h2 className="text-xl font-bold text-foreground font-mono">
-            Welcome, <span className="text-primary">{user?.name || 'Admin'}</span>
-          </h2>
+        <div>
+          <p className="text-sm text-muted-foreground font-mono">
+            {new Date().toLocaleDateString('vi-VN', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })}
+          </p>
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-4">
-          {/* Theme Toggle */}
-          <RoundButton
-            size="small"
-            variant="neutral"
-            onClick={handleToggleTheme}
-            className="gap-2"
-          >
-            {theme === 'dark' ? (
-              <Sun className="w-4 h-4" />
-            ) : (
-              <Moon className="w-4 h-4" />
-            )}
-          </RoundButton>
-
-          {/* User Avatar */}
-          <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-primary/10 border border-primary/20">
-            <div className="w-8 h-8 rounded-full bg-primary/30 flex items-center justify-center font-bold text-primary">
-              {user?.name?.charAt(0)?.toUpperCase() || 'A'}
-            </div>
-            <div className="hidden md:block">
-              <p className="text-sm font-bold text-foreground">{user?.name}</p>
-              <p className="text-xs text-muted-foreground font-mono">{user?.email}</p>
-            </div>
-          </div>
-        </div>
+        {/* Theme Toggle */}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+          className="p-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
+          title={theme === 'light' ? 'Chế độ tối' : 'Chế độ sáng'}
+        >
+          {theme === 'light' ? (
+            <Moon className="w-5 h-5 text-foreground" />
+          ) : (
+            <Sun className="w-5 h-5 text-foreground" />
+          )}
+        </motion.button>
       </div>
     </header>
   );

@@ -19,16 +19,33 @@ const LABELS = {
 export const UserStatusBadge = ({ status, type }: StatusBadgeProps) => {
   const styles = {
     role: {
-      admin: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40 shadow-[0_0_10px_rgba(6,182,212,0.2)]',
-      customer: 'bg-purple-500/20 text-purple-300 border-purple-500/40 shadow-[0_0_10px_rgba(168,85,247,0.2)]',
+      admin: cn(
+        'bg-primary/20 border-primary/40',
+        'text-primary',
+        'dark:text-primary'
+      ),
+      customer: cn(
+        'bg-accent/20 border-accent/40',
+        'text-accent',
+        'dark:bg-purple-500/20 dark:text-purple-300 dark:border-purple-500/40'
+      ),
     },
     status: {
-      active: 'bg-green-500/20 text-green-300 border-green-500/40 shadow-[0_0_10px_rgba(34,197,94,0.2)] animate-pulse',
-      banned: 'bg-red-500/20 text-red-300 border-red-500/40 shadow-[0_0_10px_rgba(239,68,68,0.2)]',
+      active: cn(
+        'bg-green-500/20 border-green-500/40 animate-pulse',
+        'text-green-700',
+        'dark:text-green-300'
+      ),
+      banned: cn(
+        'bg-red-500/20 border-red-500/40',
+        'text-red-700',
+        'dark:text-red-300'
+      ),
     },
   };
 
-  const variant = styles[type][status as keyof typeof styles[typeof type]] || 'bg-gray-500/20 text-gray-400 border-gray-500/40';
+  const variant = styles[type][status as keyof typeof styles[typeof type]] || 
+    'bg-muted/50 text-muted-foreground border-border';
   const label = LABELS[type][status as keyof typeof LABELS[typeof type]] || status;
 
   return (

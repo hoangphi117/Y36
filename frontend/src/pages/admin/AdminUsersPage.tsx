@@ -101,27 +101,27 @@ export const AdminUsersPage = () => {
           transition={{ delay: 0.1 }}
           className="grid grid-cols-1 sm:grid-cols-3 gap-4"
         >
-          <div className="bg-card/30 backdrop-blur-sm border border-border/50 rounded-xl p-4">
+          <div className="admin-glass p-4 rounded-xl">
             <p className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-1">
               Tổng người dùng
             </p>
-            <p className="text-2xl font-black text-cyan-400 font-mono">
+            <p className="text-2xl font-black admin-primary font-mono">
               {data?.paginate?.totalUsers || 0}
             </p>
           </div>
-          <div className="bg-card/30 backdrop-blur-sm border border-border/50 rounded-xl p-4">
+          <div className="admin-glass p-4 rounded-xl">
             <p className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-1">
               Đang hiển thị
             </p>
-            <p className="text-2xl font-black text-purple-400 font-mono">
+            <p className="text-2xl font-black admin-accent font-mono">
               {data?.users?.length || 0}
             </p>
           </div>
-          <div className="bg-card/30 backdrop-blur-sm border border-border/50 rounded-xl p-4">
+          <div className="admin-glass p-4 rounded-xl">
             <p className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-1">
               Trang hiện tại
             </p>
-            <p className="text-2xl font-black text-green-400 font-mono">
+            <p className="text-2xl font-black text-green-500 font-mono">
               {data?.paginate?.page || 1}/{data?.paginate?.totalPages || 1}
             </p>
           </div>

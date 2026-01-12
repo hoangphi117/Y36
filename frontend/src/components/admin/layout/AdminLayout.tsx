@@ -2,10 +2,11 @@ import { Outlet } from 'react-router-dom';
 import { AdminSidebar } from './AdminSidebar';
 import { AdminHeader } from './AdminHeader';
 import { useAdminTheme } from '@/hooks/admin/useAdminTheme';
-import { useEffect } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 
 export const AdminLayout = () => {
   const { theme } = useAdminTheme();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // Force apply admin theme on mount
   useEffect(() => {
@@ -27,11 +28,20 @@ export const AdminLayout = () => {
     };
   }, [theme]);
 
+  // Memoize padding class to prevent re-calculation
+  const mainPaddingClass = useMemo(
+    () => `transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'}`,
+    [sidebarCollapsed]
+  );
+
   return (
     <div className="min-h-screen bg-background">
-      <AdminSidebar />
+      <AdminSidebar 
+        collapsed={sidebarCollapsed} 
+        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
+      />
       
-      <div className="lg:pl-64">
+      <div className={mainPaddingClass}>
         <AdminHeader />
         
         <main className="p-6 lg:p-8">

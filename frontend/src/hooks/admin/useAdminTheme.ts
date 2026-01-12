@@ -1,39 +1,37 @@
-import { useEffect, useState } from 'react';
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 type AdminTheme = 'light' | 'dark';
 
-const ADMIN_THEME_KEY = 'admin-theme';
+interface AdminThemeState {
+  theme: AdminTheme;
+  setTheme: (theme: AdminTheme) => void;
+  toggleTheme: () => void;
+}
 
-export const useAdminTheme = () => {
-  const [theme, setTheme] = useState<AdminTheme>(() => {
-    const saved = localStorage.getItem(ADMIN_THEME_KEY);
-    return (saved as AdminTheme) || 'dark'; // Default: dark mode
-  });
-
-  useEffect(() => {
-    const root = document.documentElement;
-    
-    // XÓA tất cả theme classes
-    root.classList.remove('light', 'dark', 'admin-light', 'admin-dark');
-    
-    // THÊM admin theme class
-    root.classList.add(`admin-${theme}`);
-    
-    // Lưu vào localStorage
-    localStorage.setItem(ADMIN_THEME_KEY, theme);
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
-  };
-
-  const setThemeMode = (mode: AdminTheme) => {
-    setTheme(mode);
-  };
-
-  return {
-    theme,
-    toggleTheme,
-    setThemeMode,
-  };
-};
+export const useAdminTheme = create<AdminThemeState>()(
+  persist(
+    (set) => ({
+      theme: 'dark',
+      setTheme: (theme) => {
+        set({ theme });
+        // Update DOM immediately
+        const root = document.documentElement;
+        root.classList.remove('admin-light', 'admin-dark');
+        root.classList.add(`admin-${theme}`);
+      },
+      toggleTheme: () =>
+        set((state) => {
+          const newTheme = state.theme === 'light' ? 'dark' : 'light';
+          // Update DOM immediately
+          const root = document.documentElement;
+          root.classList.remove('admin-light', 'admin-dark');
+          root.classList.add(`admin-${newTheme}`);
+          return { theme: newTheme };
+        }),
+    }),
+    {
+      name: 'admin-theme-storage',
+    }
+  )
+);
