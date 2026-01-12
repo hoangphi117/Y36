@@ -1,9 +1,9 @@
-import { LucideIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
+import type { LucideProps } from 'lucide-react';
 
 interface StatCardProps {
-  icon: LucideIcon;
+  icon: React.ComponentType<LucideProps>;
   label: string;
   value: number | string;
   color: 'cyan' | 'purple' | 'magenta' | 'green';
