@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { Gamepad2 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -26,6 +26,11 @@ export const AdminGamesPage = () => {
 
   const { data, isLoading, isError, error } = useGames(queryFilters);
   const updateMutation = useUpdateGame();
+
+  // Memoize games to prevent unnecessary re-renders
+  const games = useMemo(() => {
+    return data?.games || [];
+  }, [data?.games]);
 
   const handleFilterChange = (key: string, value: any) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -124,7 +129,7 @@ export const AdminGamesPage = () => {
                 Tổng trò chơi
               </p>
               <p className="text-2xl font-black text-purple-400 font-mono">
-                {data?.games?.length || 0}
+                {games.length}
               </p>
             </div>
             <div className="bg-card/30 backdrop-blur-sm border border-border/50 rounded-xl p-4">
@@ -132,7 +137,7 @@ export const AdminGamesPage = () => {
                 Đang hoạt động
               </p>
               <p className="text-2xl font-black text-green-400 font-mono">
-                {data?.games?.filter(g => g.is_active).length || 0}
+                {games.filter(g => g.is_active).length}
               </p>
             </div>
             <div className="bg-card/30 backdrop-blur-sm border border-border/50 rounded-xl p-4">
@@ -140,7 +145,7 @@ export const AdminGamesPage = () => {
                 Tạm dừng
               </p>
               <p className="text-2xl font-black text-red-400 font-mono">
-                {data?.games?.filter(g => !g.is_active).length || 0}
+                {games.filter(g => !g.is_active).length}
               </p>
             </div>
           </div>
@@ -167,7 +172,7 @@ export const AdminGamesPage = () => {
             </div>
           ) : (
             <GameGrid
-              games={data?.games || []}
+              games={games}
               onToggle={handleToggle}
               onEdit={setSelectedGame}
               isUpdating={updateMutation.isPending}
