@@ -8,9 +8,10 @@ interface StatCardProps {
   value: number | string;
   color: 'cyan' | 'purple' | 'magenta' | 'green';
   className?: string;
+  formatter?: (val: number) => string;
 }
 
-export const StatCard = ({ icon: Icon, label, value, color, className }: StatCardProps) => {
+export const StatCard = ({ icon: Icon, label, value, color, className, formatter }: StatCardProps) => {
   const [displayValue, setDisplayValue] = useState(0);
 
   useEffect(() => {
@@ -66,7 +67,9 @@ export const StatCard = ({ icon: Icon, label, value, color, className }: StatCar
 
         {/* Value */}
         <h3 className="text-4xl font-black text-foreground mb-2 font-mono">
-          {typeof value === 'number' ? displayValue.toLocaleString() : value}
+          {typeof value === 'number' 
+            ? (formatter ? formatter(displayValue) : displayValue.toLocaleString()) 
+            : value}
         </h3>
 
         {/* Label */}
