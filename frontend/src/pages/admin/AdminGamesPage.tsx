@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { Gamepad2 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { useGames, useUpdateGame } from '@/hooks/admin/useGames';
 import { GameGrid } from '@/components/admin/games/GameGrid';
 import { GameConfigModal } from '@/components/admin/games/GameConfigModal';
@@ -67,11 +66,7 @@ export const AdminGamesPage = () => {
           }}
         />
         <div className="flex items-center justify-center min-h-[60vh]">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-red-500/10 border border-red-500/20 rounded-2xl p-8 max-w-md text-center"
-          >
+          <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-8 max-w-md text-center">
             <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
               <span className="text-4xl">⚠️</span>
             </div>
@@ -87,24 +82,11 @@ export const AdminGamesPage = () => {
             >
               Thử lại
             </button>
-          </motion.div>
+          </div>
         </div>
       </>
     );
   }
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 }
-  };
 
   return (
     <>
@@ -122,14 +104,9 @@ export const AdminGamesPage = () => {
         }}
       />
 
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="space-y-6"
-      >
+      <div className="space-y-6">
         {/* Header */}
-        <motion.div variants={itemVariants}>
+        <div>
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.3)] border border-purple-500/30">
               <Gamepad2 className="w-6 h-6 text-purple-400" />
@@ -143,10 +120,10 @@ export const AdminGamesPage = () => {
               </p>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Stats Summary */}
-        <motion.div variants={itemVariants}>
+        <div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-card/30 backdrop-blur-sm border border-border/50 rounded-xl p-4">
               <p className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-1">
@@ -173,23 +150,20 @@ export const AdminGamesPage = () => {
               </p>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Filters */}
-        <motion.div variants={itemVariants}>
+        <div>
           <GameFilters filters={filters} onChange={handleFilterChange} />
-        </motion.div>
+        </div>
 
         {/* Grid */}
-        <motion.div variants={itemVariants}>
+        <div>
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => (
-                <motion.div
+                <div
                   key={i}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: i * 0.1 }}
                   className="h-80 bg-card/30 rounded-2xl animate-pulse border border-border/50"
                 />
               ))}
@@ -202,8 +176,8 @@ export const AdminGamesPage = () => {
               isUpdating={updateMutation.isPending}
             />
           )}
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
 
       {selectedGame && (
         <GameConfigModal

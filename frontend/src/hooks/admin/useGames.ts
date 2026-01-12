@@ -5,7 +5,7 @@ import { showToast } from '@/components/admin/ui/Toast';
 
 export const useGames = (filters: GameFilters = {}) => {
   return useQuery({
-    queryKey: ['admin-games', filters],
+    queryKey: ['admin-games', JSON.stringify(filters)],
     queryFn: () => gameService.getGames(filters),
     retry: 1,
     staleTime: 5000,
@@ -21,27 +21,28 @@ export const useUpdateGame = () => {
     
     // Optimistic Update - Update UI immediately before API call
     onMutate: async ({ id, payload }) => {
-      // Cancel any outgoing refetches
+      // Cancel all admin-games queries (bất kể filters)
       await queryClient.cancelQueries({ queryKey: ['admin-games'] });
 
-      // Snapshot the previous value
+      // Snapshot previous values
       const previousGames = queryClient.getQueriesData({ queryKey: ['admin-games'] });
 
-      // Optimistically update all matching queries
+      // Update ALL matching queries
       queryClient.setQueriesData(
-        { queryKey: ['admin-games'] },
+        { queryKey: ['admin-games'] }, // Prefix matching
         (old: any) => {
           if (!old?.games) return old;
-          return {
+          
+          const updated = {
             ...old,
             games: old.games.map((game: Game) =>
               game.id === id ? { ...game, ...payload } : game
             ),
           };
+          return updated;
         }
       );
 
-      // Return context with previous data for rollback
       return { previousGames };
     },
 

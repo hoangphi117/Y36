@@ -176,52 +176,6 @@ export const AdminDashboardPage = () => {
           </div>
         </div>
       </motion.div>
-
-      {/* System Status */}
-      <motion.div variants={itemVariants}>
-        <div className="bg-card/30 backdrop-blur-xl border border-border/50 rounded-2xl p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <Activity className="w-5 h-5 text-green-400" />
-            <h2 className="text-xl font-black text-foreground font-mono uppercase tracking-wider">
-              Trạng thái hệ thống
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center justify-between p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
-                <span className="font-mono text-sm text-foreground">Database</span>
-              </div>
-              <span className="text-xs font-mono text-green-400 font-bold">ONLINE</span>
-            </div>
-
-            <div className="flex items-center justify-between p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
-                <span className="font-mono text-sm text-foreground">API Server</span>
-              </div>
-              <span className="text-xs font-mono text-green-400 font-bold">ONLINE</span>
-            </div>
-
-            <div className="flex items-center justify-between p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
-                <span className="font-mono text-sm text-foreground">Game Services</span>
-              </div>
-              <span className="text-xs font-mono text-green-400 font-bold">RUNNING</span>
-            </div>
-
-            <div className="flex items-center justify-between p-4 bg-cyan-500/10 border border-cyan-500/20 rounded-xl">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 bg-cyan-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
-                <span className="font-mono text-sm text-foreground">Cache System</span>
-              </div>
-              <span className="text-xs font-mono text-cyan-400 font-bold">ACTIVE</span>
-            </div>
-          </div>
-        </div>
-      </motion.div>
     </motion.div>
   );
 };
