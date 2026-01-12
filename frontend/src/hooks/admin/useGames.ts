@@ -21,10 +21,10 @@ export const useUpdateGame = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-games'] });
       queryClient.invalidateQueries({ queryKey: ['admin-dashboard-stats'] });
-      toast.success('✅ Game updated successfully');
+      toast.success('✅ Cập nhật trò chơi thành công');
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || '❌ Failed to update game');
+      toast.error(error.response?.data?.message || '❌ Không thể cập nhật trò chơi');
     },
   });
 };

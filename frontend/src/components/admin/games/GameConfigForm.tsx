@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import type { Game } from '@/services/admin/gameService';
 import { gameValidationSchemas, validateGameConfig } from '@/lib/admin/validation/gameSchemas';
+import { cn } from '@/lib/utils';
 
 interface GameConfigFormProps {
   game: Game;
@@ -32,68 +34,114 @@ export const GameConfigForm = ({ game, onSubmit, onCancel }: GameConfigFormProps
   };
 
   if (!schema) {
-    return <p>Unknown game type</p>;
+    return (
+      <div className="text-center py-8">
+        <p className="text-red-400 font-mono">Loại game không xác định</p>
+      </div>
+    );
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {Object.entries(schema).map(([field, rules]) => {
+      {Object.entries(schema).map(([field, rules], index) => {
         const value = config[field];
+        const hasError = !!errors[field];
 
         if ('type' in rules && rules.type === 'enum') {
           return (
-            <div key={field}>
-              <label className="block text-sm font-bold mb-2 font-mono">
-                {field.replace(/_/g, ' ').toUpperCase()}
+            <motion.div
+              key={field}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.05 }}
+            >
+              <label className="block text-sm font-bold mb-2 font-mono text-cyan-400 uppercase tracking-wider">
+                {field.replace(/_/g, ' ')}
               </label>
               <select
                 value={value}
                 onChange={(e) => handleChange(field, e.target.value)}
-                className="w-full px-4 py-2 bg-background border border-border rounded-xl font-mono text-sm"
+                className={cn(
+                  'w-full px-4 py-2.5 rounded-lg font-mono text-sm transition-all',
+                  'bg-black/40 backdrop-blur-sm border',
+                  hasError
+                    ? 'border-red-500/60 focus:border-red-500 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]'
+                    : 'border-border/50 focus:border-purple-500/60 focus:shadow-[0_0_15px_rgba(168,85,247,0.3)]',
+                  'focus:outline-none'
+                )}
               >
                 {'values' in rules && rules.values.map((opt) => (
                   <option key={opt} value={opt}>{opt}</option>
                 ))}
               </select>
-              {errors[field] && (
-                <p className="text-destructive text-xs mt-1 font-mono">⚠ {errors[field]}</p>
+              {hasError && (
+                <motion.p
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-red-400 text-xs mt-1 font-mono"
+                >
+                  ⚠ {errors[field]}
+                </motion.p>
               )}
-            </div>
+            </motion.div>
           );
         }
 
         if ('type' in rules && rules.type === 'color') {
           return (
-            <div key={field}>
-              <label className="block text-sm font-bold mb-2 font-mono">
-                {field.replace(/_/g, ' ').toUpperCase()}
+            <motion.div
+              key={field}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.05 }}
+            >
+              <label className="block text-sm font-bold mb-2 font-mono text-cyan-400 uppercase tracking-wider">
+                {field.replace(/_/g, ' ')}
               </label>
               <div className="flex gap-2">
                 <input
                   type="color"
                   value={value}
                   onChange={(e) => handleChange(field, e.target.value)}
-                  className="w-16 h-10 rounded-lg cursor-pointer"
+                  className="w-16 h-10 rounded-lg cursor-pointer border-2 border-border/50"
                 />
                 <input
                   type="text"
                   value={value}
                   onChange={(e) => handleChange(field, e.target.value)}
-                  className="flex-1 px-4 py-2 bg-background border border-border rounded-xl font-mono text-sm"
+                  className={cn(
+                    'flex-1 px-4 py-2.5 rounded-lg font-mono text-sm transition-all',
+                    'bg-black/40 backdrop-blur-sm border',
+                    hasError
+                      ? 'border-red-500/60 focus:border-red-500 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]'
+                      : 'border-border/50 focus:border-cyan-500/60 focus:shadow-[0_0_15px_rgba(6,182,212,0.3)]',
+                    'focus:outline-none'
+                  )}
                   placeholder="#FFFFFF"
                 />
               </div>
-              {errors[field] && (
-                <p className="text-destructive text-xs mt-1 font-mono">⚠ {errors[field]}</p>
+              {hasError && (
+                <motion.p
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-red-400 text-xs mt-1 font-mono"
+                >
+                  ⚠ {errors[field]}
+                </motion.p>
               )}
-            </div>
+            </motion.div>
           );
         }
 
         return (
-          <div key={field}>
-            <label className="block text-sm font-bold mb-2 font-mono">
-              {field.replace(/_/g, ' ').toUpperCase()}
+          <motion.div
+            key={field}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.05 }}
+          >
+            <label className="block text-sm font-bold mb-2 font-mono text-cyan-400 uppercase tracking-wider">
+              {field.replace(/_/g, ' ')}
             </label>
             <input
               type="number"
@@ -102,38 +150,61 @@ export const GameConfigForm = ({ game, onSubmit, onCancel }: GameConfigFormProps
               min={'min' in rules ? rules.min : undefined}
               max={'max' in rules ? rules.max : undefined}
               step={'even' in rules && rules.even ? 2 : 1}
-              className="w-full px-4 py-2 bg-background border border-border rounded-xl font-mono text-sm"
+              className={cn(
+                'w-full px-4 py-2.5 rounded-lg font-mono text-sm transition-all',
+                'bg-black/40 backdrop-blur-sm border',
+                hasError
+                  ? 'border-red-500/60 focus:border-red-500 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]'
+                  : 'border-border/50 focus:border-green-500/60 focus:shadow-[0_0_15px_rgba(34,197,94,0.3)]',
+                'focus:outline-none'
+              )}
             />
             {'min' in rules && 'max' in rules && (
               <p className="text-xs text-muted-foreground mt-1 font-mono">
-                Range: {rules.min} - {rules.max}
+                Giá trị: {rules.min} - {rules.max}
               </p>
             )}
-            {errors[field] && (
-              <p className="text-destructive text-xs mt-1 font-mono">⚠ {errors[field]}</p>
+            {hasError && (
+              <motion.p
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-red-400 text-xs mt-1 font-mono"
+              >
+                ⚠ {errors[field]}
+              </motion.p>
             )}
-          </div>
+          </motion.div>
         );
       })}
 
       {errors._grid && (
-        <p className="text-destructive text-sm font-mono">⚠ {errors._grid}</p>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-red-400 text-sm font-mono bg-red-500/10 border border-red-500/20 rounded-lg p-3"
+        >
+          ⚠ {errors._grid}
+        </motion.p>
       )}
 
       <div className="flex gap-3 pt-4">
-        <button
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           type="button"
           onClick={onCancel}
-          className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 rounded-xl font-mono transition-colors"
+          className="flex-1 px-4 py-2.5 bg-muted/50 hover:bg-muted border border-border/50 rounded-xl font-mono transition-all"
         >
-          Cancel
-        </button>
-        <button
+          Hủy bỏ
+        </motion.button>
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           type="submit"
-          className="flex-1 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-mono transition-colors"
+          className="flex-1 px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white rounded-xl font-mono font-bold transition-all shadow-[0_0_20px_rgba(6,182,212,0.3)]"
         >
-          Save Changes
-        </button>
+          Lưu thay đổi
+        </motion.button>
       </div>
     </form>
   );
