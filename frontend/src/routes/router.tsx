@@ -14,6 +14,7 @@ import { AdminGuard } from "@/components/admin/auth/AdminGuard";
 import { AdminLayout } from "@/components/admin/layout/AdminLayout";
 import { AdminDashboardPage } from "@/pages/admin/AdminDashboardPage";
 import { AdminUsersPage } from "@/pages/admin/AdminUsersPage";
+import { AdminGamesPage } from "@/pages/admin/AdminGamesPage";
 import { AdminLoginPage } from "@/pages/admin/AdminLoginPage";
 
 const router = createBrowserRouter([
@@ -59,8 +60,8 @@ const router = createBrowserRouter([
         children: [
           { index: true, element: <AdminDashboardPage /> },
           { path: "users", element: <AdminUsersPage /> },
+          { path: "games", element: <AdminGamesPage /> },
           // TODO: Thêm routes khác
-          // { path: "games", element: <AdminGamesPage /> },
           // { path: "stats", element: <AdminStatsPage /> },
         ],
       },
