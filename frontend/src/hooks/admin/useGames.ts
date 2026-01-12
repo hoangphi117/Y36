@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { gameService, GameFilters, UpdateGamePayload } from '@/services/admin/gameService';
+import { gameService } from '@/services/admin/gameService';
+import type { GameFilters, UpdateGamePayload } from '@/services/admin/gameService';
 import toast from 'react-hot-toast';
 
 export const useGames = (filters: GameFilters = {}) => {

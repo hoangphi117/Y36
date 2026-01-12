@@ -1,5 +1,5 @@
 import { X } from 'lucide-react';
-import { Game } from '@/services/admin/gameService';
+import type { Game } from '@/services/admin/gameService';
 import { GameConfigForm } from './GameConfigForm';
 
 interface GameConfigModalProps {

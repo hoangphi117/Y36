@@ -1,4 +1,4 @@
-import { Game } from '@/services/admin/gameService';
+import type { Game } from '@/services/admin/gameService';
 import { GameCard } from './GameCard';
 
 interface GameGridProps {

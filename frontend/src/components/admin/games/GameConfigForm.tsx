@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Game } from '@/services/admin/gameService';
+import type { Game } from '@/services/admin/gameService';
 import { gameValidationSchemas, validateGameConfig } from '@/lib/admin/validation/gameSchemas';
 
 interface GameConfigFormProps {

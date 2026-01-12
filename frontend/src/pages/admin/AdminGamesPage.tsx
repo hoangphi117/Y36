@@ -3,7 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import { useGames, useUpdateGame } from '@/hooks/admin/useGames';
 import { GameGrid } from '@/components/admin/games/GameGrid';
 import { GameConfigModal } from '@/components/admin/games/GameConfigModal';
-import { Game } from '@/services/admin/gameService';
+import type { Game } from '@/services/admin/gameService';
 
 export const AdminGamesPage = () => {
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);

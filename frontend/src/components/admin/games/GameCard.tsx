@@ -1,4 +1,4 @@
-import { Game } from '@/services/admin/gameService';
+import type { Game } from '@/services/admin/gameService';
 import { GameToggle } from './GameToggle';
 import { Settings, Gamepad2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
