@@ -33,7 +33,7 @@ export const DailyStatsChart = ({ data }: DailyStatsChartProps) => {
       }),
       newUsers: data.newUsers[date] || 0,
       newSessions: data.newGameSessions[date] || 0,
-      playTime: Math.round((data.totalPlayTime[date] || 0) / 3600),
+      playTime: Math.round((data.totalPlayTime[date] || 0) / 60),
     };
   });
 
@@ -222,7 +222,7 @@ export const DailyStatsChart = ({ data }: DailyStatsChartProps) => {
                 Thời gian chơi
               </h3>
               <p className="text-xs text-muted-foreground font-mono">
-                Tổng thời gian chơi (giờ) theo ngày
+                Tổng thời gian chơi (phút) theo ngày
               </p>
             </div>
           </div>
@@ -243,7 +243,7 @@ export const DailyStatsChart = ({ data }: DailyStatsChartProps) => {
               <Line
                 type="monotone"
                 dataKey="playTime"
-                name="Giờ chơi"
+                name="Phút chơi"
                 stroke={colors.playTime}
                 strokeWidth={3}
                 dot={{ fill: colors.playTime, r: 5, strokeWidth: 2, stroke: '#fff' }}
