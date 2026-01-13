@@ -22,24 +22,20 @@ export const UserStatusBadge = ({ status, type }: StatusBadgeProps) => {
       admin: cn(
         'bg-primary/20 border-primary/40',
         'text-primary',
-        'dark:text-primary'
       ),
       customer: cn(
         'bg-accent/20 border-accent/40',
         'text-accent',
-        'dark:bg-purple-500/20 dark:text-purple-300 dark:border-purple-500/40'
       ),
     },
     status: {
       active: cn(
-        'bg-green-500/20 border-green-500/40 animate-pulse',
-        'text-green-700',
-        'dark:text-green-300'
+        'bg-green-600/20 border-green-600/40 animate-pulse',
+        'text-green-500',
       ),
       banned: cn(
-        'bg-red-500/20 border-red-500/40',
-        'text-red-700',
-        'dark:text-red-300'
+        'bg-destructive/20 border-destructive/40',
+        'text-destructive',
       ),
     },
   };

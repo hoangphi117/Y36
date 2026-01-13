@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import type { User } from '@/services/admin/userService';
 import { UserTableRow } from './UserTableRow';
+import { Users } from 'lucide-react';
 
 interface UserTableProps {
   users: User[];
@@ -43,7 +44,7 @@ export const UserTable = ({ users, isLoading, onUpdateStatus, onDelete, isProces
         className="flex flex-col items-center justify-center py-16 text-center"
       >
         <div className="w-20 h-20 rounded-full bg-muted/30 flex items-center justify-center mb-4">
-          <span className="text-4xl">👥</span>
+          <Users className="w-10 h-10 text-muted-foreground animate-pulse" />
         </div>
         <h3 className="text-xl font-black text-foreground mb-2 font-mono">
           Không tìm thấy người dùng
