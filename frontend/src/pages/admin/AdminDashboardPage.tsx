@@ -80,7 +80,7 @@ export const AdminDashboardPage = () => {
       <motion.div variants={itemVariants}>
         <div className="flex items-center gap-3 mb-2">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.3)] border border-cyan-500/30">
-            <Activity className="w-6 h-6 text-cyan-400" />
+            <Activity className="w-6 h-6 text-cyan-400 animate-pulse" />
           </div>
           <div>
             <h1 className="text-3xl font-black text-foreground font-mono uppercase tracking-wider">
@@ -141,7 +141,7 @@ export const AdminDashboardPage = () => {
               onClick={() => navigate('/admin/users')}
               className="p-6 bg-gradient-to-br from-cyan-500/10 to-cyan-500/5 hover:from-cyan-500/20 hover:to-cyan-500/10 border border-cyan-500/30 hover:border-cyan-500/50 rounded-xl transition-all cursor-pointer group text-left shadow-[0_0_20px_rgba(6,182,212,0.1)] hover:shadow-[0_0_30px_rgba(6,182,212,0.3)]"
             >
-              <Users className="w-8 h-8 text-cyan-400 mb-3 group-hover:scale-110 transition-transform" />
+              <Users className="w-8 h-8 text-cyan-400 mb-3 group-hover:scale-110 transition-transform animate-pulse" />
               <p className="font-bold text-foreground text-lg mb-1">Quản lý người dùng</p>
               <p className="text-xs text-muted-foreground font-mono">
                 Xem, chỉnh sửa, xóa tài khoản
@@ -154,7 +154,7 @@ export const AdminDashboardPage = () => {
               onClick={() => navigate('/admin/games')}
               className="p-6 bg-gradient-to-br from-purple-500/10 to-purple-500/5 hover:from-purple-500/20 hover:to-purple-500/10 border border-purple-500/30 hover:border-purple-500/50 rounded-xl transition-all cursor-pointer group text-left shadow-[0_0_20px_rgba(168,85,247,0.1)] hover:shadow-[0_0_30px_rgba(168,85,247,0.3)]"
             >
-              <Gamepad2 className="w-8 h-8 text-purple-400 mb-3 group-hover:scale-110 transition-transform" />
+              <Gamepad2 className="w-8 h-8 text-purple-400 mb-3 group-hover:scale-110 transition-transform animate-pulse" />
               <p className="font-bold text-foreground text-lg mb-1">Quản lý trò chơi</p>
               <p className="text-xs text-muted-foreground font-mono">
                 Cấu hình, bật/tắt trò chơi
@@ -167,7 +167,7 @@ export const AdminDashboardPage = () => {
               onClick={() => navigate('/admin/stats')}
               className="p-6 bg-gradient-to-br from-green-500/10 to-green-500/5 hover:from-green-500/20 hover:to-green-500/10 border border-green-500/30 hover:border-green-500/50 rounded-xl transition-all cursor-pointer group text-left shadow-[0_0_20px_rgba(34,197,94,0.1)] hover:shadow-[0_0_30px_rgba(34,197,94,0.3)]"
             >
-              <TrendingUp className="w-8 h-8 text-green-400 mb-3 group-hover:scale-110 transition-transform" />
+              <TrendingUp className="w-8 h-8 text-green-400 mb-3 group-hover:scale-110 transition-transform animate-pulse" />
               <p className="font-bold text-foreground text-lg mb-1">Thống kê chi tiết</p>
               <p className="text-xs text-muted-foreground font-mono">
                 Xem biểu đồ và báo cáo

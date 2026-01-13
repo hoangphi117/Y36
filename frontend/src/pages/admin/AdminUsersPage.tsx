@@ -12,7 +12,7 @@ import type { UserFilters as UserFiltersType } from '@/services/admin/userServic
 export const AdminUsersPage = () => {
   const [filters, setFilters] = useState<UserFiltersType>({
     page: 1,
-    limit: 10,
+    limit: 8,
     search: '',
     role: '',
     status: '',
@@ -106,7 +106,7 @@ export const AdminUsersPage = () => {
           className="flex items-center gap-3"
         >
           <div className="w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.3)]">
-            <UsersIcon className="w-6 h-6 text-cyan-400" />
+            <UsersIcon className="w-6 h-6 text-cyan-400 animate-pulse" />
           </div>
           <div>
             <h1 className="text-3xl font-black text-foreground font-mono uppercase tracking-wider">

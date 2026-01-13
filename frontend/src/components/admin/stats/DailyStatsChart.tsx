@@ -117,7 +117,7 @@ export const DailyStatsChart = ({ data }: DailyStatsChartProps) => {
         <div className="admin-glass p-6 rounded-2xl hover:border-primary/40 transition-all duration-300">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
-              <Users className="w-6 h-6 admin-primary" />
+              <Users className="w-6 h-6 admin-primary animate-pulse" />
             </div>
             <div>
               <h3 className="text-xl font-black text-foreground font-mono uppercase tracking-wider">
@@ -168,7 +168,7 @@ export const DailyStatsChart = ({ data }: DailyStatsChartProps) => {
         <div className="admin-glass p-6 rounded-2xl hover:border-green-500/40 transition-all duration-300">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center">
-              <Gamepad2 className="w-6 h-6 text-green-500" />
+              <Gamepad2 className="w-6 h-6 text-green-500 animate-pulse" />
             </div>
             <div>
               <h3 className="text-xl font-black text-foreground font-mono uppercase tracking-wider">
@@ -215,7 +215,7 @@ export const DailyStatsChart = ({ data }: DailyStatsChartProps) => {
         <div className="admin-glass p-6 rounded-2xl hover:border-accent/40 transition-all duration-300">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center">
-              <Clock className="w-6 h-6 admin-accent" />
+              <Clock className="w-6 h-6 admin-accent animate-pulse" />
             </div>
             <div>
               <h3 className="text-xl font-black text-foreground font-mono uppercase tracking-wider">

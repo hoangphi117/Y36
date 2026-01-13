@@ -61,7 +61,7 @@ const StatsPage = () => {
       <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.3)]">
-          <TrendingUp className="w-6 h-6 text-purple-400" />
+          <TrendingUp className="w-6 h-6 text-purple-400 animate-pulse" />
         </div>
         <div>
           <h1 className="text-3xl font-black text-foreground font-mono uppercase tracking-wider">
