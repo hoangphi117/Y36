@@ -291,7 +291,7 @@ export const AdminLoginPage = () => {
               className="mt-6 pt-6 border-t border-border"
             >
               <p className="text-center text-xs text-muted-foreground font-mono">
-                Kết nối bảo mật được thiết lập
+                Trang đăng nhập dành cho quản trị viên hãy đảm bảo bạn có quyền truy cập hợp lệ.
               </p>
             </motion.div>
           </div>

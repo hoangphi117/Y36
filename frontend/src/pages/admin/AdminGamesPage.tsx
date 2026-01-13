@@ -130,7 +130,11 @@ export const AdminGamesPage = () => {
                 Tổng trò chơi
               </p>
               <p className="text-2xl font-black text-purple-400 font-mono">
-                {games.length}
+                {isLoading ? (
+                  <span className="animate-pulse">--</span>
+                ) : (
+                  data?.total || games.length
+                )}
               </p>
             </div>
             <div className="bg-card/30 backdrop-blur-sm border border-border/50 rounded-xl p-4">
@@ -138,7 +142,11 @@ export const AdminGamesPage = () => {
                 Đang hoạt động
               </p>
               <p className="text-2xl font-black text-green-400 font-mono">
-                {games.filter(g => g.is_active).length}
+                {isLoading ? (
+                  <span className="animate-pulse">--</span>
+                ) : (
+                  games.filter(g => g.is_active).length
+                )}
               </p>
             </div>
             <div className="bg-card/30 backdrop-blur-sm border border-border/50 rounded-xl p-4">
@@ -146,7 +154,11 @@ export const AdminGamesPage = () => {
                 Tạm dừng
               </p>
               <p className="text-2xl font-black text-red-400 font-mono">
-                {games.filter(g => !g.is_active).length}
+                {isLoading ? (
+                  <span className="animate-pulse">--</span>
+                ) : (
+                  games.filter(g => !g.is_active).length
+                )}
               </p>
             </div>
           </div>

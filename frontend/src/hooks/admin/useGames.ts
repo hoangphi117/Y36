@@ -50,15 +50,19 @@ export const useUpdateGame = () => {
       // Show toast for BOTH config updates AND toggle actions
       if (variables.payload.default_config) {
         showToast.success('Cập nhật cấu hình thành công');
+        // Config update: Invalidate ALL queries
+        queryClient.invalidateQueries({ queryKey: ['admin-games'] });
       } else if (variables.payload.is_active !== undefined) {
-        // Toggle toast with dynamic icon
+        // Toggle toast with dynamic message
         const isActive = variables.payload.is_active;
         const message = isActive ? 'Đã bật trò chơi' : 'Đã tắt trò chơi';
         showToast.success(message, 2000);
+        
+        // ✅ DO NOT invalidate admin-games → Keep stable layout
+        // ✅ BUT invalidate dashboard stats to update counters
       }
       
-      // Invalidate to sync with server (but optimistic update already shown)
-      queryClient.invalidateQueries({ queryKey: ['admin-games'] });
+      // ALWAYS invalidate dashboard stats (updates counters)
       queryClient.invalidateQueries({ queryKey: ['admin-dashboard-stats'] });
     },
 
