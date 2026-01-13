@@ -27,7 +27,7 @@ class GameSessionController {
         });
       }
 
-      const [session] = await GameSession.create({
+      const [session] = await GameSession.createSession({
         user_id: userId,
         game_id: game.id,
         board_state: null,
@@ -116,6 +116,12 @@ class GameSessionController {
         });
       }
 
+      if (session.status === "completed") {
+        return res.status(400).json({
+          message: "Cannot load a completed session",
+        });
+      }
+
       return res.status(200).json({
         message: "Game session loaded successfully",
         session,
@@ -137,6 +143,12 @@ class GameSessionController {
       if (!session || session.user_id !== userId) {
         return res.status(404).json({
           message: "Session not found",
+        });
+      }
+
+      if (session.status === "playing") {
+        return res.status(400).json({
+          message: "Cannot delete an active session",
         });
       }
 

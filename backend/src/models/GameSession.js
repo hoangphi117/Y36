@@ -31,11 +31,11 @@ class GameSession {
   }
 
   static async deleteById(id) {
-    return knex("game_sessions").where({ id }).del();
+    return db("game_sessions").where({ id }).del();
   }
 
   static async findHistoryByUser(userId, limit, offset) {
-    return knex("game_sessions")
+    return db("game_sessions")
       .where({ user_id: userId })
       .whereNot({ status: "playing" })
       .orderBy("updated_at", "desc")
@@ -44,7 +44,7 @@ class GameSession {
   }
 
   static async countHistoryByUser(userId) {
-    return knex("game_sessions")
+    return db("game_sessions")
       .where({ user_id: userId })
       .whereNot({ status: "playing" })
       .count("* as total")

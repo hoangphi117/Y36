@@ -27,13 +27,11 @@ class Game {
   static async getById(id) {
     return db('games').where({ id }).first();
   }
-
-  // Cập nhật trạng thái (Enable/Disable) và Cấu hình (JSON)
   static async update(id, data) {
     return db('games').where({ id }).update(data).returning('*');
   }
 
-  static async findByCode(code) {
+  static async findByID(code) {
     return db('games').where({ code,is_active: true }).first(); 
   }
 }
