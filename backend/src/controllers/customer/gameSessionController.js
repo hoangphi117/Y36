@@ -11,7 +11,7 @@ class GameSessionController {
         return res.status(400).json({ message: "Game ID is required" });
       }
 
-      const game = await Game.findById(gameId);
+      const game = await Game.findActiveById(gameId);
       if (!game) {
         return res.status(404).json({ message: "Game not found" });
       }
@@ -55,24 +55,28 @@ class GameSessionController {
       }
 
       if (session.status !== "playing") {
-        return res
-          .status(400)
-          .json({ message: "Cannot save a completed or inactive session" });
+        return res.status(400).json({
+          message: "Cannot save a completed or inactive session",
+        });
       }
 
-      const [updatedSession] = await GameSession.updateById(id, {
-        board_state,
-        score,
-        play_time_seconds,
-      });
+      const updateData = {};
+      if (board_state !== undefined) updateData.board_state = board_state;
+      if (score !== undefined) updateData.score = score;
+      if (play_time_seconds !== undefined)
+        updateData.play_time_seconds = play_time_seconds;
 
-      return res
-        .status(200)
-        .json({ message: "Session saved", session: updatedSession });
+      const [updatedSession] = await GameSession.updateById(id, updateData);
+
+      return res.status(200).json({
+        message: "Session saved",
+        session: updatedSession,
+      });
     } catch (error) {
-      return res
-        .status(500)
-        .json({ message: "Server error", error: error.message });
+      return res.status(500).json({
+        message: "Server error",
+        error: error.message,
+      });
     }
   }
 
@@ -85,6 +89,12 @@ class GameSessionController {
       const session = await GameSession.findById(id);
       if (!session || session.user_id !== userId) {
         return res.status(404).json({ message: "Session not found" });
+      }
+
+      if (session.status === "completed") {
+        return res.status(400).json({
+          message: "Session already completed",
+        });
       }
 
       const [completedSession] = await GameSession.updateById(id, {
