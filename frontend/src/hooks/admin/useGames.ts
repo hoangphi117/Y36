@@ -19,15 +19,11 @@ export const useUpdateGame = () => {
     mutationFn: ({ id, payload }: { id: number; payload: UpdateGamePayload }) =>
       gameService.updateGame(id, payload),
     
-    // Optimistic Update - Update UI immediately before API call
     onMutate: async ({ id, payload }) => {
-      // Cancel all admin-games queries (bất kể filters)
       await queryClient.cancelQueries({ queryKey: ['admin-games'] });
 
-      // Snapshot previous values
       const previousGames = queryClient.getQueriesData({ queryKey: ['admin-games'] });
 
-      // Update ALL matching queries
       queryClient.setQueriesData(
         { queryKey: ['admin-games'] }, // Prefix matching
         (old: any) => {
@@ -47,18 +43,18 @@ export const useUpdateGame = () => {
     },
 
     onSuccess: (_, variables) => {
-      // Show toast for BOTH config updates AND toggle actions
       if (variables.payload.default_config) {
         showToast.success('Cập nhật cấu hình thành công');
+        // Config update: Invalidate ALL queries
+        queryClient.invalidateQueries({ queryKey: ['admin-games'] });
       } else if (variables.payload.is_active !== undefined) {
-        // Toggle toast with dynamic icon
+        // Toggle toast with dynamic message
         const isActive = variables.payload.is_active;
         const message = isActive ? 'Đã bật trò chơi' : 'Đã tắt trò chơi';
         showToast.success(message, 2000);
+        
       }
       
-      // Invalidate to sync with server (but optimistic update already shown)
-      queryClient.invalidateQueries({ queryKey: ['admin-games'] });
       queryClient.invalidateQueries({ queryKey: ['admin-dashboard-stats'] });
     },
 
