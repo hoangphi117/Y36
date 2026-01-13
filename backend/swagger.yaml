@@ -613,6 +613,42 @@ paths:
                     example: User registered successfully
 
         400:
-          description: Yêu cầu không hợp lệ hoặc người dùng đã tồn tại  
+          description: Yêu cầu không hợp lệ hoặc người dùng đã tồn tại 
+
+  /games:
+    get:
+      summary: Lấy danh sách Game công khai
+      tags: [Games]
+      responses:
+        200:
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Game'
+                  
+  /games/{code}:
+    get:
+      summary: Lấy thông tin chi tiết Game công khai theo mã
+      tags: [Games]
+      parameters:
+        - in: path
+          name: code
+          required: true
+          schema:
+            type: string
+          description: Mã của Game
+      responses:
+        200:
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Game'
+        404:
+          description: Không tìm thấy Game
+                
           
   
