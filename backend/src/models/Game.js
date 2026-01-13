@@ -31,12 +31,30 @@ class Game {
     return db('games').where({ id }).update(data).returning('*');
   }
 
-  static async findByID(code) {
-    return db('games').where({ code,is_active: true }).first(); 
+  static async getAllActive({ search }) {
+    const query = db("games")
+      .where({ is_active: true });
+
+    if (search) {
+      query.andWhere((qb) => {
+        qb.whereILike("name", `%${search}%`)
+          .orWhereILike("code", `%${search}%`);
+      });
+    }
+
+    return query.orderBy("created_at", "desc");
   }
 
-  static async findById(id) {
-    return await db('games').where({ id }).first();
+  static async findActiveById(id) {
+    return db("games")
+      .where({ id, is_active: true })
+      .first();
+  }
+
+  static async findByCode(code) {
+    return db("games")
+      .where({ code, is_active: true })
+      .first();
   }
 }
 

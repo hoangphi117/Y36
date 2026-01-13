@@ -576,7 +576,7 @@ paths:
         400:
           description: Dữ liệu đầu vào không hợp lệ
   
-  /auth/register
+  /auth/register:
     post:
       summary: Đăng ký tài khoản người dùng
       tags: [Auth]
@@ -593,13 +593,13 @@ paths:
               properties:
                 email:
                   type: string
-                  default:test1@gmail.com
+                  default: test1@gmail.com
                 username:
                   type: string
                   default: testuser1
                 password:
                   type: string
-                  default:123456
+                  default: 123456
       responses:
         201:
           description: Đăng ký thành công
