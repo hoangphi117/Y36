@@ -1,6 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
+  ArrowLeft,
+  Play,
   RefreshCcw, 
   Trophy, 
   Volume2,
@@ -9,7 +11,6 @@ import {
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -53,53 +54,47 @@ export default function Match3Game() {
   const [isGameActive, setIsGameActive] = useState(false);
   const [boardSize, setBoardSize] = useState(BOARD_SIZE);
 
-  // 1. Khởi tạo board
-  const createBoard = useCallback(() => {
+  const activeCandies = useMemo(() => CANDY_TYPES.slice(0, numCandyTypes), [numCandyTypes]);
+
+  // create board
+  const startGame = useCallback(() => {
     const randomBoard: string[] = [];
-
     for (let i = 0; i < boardSize * boardSize; i++) {
-        const row = Math.floor(i / boardSize);
-        const col = i % boardSize;
+      const row = Math.floor(i / boardSize);
+      const col = i % boardSize;
 
-        const validTypes = CANDY_TYPES.slice(0, numCandyTypes).filter(type => {
-            // check col
-            if(col >= 2) {
-                if(randomBoard[i - 1] === type.id && randomBoard[i - 2] === type.id ) {
-                    return false;
-                }
-            }
+      const validTypes = activeCandies.filter(type => {
+        if (col >= 2 && randomBoard[i - 1] === type.id && randomBoard[i - 2] === type.id) 
+          return false;
+        if (row >= 2 && randomBoard[i - boardSize] === type.id && randomBoard[i - (boardSize * 2)] === type.id) 
+          return false;
+        return true;
+      });
 
-            // check row
-            if(row >= 2) {
-                if(randomBoard[i - boardSize] === type.id && randomBoard[i - (boardSize * 2)] === type.id) {
-                    return false;
-                }
-            }
-
-            return true;
-        })
-
-        // get random type in vaidTypes array
-        const randomType = validTypes[Math.floor(Math.random() * validTypes.length)];
-        randomBoard.push(randomType.id);
+      const randomType = validTypes[Math.floor(Math.random() * validTypes.length)];
+      randomBoard.push(randomType.id);
     }
     setBoard(randomBoard);
     setScore(0);
-  }, [numCandyTypes, boardSize]);
+    setIsGameActive(true);
+    playSound("button1");
+  }, [boardSize, activeCandies, playSound]);
 
-  useEffect(() => {
-    createBoard();
-  }, [createBoard]);
+  const resetToSetup = () => {
+    setIsGameActive(false);
+    setBoard([]);
+    setScore(0);
+  }
 
   // check match 3, 4, 5
   const checkForMatches = useCallback(() => {
+    if(!isGameActive) return;
+
     const newBoard = [...board];
     let foundMatch = false;
 
     // Check row
     for (let i = 0; i < boardSize * boardSize; i++) {
-      const row = Math.floor(i / boardSize);
-
       if (i % boardSize < boardSize - 2) {
         const match = [i, i + 1, i + 2];
         const color = board[i];
@@ -127,10 +122,12 @@ export default function Match3Game() {
       playSound("pop");
     }
     return foundMatch;
-  }, [board, playSound]);
+  }, [board, boardSize, isGameActive, playSound]);
 
-  // 3. handle move into square below
+  // handle move into square below
   const moveIntoSquareBelow = useCallback(() => {
+    if(!isGameActive) return;
+
     const newBoard = [...board];
     let moved = false;
 
@@ -138,10 +135,10 @@ export default function Match3Game() {
         const isFirstRow = i < boardSize;
 
         if (isFirstRow && newBoard[i] === "") {
-            const availableCandies = CANDY_TYPES.slice(0, numCandyTypes);
-            newBoard[i] = availableCandies[Math.floor(Math.random() * numCandyTypes)].id;
-            moved = true;
-        }
+          const randomIndex = Math.floor(Math.random() * activeCandies.length);
+          newBoard[i] = activeCandies[randomIndex].id;
+          moved = true;
+          }
 
         if (newBoard[i + boardSize] === "") {
             newBoard[i + boardSize] = newBoard[i];
@@ -151,9 +148,11 @@ export default function Match3Game() {
     }
 
     if (moved) setBoard(newBoard);
-  }, [board, boardSize, numCandyTypes]); 
+  }, [board, boardSize, isGameActive, activeCandies]); 
 
   useEffect(() => {
+    if (!isGameActive) return;
+    
     const timer = setInterval(() => {
       const matched = checkForMatches();
       if (!matched) {
@@ -161,9 +160,9 @@ export default function Match3Game() {
       }
     }, 150);
     return () => clearInterval(timer);
-  }, [checkForMatches, moveIntoSquareBelow]);
+  }, [checkForMatches, moveIntoSquareBelow, isGameActive]);
 
-  // 4. handle Swap
+  // handle swap
   const handleSquareClick = (idx: number) => {
     if (selectedSquare === null) {
       setSelectedSquare(idx);
@@ -194,17 +193,22 @@ export default function Match3Game() {
         <h1 className="text-4xl font-black text-primary uppercase italic drop-shadow-md">
           MATCH 3 COMBO
         </h1>
-        <div className="flex items-center justify-center gap-4">
-          <p className="flex items-center gap-2 text-2xl font-bold">
+        {isGameActive && (
+          <motion.p initial={{ scale: 0 }} animate={{ scale: 1 }} className="flex items-center gap-2 text-2xl font-bold">
             <Trophy className="text-yellow-500" /> {score}
-          </p>
-        </div>
+          </motion.p>
+        )}
       </div>
 
       <div className="flex gap-4 mb-6">
-        <RoundButton size="small" variant="primary" onClick={createBoard}>
-          <RefreshCcw className="w-4 h-4 mr-2" /> CHƠI MỚI
-        </RoundButton>
+        {isGameActive && (
+          <div>
+            <RoundButton size="small" variant="primary" onClick={startGame}>
+              <RefreshCcw className="w-4 h-4 mr-2" /> CHƠI MỚI
+            </RoundButton>
+          </div>
+        )}
+        
         <RoundButton
           size="small"
           variant="neutral"
@@ -213,6 +217,37 @@ export default function Match3Game() {
         >
           {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
         </RoundButton>
+        {!isGameActive ? (
+          <>
+            <div className="flex items-center gap-2 bg-muted px-4 py-2 rounded-2xl border">
+              <span className="text-xs font-bold uppercase opacity-60">Loại kẹo:</span>
+              <select 
+                className="bg-transparent font-bold outline-none" 
+                value={numCandyTypes} 
+                onChange={(e) => setNumCandyTypes(Number(e.target.value))}
+              >
+                {[4, 5, 6, 7, 8].map(n => <option key={n} value={n}>{n}</option>)}
+              </select>
+            </div>
+            <div className="flex items-center gap-2 bg-muted px-4 py-2 rounded-2xl border">
+              <span className="text-xs font-bold uppercase opacity-60">Kích thước:</span>
+              <Select value={boardSize.toString()} onValueChange={(v) => setBoardSize(Number(v))}>
+                <SelectTrigger className="w-24 border-none shadow-none font-bold h-auto p-0 bg-transparent">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="6">6x6</SelectItem>
+                  <SelectItem value="7">7x7</SelectItem>
+                  <SelectItem value="8">8x8</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </>
+        ) : (
+          <RoundButton size="small" variant="primary" onClick={resetToSetup}>
+            <ArrowLeft /> Quay lại
+          </RoundButton>
+        )}
          
       </div>
 
@@ -222,42 +257,70 @@ export default function Match3Game() {
           className="grid gap-2"
           style={{ gridTemplateColumns: `repeat(${boardSize}, minmax(0, 1fr))` }}
         >
-          {board.map((typeId, index) => {
-            const type = CANDY_TYPES.find(t => t.id === typeId);
-            const Icon = type?.icon;
-            
-            return (
-              <motion.button
-                key={`${index}-${typeId}`}
-                layout
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => handleSquareClick(index)}
-                className={cn(
-                  "w-10 h-10 sm:w-15 sm:h-15 rounded-lg flex items-center justify-center transition-all relative bg-transparent",
-                  "bg-gradient-to-br from-white/5 to-transparent border border-white/10 shadow-inner",
-                  selectedSquare === index ? "ring-4 ring-primary z-20" : "ring-0"
-                )}
-              > 
-                <AnimatePresence>
-                  {Icon && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.5 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0, rotate: 90 }}
-                    >
-                      <img src={Icon} alt={type.id} />
-                    </motion.div>
+          {isGameActive ? (
+            // PLAYING STATUS
+            board.map((typeId, index) => {
+              const type = CANDY_TYPES.find(t => t.id === typeId);
+              return (
+                <motion.button
+                  key={`${index}-${typeId}`}
+                  layout
+                  whileHover={{ scale: 1.05 }}
+                  onClick={() => handleSquareClick(index)}
+                  className={cn(
+                    "w-10 h-10 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center relative bg-gradient-to-br from-white/10 to-transparent border border-white/10",
+                    selectedSquare === index ? "ring-4 ring-primary z-20" : ""
                   )}
-                </AnimatePresence>
-              </motion.button>
-            );
-          })}
+                >
+                  <AnimatePresence>
+                    {type && (
+                      <motion.img 
+                        initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ opacity: 0 }}
+                        src={type.icon} className="w-4/5 h-4/5 object-contain" 
+                      />
+                    )}
+                  </AnimatePresence>
+                </motion.button>
+              );
+            })
+          ) : (
+            // CONFIG GAME STATUS
+            Array.from({ length: boardSize * boardSize }).map((_, i) => (
+              <div key={i} className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl border border-dashed border-primary/5 bg-primary/5" />
+            ))
+          )}
         </div>
-      </div>
+        {!isGameActive && (
+          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-background/40 backdrop-blur-[2px] rounded-[2.3rem] p-6 text-center">
+            <div className="mb-6">
+              <p className="text-sm font-black uppercase tracking-widest text-primary mb-4 opacity-80">Các loại kẹo sẽ xuất hiện:</p>
+              <div className="flex flex-wrap justify-center gap-3">
+                {activeCandies.map((candy) => (
+                  <motion.div 
+                    key={candy.id}
+                    initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
+                    className="w-12 h-12 bg-card rounded-2xl p-2 shadow-lg border border-primary/20 flex items-center justify-center"
+                  >
+                    <img src={candy.icon} className="w-full h-full object-contain" alt="candy" />
+                  </motion.div>
+                ))}
+              </div>
+            </div>
 
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={startGame}
+              className="group relative flex flex-col items-center"
+            >
+              <div className="w-20 h-20 bg-primary rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(var(--primary),0.5)] mb-2 group-hover:bg-primary/90 transition-colors">
+                <Play className="w-10 h-10 text-primary-foreground ml-1 fill-current" />
+              </div>
+              <span className="font-black text-primary text-xl uppercase italic">Bắt đầu ngay</span>
+            </motion.button>
+          </div>
+        )}
+      </div>
       <p className="mt-8 text-muted-foreground text-sm font-medium animate-pulse">
         Mẹo: Chọn 2 ô cạnh nhau để tráo đổi vị trí!
       </p>
