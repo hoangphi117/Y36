@@ -575,3 +575,44 @@ paths:
                           type: integer
         400:
           description: Dữ liệu đầu vào không hợp lệ
+  
+  /auth/register
+    post:
+      summary: Đăng ký tài khoản người dùng
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - username
+                - password
+              properties:
+                email:
+                  type: string
+                  default:test1@gmail.com
+                username:
+                  type: string
+                  default: testuser1
+                password:
+                  type: string
+                  default:123456
+      responses:
+        201:
+          description: Đăng ký thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User registered successfully
+
+        400:
+          description: Yêu cầu không hợp lệ hoặc người dùng đã tồn tại  
+          
+  
