@@ -41,6 +41,31 @@ class User {
   static async deleteUser(id) {
     return db('users').where({ id }).del();
   }
+  static async createUser(userData) {
+    return db('users').insert(userData).returning('*');
+  }
+
+  static async findByUserName(username) {
+    return db('users').where({ username }).first();
+  }
+  static async findById(id) {
+    return db('users').where({ id }).first();
+  }
+  updateById(id, data) {
+    return knex("users")
+      .where({ id })
+      .update(data)
+      .returning([
+        "id",
+        "email",
+        "username",
+        "avatar_url",
+        "dark_mode",
+        "role",
+        "status",
+        "created_at",
+      ]);
+  }
 }
 
 module.exports = User;
