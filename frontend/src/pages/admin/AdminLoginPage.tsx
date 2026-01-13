@@ -4,7 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import { useAdminLogin } from '@/hooks/admin/useAdminAuth';
 import { adminAuthService } from '@/services/admin/authService';
 import { useAdminTheme } from '@/hooks/admin/useAdminTheme';
-import { Eye, EyeOff, Lock, Mail, Shield, LogIn, Sparkles, AmpersandIcon, VenusAndMarsIcon, AppWindowMacIcon } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, Shield, LogIn, KeyRound } from 'lucide-react';
 import { useGameSound } from '@/hooks/useGameSound';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -155,7 +155,7 @@ export const AdminLoginPage = () => {
               
               <h1 className="text-4xl font-black text-primary font-mono mb-2 flex items-center justify-center gap-2">
                 ADMIN
-                <Sparkles className="w-6 h-6 text-primary animate-pulse" />
+                <KeyRound className="w-6 h-6 text-primary animate-pulse" />
               </h1>
               <p className="text-muted-foreground text-sm font-mono">
                 Khu vực quản trị viên
