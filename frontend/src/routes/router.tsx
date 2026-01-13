@@ -16,7 +16,7 @@ import { AdminDashboardPage } from "@/pages/admin/AdminDashboardPage";
 import { AdminUsersPage } from "@/pages/admin/AdminUsersPage";
 import { AdminGamesPage } from "@/pages/admin/AdminGamesPage";
 import { AdminLoginPage } from "@/pages/admin/AdminLoginPage";
-import StatsPage from "@/pages/admin/StatsPage";
+import AdminStatsPage from "@/pages/admin/AdminStatsPage";
 
 const router = createBrowserRouter([
   {
@@ -62,7 +62,7 @@ const router = createBrowserRouter([
           { index: true, element: <AdminDashboardPage /> },
           { path: "users", element: <AdminUsersPage /> },
           { path: "games", element: <AdminGamesPage /> },
-          { path: "stats", element: <StatsPage /> },
+          { path: "stats", element: <AdminStatsPage /> },
         ],
       },
     ],

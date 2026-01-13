@@ -8,7 +8,7 @@ import { ExportButton } from '@/components/admin/stats/ExportButton';
 import { useDailyStats } from '@/hooks/admin/useStats';
 import { exportToCSV, exportToJSON } from '@/lib/admin/statsUtils';
 
-const StatsPage = () => {
+const AdminStatsPage = () => {
   const [dateRange, setDateRange] = useState({
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     endDate: new Date().toISOString().split('T')[0]
@@ -116,4 +116,4 @@ const StatsPage = () => {
   );
 };
 
-export default StatsPage;
+export default AdminStatsPage;
