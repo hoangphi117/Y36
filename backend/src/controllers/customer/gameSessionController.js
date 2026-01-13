@@ -199,3 +199,5 @@ class GameSessionController {
     }
   }
 }
+
+module.exports = new GameSessionController();
