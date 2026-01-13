@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Download, FileJson, FileSpreadsheet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -10,18 +11,37 @@ interface ExportButtonProps {
 
 export const ExportButton = ({ onExportCSV, onExportJSON, disabled }: ExportButtonProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState({ top: 0, right: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      const isClickInsideButton = buttonRef.current?.contains(target);
+      const isClickInsideMenu = menuRef.current?.contains(target);
+
+      if (!isClickInsideButton && !isClickInsideMenu) {
         setIsOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [isOpen]);
+
+  const handleToggle = () => {
+    if (!isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setPosition({
+        top: rect.bottom + window.scrollY + 8,
+        right: window.innerWidth - rect.right
+      });
+    }
+    setIsOpen(!isOpen);
+  };
 
   const handleExport = (callback: () => void) => {
     callback();
@@ -29,9 +49,10 @@ export const ExportButton = ({ onExportCSV, onExportJSON, disabled }: ExportButt
   };
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative">
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        ref={buttonRef}
+        onClick={handleToggle}
         disabled={disabled}
         className={cn(
           'flex items-center gap-2 px-4 py-2.5 rounded-lg font-mono text-sm transition-all',
@@ -44,13 +65,20 @@ export const ExportButton = ({ onExportCSV, onExportJSON, disabled }: ExportButt
         Xuất dữ liệu
       </button>
 
-      {/* Dropdown Menu */}
-      {isOpen && (
+      {/* Dropdown Menu - Portal */}
+      {isOpen && createPortal(
         <div
+          ref={menuRef}
+          style={{
+            position: 'absolute',
+            top: `${position.top}px`,
+            right: `${position.right}px`,
+          }}
           className={cn(
-            'absolute right-0 mt-2 w-48 py-2 rounded-lg',
-            'admin-surface shadow-lg',
-            'z-50'
+            'w-48 py-2 rounded-lg',
+            'admin-surface shadow-lg border border-border/50',
+            'z-[9999]',
+            'animate-in fade-in slide-in-from-top-2 duration-200'
           )}
         >
           <button
@@ -76,7 +104,8 @@ export const ExportButton = ({ onExportCSV, onExportJSON, disabled }: ExportButt
             <FileJson className="w-4 h-4 admin-primary" />
             Xuất file JSON
           </button>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
