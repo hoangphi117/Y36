@@ -20,12 +20,12 @@ const getGames = async (req, res) => {
   }
 };
 
-const getGameByCode = async (req, res) => {
+const getGameById = async (req, res) => {
   try {
-    const { code } = req.params;
-    const game = await Game.findByCode(code);
+    const { id } = req.params;
+    const game = await Game.findById(id);
     if (!game) {
-      return res.status(404).json({ message: "Game not found or inactive" });
+      return res.status(404).json({ message: "Game not found" });
     }
     res.status(200).json(game);
   } catch (error) {
@@ -33,4 +33,4 @@ const getGameByCode = async (req, res) => {
   }
 };
 
-module.exports = { getGames,getGameByCode };
+module.exports = { getGames, getGameById };

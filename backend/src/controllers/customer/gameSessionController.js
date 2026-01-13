@@ -11,7 +11,7 @@ class GameSessionController {
         return res.status(400).json({ message: "Game ID is required" });
       }
 
-      const game = await Game.findByCode(gameId);
+      const game = await Game.findById(gameId);
       if (!game) {
         return res.status(404).json({ message: "Game not found" });
       }

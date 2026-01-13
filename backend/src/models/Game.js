@@ -34,6 +34,10 @@ class Game {
   static async findByID(code) {
     return db('games').where({ code,is_active: true }).first(); 
   }
+
+  static async findById(id) {
+    return await db('games').where({ id }).first();
+  }
 }
 
 module.exports = Game;

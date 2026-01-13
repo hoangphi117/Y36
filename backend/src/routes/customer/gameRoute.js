@@ -1,7 +1,7 @@
 const express = require("express");
-const gameController = require("../../controllers/customer/gameController");
+const {getGames,getGameById} = require("../../controllers/customer/gameController");
 
 const router = express.Router();    
-router.get("/", gameController.listGames);
-router.get("/:id", gameController.getGameByCode);
+router.get("/", getGames);
+router.get("/:id", getGameById);
 module.exports = router;
