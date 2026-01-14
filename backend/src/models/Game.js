@@ -27,10 +27,34 @@ class Game {
   static async getById(id) {
     return db('games').where({ id }).first();
   }
-
-  // Cập nhật trạng thái (Enable/Disable) và Cấu hình (JSON)
   static async update(id, data) {
     return db('games').where({ id }).update(data).returning('*');
+  }
+
+  static async getAllActive({ search }) {
+    const query = db("games")
+      .where({ is_active: true });
+
+    if (search) {
+      query.andWhere((qb) => {
+        qb.whereILike("name", `%${search}%`)
+          .orWhereILike("code", `%${search}%`);
+      });
+    }
+
+    return query.orderBy("created_at", "desc");
+  }
+
+  static async findActiveById(id) {
+    return db("games")
+      .where({ id, is_active: true })
+      .first();
+  }
+
+  static async findByCode(code) {
+    return db("games")
+      .where({ code, is_active: true })
+      .first();
   }
 }
 
