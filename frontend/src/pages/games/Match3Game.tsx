@@ -425,18 +425,13 @@ export default function Match3Game() {
       </div>
       </div>
 
-      {!isGameActive && !showGameOver && (
         <div className="mt-8 px-4 max-w-2xl">
           <div className="space-y-2 text-center">
             <p className="text-muted-foreground text-sm font-medium animate-pulse">
               💡 Mẹo: Chọn 2 ô cạnh nhau để tráo đổi vị trí!
             </p>
-            <p className="text-muted-foreground text-sm font-medium animate-pulse">
-              {gameMode === "time" ? "⏱️ Đặt thời gian và cố gắng ghi điểm cao nhất" : gameMode === "rounds" ? "🎯 Hoàn thành số lần ghép đã đặt" : "∞ Chơi thoải mái không giới hạn"}
-            </p>
           </div>
         </div>
-      )}
     </div>
   );
 }
