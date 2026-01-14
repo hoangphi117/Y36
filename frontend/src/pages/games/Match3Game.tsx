@@ -7,6 +7,7 @@ import {
   PlayCircle,
   Clock,
   Target,
+  Settings,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -144,7 +145,7 @@ export default function Match3Game() {
     if (foundMatch) {
       const emptyCount = newBoard.filter(cell => cell === "").length;
       setScore(prev => prev + emptyCount * 10);
-      setMatchesCount(prev => prev + 1);
+      // setMatchesCount(prev => prev + 1);
       setBoard(newBoard);
       // playSound("pop");
     }
@@ -191,13 +192,13 @@ export default function Match3Game() {
 
   // Timer effect
   useEffect(() => {
-    if (!isGameActive || isPaused || gameMode === "endless" || gameMode === "rounds") return;
+    if (!isGameActive || isPaused || gameMode !== "time" || showGameOver) return;
 
     const timer = setInterval(() => {
       setTimeRemaining(prev => {
         const newTime = prev - 1;
         if (newTime <= 0) {
-          // setIsGameActive(false);
+          clearInterval(timer);
           setShowGameOver(true);
           return 0;
         }
@@ -206,7 +207,7 @@ export default function Match3Game() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isGameActive, isPaused, gameMode, score]);
+  }, [isGameActive, isPaused, gameMode, showGameOver]);
 
   // Check for target matches
   useEffect(() => {
@@ -214,7 +215,7 @@ export default function Match3Game() {
       // setIsGameActive(false);
       setShowGameOver(true);
     }
-  }, [matchesCount, targetMatches, gameMode, isGameActive, score]);
+  }, [matchesCount, targetMatches, gameMode, isGameActive]);
 
   // handle swap
   const handleSquareClick = (idx: number) => {
@@ -234,6 +235,7 @@ export default function Match3Game() {
         newBoard[selectedSquare] = newBoard[idx];
         newBoard[idx] = temp;
         setBoard(newBoard);
+        setMatchesCount(prev => prev + 1);
       }
       setSelectedSquare(null);
     }
@@ -253,7 +255,8 @@ export default function Match3Game() {
         {isGameActive && (
           <motion.div className="flex items-center gap-4 justify-center text-2xl font-bold">
             <motion.p key="stat-score" initial={{ scale: 0 }} animate={{ scale: 1 }} className="flex items-center gap-2">
-              <Trophy className="text-yellow-500" /> {score}
+              <Trophy className="text-yellow-500" /> 
+              {score}/{targetScore}
             </motion.p>
             
             {gameMode === "time" && (
@@ -300,6 +303,9 @@ export default function Match3Game() {
                   <Pause className="w-4 h-4 mr-2" /> TẠM DỪNG
                 </>
               )}
+            </RoundButton>
+            <RoundButton size="small" variant="danger" onClick={resetToSetup}>
+              <Settings className="w-4 h-4 mr-2" /> CÀI ĐẶT
             </RoundButton>
           </div>
         )}

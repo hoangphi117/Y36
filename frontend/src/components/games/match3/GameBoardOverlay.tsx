@@ -1,6 +1,6 @@
 import { RoundButton } from '@/components/ui/round-button';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Pause, Play, Settings2, Trophy, RotateCcw, Star } from 'lucide-react';
+import { ArrowLeft, Pause, Play, Settings2, RotateCcw, Star } from 'lucide-react';
 
 interface CandyType {
     id: string;
