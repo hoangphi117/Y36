@@ -916,6 +916,127 @@ paths:
                     items:
                       $ref: '#/components/schemas/GameSession'
 
+  /users/me:
+    get:
+      tags:
+        - User
+      summary: Get current user profile
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  username:
+                    type: string
+                  email:
+                    type: string
+                  avatar_url:
+                    type: string
+                    nullable: true
+                  dark_mode:
+                    type: boolean
+        401:
+          description: Unauthorized
+        404:
+          description: User not found
+        500:
+          description: Server error
+
+    put:
+      tags:
+        - User
+      summary: Update current user information
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: quannguyen
+                avatar_url:
+                  type: string
+                  example: https://example.com/avatar.png
+                dark_mode:
+                  type: boolean
+                  example: true
+      responses:
+        200:
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User updated successfully
+                  user:
+                    $ref: '#/components/schemas/User'
+        400:
+          description: Invalid input
+        401:
+          description: Unauthorized
+        404:
+          description: User not found
+        500:
+          description: Server error
+
+  /users/me/password:
+    put:
+      tags:
+        - User
+      summary: Change current user password
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - currentPassword
+                - newPassword
+              properties:
+                currentPassword:
+                  type: string
+                  example: oldPassword123
+                newPassword:
+                  type: string
+                  example: newPassword123
+      responses:
+        200:
+          description: Password changed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Password changed successfully
+        400:
+          description: Current password is incorrect or invalid input
+        401:
+          description: Unauthorized
+        404:
+          description: User not found
+        500:
+          description: Server error
+
                 
           
   

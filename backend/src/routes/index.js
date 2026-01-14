@@ -3,9 +3,9 @@ const router = express.Router();
 const { verifyToken, isAdmin } = require('../middlewares/authMiddleware');
 
 const AuthRoute = require('./authRoute');
-const customerUserRoute = require('./customer/userRoute');
 const customerGameRoute = require('./customer/gameRoute');
 const customerGameSessionRoute = require('./customer/gameSessionRoute');
+const userRoute = require('./userRoute');
 
 const adminUserRoute = require('./admin/userRoute');
 const adminGameRoute = require('./admin/gameRoute');
@@ -18,7 +18,7 @@ router.use('/admin/games', verifyToken, isAdmin, adminGameRoute);
 router.use('/admin/stats', verifyToken, isAdmin, adminStatsRoute);
 
 //CUSTOMER ROUTES
-router.use('/users', verifyToken, customerUserRoute);
+router.use('/users', verifyToken, userRoute);
 router.use('/games', verifyToken, customerGameRoute);
 router.use('/sessions', verifyToken, customerGameSessionRoute);
 
