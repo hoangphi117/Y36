@@ -35,6 +35,14 @@ const MY_GAMES = [
     variant: "primary" as const,
     url: "/match-3",
   },
+  {
+    id: 5,
+    title: "Cờ trí nhớ",
+    image:
+      "https://cdn-icons-png.flaticon.com/512/6168/6168860.png",
+    variant: "accent" as const,
+    url: "/memory",
+  }
 ];
 
 export default function HomePage() {

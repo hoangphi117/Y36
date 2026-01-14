@@ -7,6 +7,7 @@ import CaroGame from "@/pages/games/CaroGame";
 import TicTacToe from "@/pages/games/TicTacToe";
 import SnakeGame from "@/pages/games/Snake";
 import Match3Game from "@/pages/games/Match3Game";
+import MemoryGame from "@/pages/games/MemoryGame";
 import LoginPage from "@/pages/auth/LoginPage";
 import RegisterPage from "@/pages/auth/RegisterPage";
 
@@ -32,6 +33,10 @@ const router = createBrowserRouter([
   {
     path: "/match-3",
     element: <Match3Game />,
+  },
+  {
+    path: "/memory",
+    element: <MemoryGame />,
   },
   {
     path: "/auth/login",
