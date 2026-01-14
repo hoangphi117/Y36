@@ -1,3 +1,4 @@
+const e = require("cors");
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
 
@@ -35,7 +36,12 @@ const profile = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    return res.status(200).json({ data: user });
+    return res.status(200).json({
+      username: user.username,
+      email: user.email,
+      avatar_url: user.avatar_url,
+      dark_mode: user.dark_mode,
+    });
   } catch (error) {
     return res.status(500).json({
       message: "Server error",
@@ -75,4 +81,4 @@ const changePassword = async (req, res) => {
     });
   }
 };
-module.exports = { updateMe, profile,changePassword };
+module.exports = { updateMe, profile, changePassword };

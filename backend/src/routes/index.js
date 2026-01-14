@@ -6,6 +6,7 @@ const AuthRoute = require('./authRoute');
 const customerUserRoute = require('./customer/userRoute');
 const customerGameRoute = require('./customer/gameRoute');
 const customerGameSessionRoute = require('./customer/gameSessionRoute');
+const userRoute = require('./userRoute');
 
 const adminUserRoute = require('./admin/userRoute');
 const adminGameRoute = require('./admin/gameRoute');
@@ -21,5 +22,6 @@ router.use('/admin/stats', verifyToken, isAdmin, adminStatsRoute);
 router.use('/users', verifyToken, customerUserRoute);
 router.use('/games', verifyToken, customerGameRoute);
 router.use('/sessions', verifyToken, customerGameSessionRoute);
+router.use('/user', verifyToken, userRoute);
 
 module.exports = router;
