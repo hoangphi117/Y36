@@ -12,8 +12,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { loginSchema, type LoginFormValues } from "@/lib/schemas";
+import useDocumentTitle from "@/hooks/useDocumentTitle";
 
 export default function LoginPage() {
+  useDocumentTitle("Đăng Nhập");
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     mode: "onBlur",

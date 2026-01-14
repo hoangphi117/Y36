@@ -13,8 +13,10 @@ import {
 } from "@/components/ui/form";
 import { registerSchema, type RegisterFormValues } from "@/lib/schemas";
 import { getPasswordStrength, cn } from "@/lib/utils";
+import useDocumentTitle from "@/hooks/useDocumentTitle";
 
 export default function RegisterPage() {
+  useDocumentTitle("Đăng Ký");
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     mode: "onBlur",
