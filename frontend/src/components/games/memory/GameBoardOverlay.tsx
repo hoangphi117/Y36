@@ -4,7 +4,7 @@ import { ChevronRight, RefreshCcw } from "lucide-react";
 
 interface GameStatusOverlayProps {
     totalScore: number;
-    gameStatus?: "completed" | "lost" | "playing";
+    gameStatus?: "completed" | "lost" | "playing" | string;
     action: () => void;
     currentLevel?: number;
 }
@@ -25,6 +25,10 @@ const GameStatusOverlay = ({ totalScore, gameStatus, action, currentLevel }: Gam
                         <p className="text-xl sm:text-3xl font-black text-primary mb-2">Chúc mừng! Bạn đã hoàn thành tất cả 6 cấp độ! 🏆</p>
                     )}
                 </>
+            )}
+
+            {gameStatus === "freeCompleted" && (
+                <p className="text-xl sm:text-3xl font-black text-primary mb-2">Chiến thắng</p>
             )}
 
             {gameStatus === "lost" && (
