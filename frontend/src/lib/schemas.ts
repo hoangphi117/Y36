@@ -2,10 +2,11 @@ import * as z from "zod";
 
 export const registerSchema = z
   .object({
-    name: z.string().min(2, "Tên hiển thị phải có ít nhất 2 ký tự"),
+    username: z.string().min(2, "Tên hiển thị phải có ít nhất 2 ký tự"),
     email: z.string().email("Email không hợp lệ"),
     password: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
     confirmPassword: z.string(),
+    role: z.enum(["user", "admin"]).default("user"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Mật khẩu xác nhận không khớp",
