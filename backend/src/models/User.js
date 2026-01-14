@@ -51,8 +51,8 @@ class User {
   static async findById(id) {
     return db('users').where({ id }).first();
   }
-  updateById(id, data) {
-    return knex("users")
+  static async updateById(id, data) {
+    return db("users")
       .where({ id })
       .update(data)
       .returning([
