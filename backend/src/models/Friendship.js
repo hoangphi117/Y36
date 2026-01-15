@@ -123,24 +123,62 @@ class Friendship {
       data,
     };
   }
-  static async getIncomingRequests(userId) {
-    return db("friendships as f")
+  static async getIncomingRequests(userId, { page = 1, limit = 10 }) {
+    const currentPage = Math.max(parseInt(page), 1);
+    const perPage = Math.max(parseInt(limit), 1);
+    const offset = (currentPage - 1) * perPage;
+
+    const baseQuery = db("friendships as f")
       .join("users as u", "u.id", "f.user_id_1")
       .where({
         "f.user_id_2": userId,
         "f.status": "pending",
-      })
-      .select("f.created_at", "u.id", "u.username", "u.avatar_url");
+      });
+
+    const [{ count }] = await baseQuery.clone().count("* as count");
+
+    const data = await baseQuery
+      .clone()
+      .select("f.created_at", "u.id", "u.username", "u.avatar_url")
+      .orderBy("f.created_at", "desc")
+      .offset(offset)
+      .limit(perPage);
+
+    return {
+      page: currentPage,
+      limit: perPage,
+      total: parseInt(count),
+      data,
+    };
   }
 
-  static async getOutgoingRequests(userId) {
-    return db("friendships as f")
+  static async getOutgoingRequests(userId, { page = 1, limit = 10 }) {
+    const currentPage = Math.max(parseInt(page), 1);
+    const perPage = Math.max(parseInt(limit), 1);
+    const offset = (currentPage - 1) * perPage;
+
+    const baseQuery = db("friendships as f")
       .join("users as u", "u.id", "f.user_id_2")
       .where({
         "f.user_id_1": userId,
         "f.status": "pending",
-      })
-      .select("f.created_at", "u.id", "u.username", "u.avatar_url");
+      });
+
+    const [{ count }] = await baseQuery.clone().count("* as count");
+
+    const data = await baseQuery
+      .clone()
+      .select("f.created_at", "u.id", "u.username", "u.avatar_url")
+      .orderBy("f.created_at", "desc")
+      .offset(offset)
+      .limit(perPage);
+
+    return {
+      page: currentPage,
+      limit: perPage,
+      total: parseInt(count),
+      data,
+    };
   }
 }
 
