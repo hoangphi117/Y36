@@ -9,6 +9,8 @@ router.delete("/reject/:userId", friendController.rejectFriendRequest);
 router.delete("/unfriend/:userId", friendController.unfriend);
 
 router.get("/list", friendController.getFriends);
+router.get('/requests/incoming', friendController.getIncomingRequests);
+router.get('/requests/outgoing', friendController.getOutgoingRequests);
 
 
 module.exports = router;

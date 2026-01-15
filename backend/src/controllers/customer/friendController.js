@@ -153,7 +153,7 @@ class FriendController {
       const userId = req.user.id;
       const { page = 1, limit = 10 } = req.query;
 
-      const result = await FriendshipService.getIncomingRequests(userId, {
+      const result = await Friend.getIncomingRequests(userId, {
         page,
         limit,
       });
@@ -176,7 +176,7 @@ class FriendController {
       const userId = req.user.id;
       const { page = 1, limit = 10 } = req.query;
 
-      const result = await FriendshipService.getOutgoingRequests(userId, {
+      const result = await Friend.getOutgoingRequests(userId, {
         page,
         limit,
       });
