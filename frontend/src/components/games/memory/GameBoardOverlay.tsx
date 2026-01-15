@@ -12,7 +12,7 @@ interface GameStatusOverlayProps {
 const GameStatusOverlay = ({ totalScore, gameStatus, action, currentLevel }: GameStatusOverlayProps) => {
     return (
         <motion.div
-            className="bg-card rounded-2xl p-6 sm:p-12 text-center shadow-lg border-2 border-primary/20 mb-4 sm:mb-8"
+            className="bg-card rounded-2xl p-4 sm:p-12 text-center shadow-lg border-2 border-primary/20 mb-3 mt-3 sm:mb-8"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
         >

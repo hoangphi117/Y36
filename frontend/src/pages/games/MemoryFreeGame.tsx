@@ -288,7 +288,7 @@ export default function MemoryFreeGame() {
             {/* Game Status Overlay */}
             {isStarted && (freeGameStatus === "completed" || freeGameStatus === "lost") && (
               <motion.div
-                className="absolute inset-0 rounded-2xl bg-background/40 backdrop-blur-[2px] flex items-center justify-center"
+                className="absolute inset-0 rounded-2xl bg-black/70 backdrop-blur-sm flex items-center justify-center"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
               >
