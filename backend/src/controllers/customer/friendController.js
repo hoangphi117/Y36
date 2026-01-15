@@ -147,6 +147,52 @@ class FriendController {
       });
     }
   }
+
+  async getIncomingRequests(req, res) {
+    try {
+      const userId = req.user.id;
+      const { page = 1, limit = 10 } = req.query;
+
+      const result = await FriendshipService.getIncomingRequests(userId, {
+        page,
+        limit,
+      });
+
+      return res.status(200).json({
+        message: "Get incoming requests successfully",
+        ...result,
+      });
+    } catch (error) {
+      console.error("Get incoming requests error:", error);
+      return res.status(500).json({
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  }
+
+  async getOutgoingRequests(req, res) {
+    try {
+      const userId = req.user.id;
+      const { page = 1, limit = 10 } = req.query;
+
+      const result = await FriendshipService.getOutgoingRequests(userId, {
+        page,
+        limit,
+      });
+
+      return res.status(200).json({
+        message: "Get outgoing requests successfully",
+        ...result,
+      });
+    } catch (error) {
+      console.error("Get outgoing requests error:", error);
+      return res.status(500).json({
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  }
 }
 
 module.exports = new FriendController();
