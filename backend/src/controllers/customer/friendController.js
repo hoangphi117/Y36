@@ -26,7 +26,7 @@ class FriendController {
         });
       }
 
-      await Friendship.sendFriendRequest(fromUserId, toUserId);
+      await Friend.sendFriendRequest(fromUserId, toUserId);
       return res.status(201).json({
         message: "Friend request sent successfully",
       });
