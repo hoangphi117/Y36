@@ -13,9 +13,9 @@ const StatCard = ({ label, value, colorClass, icon: Icon, className } : StatCard
     return (
         <motion.div
             className={cn(
-                "bg-card rounded-2xl p-3 sm:p-5 text-center border-2 shadow-sm flex flex-col items-center justify-center min-w-[100px]",
+                "bg-card rounded-lg p-3 sm:p-5 text-center border-2 shadow-sm flex flex-col items-center justify-center min-w-[100px]",
                 className
-            )}
+            )}  
             transition={{ type: "spring", stiffness: 400, damping: 17 }}
         >
             <p className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">
