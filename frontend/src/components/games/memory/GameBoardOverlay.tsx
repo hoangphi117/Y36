@@ -36,7 +36,7 @@ const GameStatusOverlay = ({ totalScore, gameStatus, action, currentLevel }: Gam
             )}
             <p className="text-foreground text-xl">Tổng điểm: <span className="font-bold text-primary text-xl">{totalScore}</span></p>
 
-            <RoundButton size="small" variant="primary" className="mt-3 rounded-sm" onClick={action} >
+            <RoundButton size="small" variant="primary" className="mt-3 rounded-sm text-sm" onClick={action} >
                 {gameStatus === "completed" ? "Màn tiếp theo" : "Chơi lại"}
                 {gameStatus === "completed" ? <ChevronRight className="w-4 h-4" /> : <RefreshCcw className="w-4 h-4" />}
             </RoundButton>

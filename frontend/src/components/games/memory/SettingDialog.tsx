@@ -38,9 +38,9 @@ export default function SettingDialog({ setFreePairs, setFreeTime, setFreeTimeLe
         exit={{ opacity: 0 }}
     >
         <motion.div
-        className="bg-card rounded-2xl p-6 sm:p-8 shadow-2xl border-2 border-accent/20 max-w-sm w-full space-y-6"
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
+            className="bg-card rounded-2xl p-6 sm:p-8 shadow-2xl border-2 border-accent/20 max-w-sm w-full space-y-6"
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
         >
         {/* Configuration header */}
         <div className="text-center">
@@ -82,10 +82,10 @@ export default function SettingDialog({ setFreePairs, setFreeTime, setFreeTimeLe
         {/* Action buttons */}
         <div className="flex gap-3 pt-4">
             <button
-            onClick={() => setIsConfigDialogOpen(false)}
-            className="flex-1 px-6 py-3 rounded-xl border-2 border-muted-foreground text-muted-foreground font-bold hover:bg-muted transition-colors"
+                onClick={() => setIsConfigDialogOpen(false)}
+                className="flex-1 px-6 py-3 rounded-xl border-2 border-muted-foreground text-muted-foreground font-bold hover:bg-muted transition-colors"
             >
-            Hủy
+                Hủy
             </button>
             <motion.button
                 onClick={() => {
