@@ -87,14 +87,26 @@ class Friendship {
 
     const baseQuery = db("friendships as f")
       .join("users as u", function () {
-        this.on("u.id", "=", "f.user_id_1").orOn("u.id", "=", "f.user_id_2");
+        this.on(function () {
+          this.on("f.user_id_1", "=", db.raw("?", [userId])).andOn(
+            "u.id",
+            "=",
+            "f.user_id_2"
+          );
+        }).orOn(function () {
+          this.on("f.user_id_2", "=", db.raw("?", [userId])).andOn(
+            "u.id",
+            "=",
+            "f.user_id_1"
+          );
+        });
       })
-      .where("f.status", "accepted")
-      .andWhere("u.id", "!=", userId);
+      .where("f.status", "accepted");
 
     if (search && search.trim()) {
       baseQuery.andWhere("u.username", "ilike", `%${search}%`);
     }
+
     const [{ count }] = await baseQuery.clone().count("* as count");
 
     const data = await baseQuery
@@ -111,7 +123,6 @@ class Friendship {
       data,
     };
   }
-
   static async getIncomingRequests(userId) {
     return db("friendships as f")
       .join("users as u", "u.id", "f.user_id_1")
