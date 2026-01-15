@@ -42,7 +42,6 @@ export const useLogin = () => {
     onSuccess: (data) => {
       const fullUser = {
         ...data.user,
-        username: data.user.username || data.user.name,
         avatar_url: data.user.avatar_url || "https://github.com/shadcn.png",
         dark_mode: data.user.dark_mode ?? false,
       };
