@@ -17,7 +17,7 @@ import icon16 from "@/assets/memoryIcons/icon16.png";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { GameHeader } from "@/components/games/GameHeader";
-import { Infinity as InfynityIcon, Play, Settings2 } from "lucide-react";
+import { Infinity as InfynityIcon, Play, Settings2, Pause } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BackToSelectionButton, RefreshGameButton } from "@/components/games/memory/SettingButtons";
 import StatCard from "@/components/games/memory/StatCard";
@@ -27,6 +27,7 @@ import { RoundButton } from "@/components/ui/round-button";
 import SettingDialog from "@/components/games/memory/SettingDialog";
 import { convertCardsToBoardState, createSessionSave } from "@/utils/memorySessionHelper";
 import type { MemorySessionSave } from "@/types/memoryGame";
+import { PauseMenu } from "@/components/games/memory/PauseMenu";
 
 const ICONS = [icon1, icon2, icon3, icon4, icon5, icon6, icon7, icon8, icon9, icon10, icon11, icon12, icon13, icon14, icon15, icon16];
 
@@ -51,6 +52,7 @@ export default function MemoryFreeGame() {
   const [freeTimeLeft, setFreeTimeLeft] = useState(0);
   const [freeGameStatus, setFreeGameStatus] = useState<GameStatus>("playing");
   const [isStarted, setIsStarted] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [configPairs, setConfigPairs] = useState(6);
   const [configTime, setConfigTime] = useState(60);
   const [isConfigDialogOpen, setIsConfigDialogOpen] = useState(false);
@@ -106,7 +108,7 @@ export default function MemoryFreeGame() {
 
   // Handle card flip
   const handleFreeCardFlip = (cardId: number) => {
-    if (!isStarted || freeGameStatus !== "playing" || freeFlipped.length >= 2 || freeFlipped.includes(cardId) || freeMatched.includes(cardId)) {
+    if (!isStarted || freeGameStatus !== "playing" || freeFlipped.length >= 2 || freeFlipped.includes(cardId) || freeMatched.includes(cardId) || isPaused) {
       return;
     }
 
@@ -126,7 +128,7 @@ export default function MemoryFreeGame() {
 
   // Timer for free mode
   useEffect(() => {
-    if (freeGameStatus !== "playing" || !isStarted) return;
+    if (freeGameStatus !== "playing" || !isStarted || isPaused) return;
     if (freeTime === 0) return; 
 
     const timer = setInterval(() => {
@@ -140,7 +142,7 @@ export default function MemoryFreeGame() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [freeGameStatus, freeTime, isStarted]);
+  }, [freeGameStatus, freeTime, isStarted, isPaused]);
 
   // Check free mode completion
   useEffect(() => {
@@ -163,6 +165,40 @@ export default function MemoryFreeGame() {
   // Reset to mode selection
   const backToSelection = () => {
     navigate("/memory");
+  };
+
+  // Restart free mode game
+  const restartFreeGame = () => {
+    setIsStarted(false);
+    setIsPaused(false);
+    setFreePairs(configPairs);
+    setFreeTime(configTime);
+    const newCards = generateCards(configPairs);
+    setFreeCards(newCards);
+    setFreeFlipped([]);
+    setFreeMatched([]);
+    setFreeGameStatus("playing");
+    setFreeTimeLeft(configTime);
+  };
+
+  // Handle pause menu - save and exit
+  const handleSaveAndExit = () => {
+    try {
+      // Save game session
+      saveGameSession();
+      // Navigate back to selection
+      navigate("/memory");
+    } catch (error) {
+      console.error("Error saving game:", error);
+      // Still navigate back even if save fails
+      navigate("/memory");
+    }
+  };
+
+  // Handle restart from pause menu
+  const handleRestartFromPause = () => {
+    setIsPaused(false);
+    restartFreeGame();
   };
 
   // Calculate responsive columns
@@ -250,6 +286,16 @@ export default function MemoryFreeGame() {
           <div className="flex flex-row gap-2 sm:gap-3 items-center justify-start mb-3">
             <BackToSelectionButton backToSelection={backToSelection} />
             { isStarted &&  freeGameStatus === "playing" && <RefreshGameButton restartGame={initializeFreeGame} />}
+            {isStarted && freeGameStatus === "playing" && (
+              <RoundButton 
+                size="small"
+                className="rounded-md"
+                onClick={() => setIsPaused(true)}
+              >
+                <Pause className="w-5 h-5" />
+                <span className="hidden min-[375px]:inline ml-1">Tạm dừng</span>
+              </RoundButton>
+            )}
             <RoundButton 
                 size="small"
                 className="rounded-md"
@@ -345,6 +391,15 @@ export default function MemoryFreeGame() {
           )}
         </motion.div>
       </div>
+
+      {/* Pause Menu */}
+      {isPaused && (
+        <PauseMenu
+          onContinue={() => setIsPaused(false)}
+          onSaveAndExit={handleSaveAndExit}
+          onRestart={handleRestartFromPause}
+        />
+      )}
     </>
   );
 }

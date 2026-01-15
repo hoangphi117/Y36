@@ -17,7 +17,7 @@ import icon16 from "@/assets/memoryIcons/icon16.png";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { GameHeader } from "@/components/games/GameHeader";
-import { AlarmClock, History, Play, RefreshCcw } from "lucide-react";
+import { AlarmClock, History, Play, RefreshCcw, Pause } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BackToSelectionButton } from "@/components/games/memory/SettingButtons";
 import StatCard from "@/components/games/memory/StatCard";
@@ -26,8 +26,9 @@ import { useNavigate } from "react-router-dom";
 import calcLevelScore from "@/utils/clacScoreMemoryGame";
 import { RoundButton } from "@/components/ui/round-button";
 import { convertCardsToBoardState, createSessionSave } from "@/utils/memorySessionHelper";
-import type { MemorySessionResponse, MemorySessionSave } from "@/types/memoryGame";
+import type { MemorySessionSave } from "@/types/memoryGame";
 import memoryApi from "@/services/memoryApi";
+import { PauseMenu } from "@/components/games/memory/PauseMenu";
 
 const ICONS = [icon1, icon2, icon3, icon4, icon5, icon6, icon7, icon8, icon9, icon10, icon11, icon12, icon13, icon14, icon15, icon16];
 
@@ -62,11 +63,7 @@ export default function MemoryLevelGame() {
   const [totalScore, setTotalScore] = useState(0);
   const [moves, setMoves] = useState(0);
   const [isStarted, setIsStarted] = useState(false);
-
-
-  // session state type
-  // const [session, setSession] = useState<MemorySessionResponse | null>(null);
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
 
   // Load default game session from API
   useEffect(() => {
@@ -107,33 +104,31 @@ export default function MemoryLevelGame() {
 
   // Get current game session state
   const getCurrentSessionState = (): MemorySessionSave => {
-    const boardState = convertCardsToBoardState(cards, flipped, matched);
+    const board = convertCardsToBoardState(cards, flipped, matched);
     return createSessionSave(
-      boardState,
-      gameStatus,
+      board,
       timeLeft,
       currentLevel,
       moves,
       totalScore,
-      "level"
     );
   };
 
   // Save game (can be called to send to API)
   const saveGameSession = async () => {
-    const sessionData = getCurrentSessionState();
-    console.log("Game session to save:", sessionData);
+    const sessionSaveData = getCurrentSessionState();
+    console.log("Game session to save:", sessionSaveData);
 
     const newSession = await memoryApi.startSession(6);
     console.log("check start new session: ", newSession);
     setSessionId(newSession.session.id);
     console.log("check new session Id: ", newSession.session.id);
-    return sessionData;
+    return sessionSaveData;
   };
 
   // Handle card flip
   const handleCardFlip = (cardId: number) => {
-    if (!isStarted || gameStatus !== "playing" || flipped.length >= 2 || flipped.includes(cardId) || matched.includes(cardId)) {
+    if (!isStarted || gameStatus !== "playing" || flipped.length >= 2 || flipped.includes(cardId) || matched.includes(cardId) || isPaused) {
       return;
     }
 
@@ -154,7 +149,7 @@ export default function MemoryLevelGame() {
 
   // Timer for level mode
   useEffect(() => {
-    if (gameStatus !== "playing" || !isStarted) return;
+    if (gameStatus !== "playing" || !isStarted || isPaused) return;
 
     const timer = setInterval(() => {
       setTimeLeft((t) => {
@@ -167,7 +162,7 @@ export default function MemoryLevelGame() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [gameStatus, isStarted]);
+  }, [gameStatus, isStarted, isPaused]);
 
   // Check level completion
   useEffect(() => {
@@ -218,7 +213,28 @@ export default function MemoryLevelGame() {
     setIsStarted(false);
     setTotalScore(0);
     setCurrentLevel(0);
-  }
+    setIsPaused(false);
+  };
+
+  // Handle pause menu - save game session
+  const handleSaveAndExit = async () => {
+    try {
+      // Save game session
+      await saveGameSession();
+      // Navigate back to selection
+      navigate("/memory");
+    } catch (error) {
+      console.error("Error saving game:", error);
+      // Still navigate back even if save fails
+      navigate("/memory");
+    }
+  };
+
+  // Handle restart from pause menu
+  const handleRestartFromPause = () => {
+    setIsPaused(false);
+    restartGame();
+  };
 
   // Calculate responsive columns based on screen width and card count
   const getResponsiveColumns = (totalCards: number): number => {
@@ -237,7 +253,7 @@ export default function MemoryLevelGame() {
   };
 
   // Render card component
-  const CardComponent = ({ cardId, card, isFlipped, isMatched, onClick }: any) => (
+  const CardComponent = ({ card, isFlipped, isMatched, onClick }: any) => (
     <motion.button
       onClick={onClick}
       disabled={isMatched}
@@ -305,15 +321,10 @@ export default function MemoryLevelGame() {
 
           <div className="flex flex-row gap-2 mb-4 items-center justify-center">
             <BackToSelectionButton backToSelection={backToSelection} />
-            {isStarted && (
-              <RoundButton size="small"  onClick={restartGame} className="hover:bg-primary/90 text-[0.8rem] sm:py-2 rounded-md">
-                <RefreshCcw className="w-5 h-5" />
-                <span className="hidden min-[375px]:inline ml-1">Chơi lại</span>
-              </RoundButton>
-            )}
-            {isStarted && (
-              <RoundButton size="small" onClick={saveGameSession} className="hover:bg-primary/90 text-[0.8rem] sm:py-2 rounded-md">
-                Lưu
+            {isStarted && gameStatus === "playing" && (
+              <RoundButton size="small" onClick={() => setIsPaused(true)} className="hover:bg-primary/90 text-[0.8rem] sm:py-2 rounded-md">
+                <Pause className="w-5 h-5" />
+                <span className="hidden min-[375px]:inline ml-1">Tạm dừng</span>
               </RoundButton>
             )}
             <RoundButton
@@ -390,6 +401,15 @@ export default function MemoryLevelGame() {
           </motion.div>
         </motion.div>
       </div>
+
+      {/* Pause Menu */}
+      {isPaused && (
+        <PauseMenu
+          onContinue={() => setIsPaused(false)}
+          onSaveAndExit={handleSaveAndExit}
+          onRestart={handleRestartFromPause}
+        />
+      )}
     </>
   );
 }
