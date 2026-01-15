@@ -17,7 +17,7 @@ import icon16 from "@/assets/memoryIcons/icon16.png";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { GameHeader } from "@/components/games/GameHeader";
-import { AlarmClock, History, Play, RefreshCcw, Pause } from "lucide-react";
+import { AlarmClock, History, Play, Pause } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BackToSelectionButton } from "@/components/games/memory/SettingButtons";
 import StatCard from "@/components/games/memory/StatCard";
@@ -29,6 +29,7 @@ import { convertCardsToBoardState, createSessionSave } from "@/utils/memorySessi
 import type { MemorySessionSave } from "@/types/memoryGame";
 import memoryApi from "@/services/memoryApi";
 import { PauseMenu } from "@/components/games/memory/PauseMenu";
+import SessionHistoryDialog from "@/components/games/memory/SessionHistoryDialog";
 
 const ICONS = [icon1, icon2, icon3, icon4, icon5, icon6, icon7, icon8, icon9, icon10, icon11, icon12, icon13, icon14, icon15, icon16];
 
@@ -64,6 +65,10 @@ export default function MemoryLevelGame() {
   const [moves, setMoves] = useState(0);
   const [isStarted, setIsStarted] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+
+  //session id for saving
+  // const [sessionId, setSessionId] = useState<string | null>(null);
 
   // Load default game session from API
   useEffect(() => {
@@ -114,15 +119,14 @@ export default function MemoryLevelGame() {
     );
   };
 
-  // Save game (can be called to send to API)
+  // Save game
   const saveGameSession = async () => {
     const sessionSaveData = getCurrentSessionState();
     console.log("Game session to save:", sessionSaveData);
 
     const newSession = await memoryApi.startSession(6);
-    console.log("check start new session: ", newSession);
-    setSessionId(newSession.session.id);
-    console.log("check new session Id: ", newSession.session.id);
+    const res = await memoryApi.saveSession(newSession.session.id, sessionSaveData);
+    console.log("check save res: ", res);
     return sessionSaveData;
   };
 
@@ -327,13 +331,16 @@ export default function MemoryLevelGame() {
                 <span className="hidden min-[375px]:inline ml-1">Tạm dừng</span>
               </RoundButton>
             )}
-            <RoundButton
-              size="small"
-              className="hover:bg-primary/90 text-[0.8rem] sm:py-2 rounded-md"
-            >
-              <History className="w-5 h-5" />
-              <span className="hidden min-[375px]:inline ml-1">Lịch sử</span>
-            </RoundButton>
+            {!isStarted && (
+              <RoundButton
+                size="small"
+                className="hover:bg-primary/90 text-[0.8rem] sm:py-2 rounded-md"
+                onClick={() => setIsHistoryOpen(true)}
+              >
+                <History className="w-5 h-5" />
+                <span className="hidden min-[375px]:inline ml-1">Lịch sử</span>
+              </RoundButton>
+            )}
           </div>
 
           {/* Game board */}
@@ -408,6 +415,15 @@ export default function MemoryLevelGame() {
           onContinue={() => setIsPaused(false)}
           onSaveAndExit={handleSaveAndExit}
           onRestart={handleRestartFromPause}
+        />
+      )}
+
+      {isHistoryOpen && (
+        <SessionHistoryDialog 
+          isOpen={isHistoryOpen}
+          onClose={() => setIsHistoryOpen(false)}
+          sessions={[]} 
+          onLoadSession={() => {}}
         />
       )}
     </>
