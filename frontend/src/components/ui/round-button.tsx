@@ -29,16 +29,16 @@ export const RoundButton = ({
 
   const sizeStyles = {
     small:
-      "h-10 px-4 text-sm border-b-[5px] active:border-b-0 active:translate-y-[3px]",
+      "h-10 px-4 text-sm border-b-[5px] active:border-b-[3px] active:translate-y-[2px]",
 
     medium:
-      "h-14 px-6 text-md border-b-[8px] active:border-b-0 active:translate-y-[3px]",
+      "h-14 px-6 text-md border-b-[8px] active:border-b-[3px] active:translate-y-[3px]",
 
     large:
-      "h-20 px-12 text-2xl border-b-[9px] active:border-b-0 active:translate-y-[4px]",
+      "h-20 px-12 text-2xl border-b-[9px] active:border-b-[4px] active:translate-y-[4px]",
 
     mobile:
-      "h-14 w-full text-xl border-b-[6px] active:border-b-0 active:translate-y-[6px]",
+      "h-14 w-full text-xl border-b-[6px] active:border-b-[2px] active:translate-y-[6px]",
   };
 
   return (

@@ -1,7 +1,16 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link } from "react-router-dom";
-import { User, Mail, Lock, ShieldCheck, ArrowRight } from "lucide-react";
+import {
+  User,
+  Mail,
+  Lock,
+  ShieldCheck,
+  ArrowRight,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import { RoundButton } from "@/components/ui/round-button";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,26 +22,33 @@ import {
 } from "@/components/ui/form";
 import { registerSchema, type RegisterFormValues } from "@/lib/schemas";
 import { getPasswordStrength, cn } from "@/lib/utils";
+import useDocumentTitle from "@/hooks/useDocumentTitle";
+import { useRegister } from "@/hooks/useAuth";
 
 export default function RegisterPage() {
-  const form = useForm<RegisterFormValues>({
+  useDocumentTitle("Đăng Ký");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const form = useForm({
     resolver: zodResolver(registerSchema),
-    mode: "onBlur",
     defaultValues: {
-      name: "",
+      username: "",
       email: "",
       password: "",
       confirmPassword: "",
+      role: "user", // Lưu ý: TypeScript có thể hiểu nhầm đây là string thường
     },
+    mode: "onChange",
   });
+
+  const { mutate: handleRegister, isPending, isError, error } = useRegister();
+
+  const onSubmit = (data: RegisterFormValues) => {
+    handleRegister(data);
+  };
 
   const password = form.watch("password");
   const strength = getPasswordStrength(password);
-
-  const onSubmit = async (data: RegisterFormValues) => {
-    console.log("Register Data:", data);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-  };
 
   const strengthColor = [
     "bg-muted", // 0: Trống
@@ -51,6 +67,10 @@ export default function RegisterPage() {
       ? "text-muted-foreground"
       : strengthColor.replace("bg-", "text-");
 
+  const errorMessage =
+    (error as any)?.response?.data?.message ||
+    "Đăng nhập thất bại. Vui lòng thử lại";
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background transition-colors duration-500">
       <div className="w-full max-w-md bg-card p-8 rounded-[2rem] shadow-2xl border-2 border-border/50">
@@ -67,7 +87,7 @@ export default function RegisterPage() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="name"
+              name="username"
               render={({ field }) => (
                 <FormItem>
                   <div className="relative">
@@ -115,12 +135,24 @@ export default function RegisterPage() {
                     <Lock className="absolute left-3 top-2 h-5 w-5 text-muted-foreground z-10" />
                     <FormControl>
                       <Input
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         placeholder="Mật khẩu"
-                        className="pl-10"
+                        className="pl-10 pr-10"
                         {...field}
                       />
                     </FormControl>
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      className="absolute right-3 top-2 text-muted-foreground hover:text-primary transition"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-5 w-5" />
+                      ) : (
+                        <Eye className="h-5 w-5" />
+                      )}
+                    </button>
                   </div>
                   <FormMessage className="text-xs font-bold text-destructive ml-1" />
                   {password && (
@@ -175,15 +207,23 @@ export default function RegisterPage() {
               )}
             />
 
+            {isError && (
+              <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2">
+                <p className="text-xs font-bold text-destructive text-center">
+                  {errorMessage}
+                </p>
+              </div>
+            )}
+
             <RoundButton
               type="submit"
               variant="primary"
               size="large"
-              className="w-full mt-4 group"
-              disabled={form.formState.isSubmitting}
+              className="w-full group"
+              disabled={isPending || !form.formState.isValid}
             >
-              {form.formState.isSubmitting ? "Đang xử lý..." : "Đăng Ký Ngay"}
-              {!form.formState.isSubmitting && (
+              {isPending ? "Đang xử lý..." : "Đăng Ký Ngay"}
+              {!isPending && (
                 <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
               )}
             </RoundButton>

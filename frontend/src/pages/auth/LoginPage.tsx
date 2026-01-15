@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link } from "react-router-dom";
-import { Mail, Lock, LogIn, ArrowLeft } from "lucide-react";
+import { Mail, Lock, LogIn, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { RoundButton } from "@/components/ui/round-button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,21 +13,30 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { loginSchema, type LoginFormValues } from "@/lib/schemas";
+import useDocumentTitle from "@/hooks/useDocumentTitle";
+import { useLogin } from "@/hooks/useAuth";
 
 export default function LoginPage() {
+  useDocumentTitle("Đăng Nhập");
+  const [showPassword, setShowPassword] = useState(false);
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
-    mode: "onBlur",
+    mode: "onChange",
     defaultValues: {
       email: "",
       password: "",
     },
   });
 
+  const { mutate: handleLogin, isPending, isError, error } = useLogin();
+
   const onSubmit = async (data: LoginFormValues) => {
-    console.log("Login Data:", data);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    handleLogin(data);
   };
+
+  const errorMessage =
+    (error as any)?.response?.data?.message ||
+    "Đăng nhập thất bại. Vui lòng thử lại";
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background transition-colors duration-500">
@@ -72,12 +82,19 @@ export default function LoginPage() {
                     <Lock className="absolute left-3 top-2 h-5 w-5 text-muted-foreground z-10" />
                     <FormControl>
                       <Input
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         placeholder="Mật khẩu"
                         className="pl-10"
                         {...field}
                       />
                     </FormControl>
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-2 text-muted-foreground z-10"
+                    >
+                      {showPassword ? <EyeOff /> : <Eye />}
+                    </button>
                   </div>
                   <FormMessage className="text-xs font-bold text-destructive ml-1" />
                 </FormItem>
@@ -93,17 +110,23 @@ export default function LoginPage() {
               </Link>
             </div>
 
+            {isError && (
+              <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2">
+                <p className="text-xs font-bold text-destructive text-center">
+                  {errorMessage}
+                </p>
+              </div>
+            )}
+
             <RoundButton
               type="submit"
               variant="accent"
               size="large"
-              className="w-full mt-2"
-              disabled={form.formState.isSubmitting}
+              className="w-full"
+              disabled={isPending || !form.formState.isValid}
             >
-              {form.formState.isSubmitting ? "Đang xử lý..." : "Đăng Nhập"}
-              {!form.formState.isSubmitting && (
-                <LogIn className="w-5 h-5 ml-2" />
-              )}
+              {isPending ? "Đang xử lý..." : "Đăng Nhập"}
+              {!isPending && <LogIn className="w-5 h-5 ml-2" />}
             </RoundButton>
           </form>
         </Form>
