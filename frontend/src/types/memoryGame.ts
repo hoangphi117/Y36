@@ -5,21 +5,10 @@ export interface BoardCard {
   status: "matched" | "hidden" | "flipped"; 
 }
 
-// Complete game session state
-export interface MemorySessionSave {
-  board: BoardCard[]; 
-  gameStatus: "playing" | "completed" | "lost"; 
-  timeLeft: number; 
-  currentLevel: number; 
-  moves: number; 
-  totalScore: number; 
-  mode: "level" | "free"; 
-}
-
 export interface board_state {
     cards: BoardCard[];
-    moves: number;
-    level: number;
+    moves?: number;
+    level?: number;
 }
 
 export interface session_config {

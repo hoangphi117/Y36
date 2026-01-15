@@ -42,20 +42,18 @@ export const convertCardsToBoardState = (
  */
 export const createSessionSave = (
   board: BoardCard[],
-  gameStatus: "playing" | "completed" | "lost",
   timeLeft: number,
   currentLevel: number,
   moves: number,
   totalScore: number,
-  mode: "level" | "free"
 ): MemorySessionSave => {
   return {
-    board,
-    gameStatus,
-    timeLeft,
-    currentLevel,
-    moves,
-    totalScore,
-    mode,
+    board_state: {
+      cards: board,
+      moves: moves,
+      level: currentLevel,
+    },
+    score: totalScore,
+    play_time_seconds: timeLeft,
   };
 };
