@@ -135,6 +135,18 @@ class FriendController {
       });
     }
   }
+
+  async getFriends(req, res) {
+    try {
+      const result = await Friendship.getFriends(req.user.id, req.query);
+      res.status(200).json(result);
+    } catch (error) {
+      res.status(500).json({
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  }
 }
 
 module.exports = new FriendController();
