@@ -75,16 +75,40 @@ class FriendController {
 
       if (!deleted) {
         return res.status(400).json({
-          message: 'No pending friend request found',
+          message: "No pending friend request found",
         });
       }
 
       return res.status(200).json({
-        message: 'Friend request rejected',
+        message: "Friend request rejected",
       });
     } catch (error) {
       return res.status(500).json({
-        message: 'Server error',
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  }
+
+  async unfriend(req, res) {
+    try {
+      const currentUserId = req.user.id;
+      const { userId: otherUserId } = req.params;
+
+      const deleted = await Friend.unfriend(currentUserId, otherUserId);
+
+      if (!deleted) {
+        return res.status(400).json({
+          message: "No friendship found to unfriend",
+        });
+      }
+
+      return res.status(200).json({
+        message: "Unfriended successfully",
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: "Server error",
         error: error.message,
       });
     }
