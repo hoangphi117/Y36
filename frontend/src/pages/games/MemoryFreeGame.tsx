@@ -17,9 +17,9 @@ import icon16 from "@/assets/memoryIcons/icon16.png";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { GameHeader } from "@/components/games/GameHeader";
-import { Infinity as InfynityIcon, Play, RefreshCcw, Settings2 } from "lucide-react";
+import { Infinity as InfynityIcon, Play, Settings2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { BackToSelectionButton } from "@/components/games/memory/SettingButtons";
+import { BackToSelectionButton, RefreshGameButton } from "@/components/games/memory/SettingButtons";
 import StatCard from "@/components/games/memory/StatCard";
 import { GameStatusOverlay } from "@/components/games/memory/GameBoardOverlay";
 import { useNavigate } from "react-router-dom";
@@ -78,10 +78,6 @@ export default function MemoryFreeGame() {
     setFreeTimeLeft(freeTime);
     setIsStarted(true);
   };
-
-  const restartGame = () => {
-    initializeFreeGame();
-  }
 
   // Handle card flip
   const handleFreeCardFlip = (cardId: number) => {
@@ -225,15 +221,10 @@ export default function MemoryFreeGame() {
             />
           </div>
 
+          {/* Setting buttons */}
           <div className="flex flex-row gap-2 sm:gap-3 items-center justify-start mb-3">
             <BackToSelectionButton backToSelection={backToSelection} />
-            <RoundButton 
-                size="small"
-                className="rounded-md"
-                onClick={restartGame} 
-            >
-                <RefreshCcw/>
-            </RoundButton>
+            { isStarted &&  freeGameStatus === "playing" && <RefreshGameButton restartGame={initializeFreeGame} />}
             <RoundButton 
                 size="small"
                 className="rounded-md"
@@ -304,7 +295,7 @@ export default function MemoryFreeGame() {
                 <GameStatusOverlay 
                   totalScore={freeGameStatus === "completed" ? 100 + freeTimeLeft : 0} 
                   gameStatus={freeGameStatus === "completed" ? "freeCompleted" : freeGameStatus} 
-                  action={() => setIsStarted(false)} 
+                  action={initializeFreeGame} 
                 />
               </motion.div>
             )}
