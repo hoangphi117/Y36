@@ -72,6 +72,46 @@ components:
           type: string
           format: date-time
 
+    GameSession:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+
+        user_id:
+          type: string
+          format: uuid
+
+        game_id:
+          type: integer
+
+        status:
+          type: string
+          enum: [playing, completed, saved]
+
+        score:
+          type: integer
+
+        play_time_seconds:
+          type: integer
+
+        board_state:
+          type: object
+          nullable: true
+
+        session_config:
+          type: object
+          nullable: true
+
+        created_at:
+          type: string
+          format: date-time
+
+        updated_at:
+          type: string
+          format: date-time
+
 # --- ĐƯỜNG DẪN API ---
 paths:
   # 1. AUTHENTICATION
@@ -575,3 +615,428 @@ paths:
                           type: integer
         400:
           description: Dữ liệu đầu vào không hợp lệ
+  
+  /auth/register:
+    post:
+      summary: Đăng ký tài khoản người dùng
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - username
+                - password
+              properties:
+                email:
+                  type: string
+                  default: test1@gmail.com
+                username:
+                  type: string
+                  default: testuser1
+                password:
+                  type: string
+                  default: 123456
+      responses:
+        201:
+          description: Đăng ký thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User registered successfully
+
+        400:
+          description: Yêu cầu không hợp lệ hoặc người dùng đã tồn tại 
+
+  /games:
+    get:
+      summary: Lấy danh sách Game công khai
+      tags: [Games]
+      responses:
+        200:
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Game'
+                  
+  /games/{code}:
+    get:
+      summary: Lấy thông tin chi tiết Game công khai theo mã
+      tags: [Games]
+      parameters:
+        - in: path
+          name: code
+          required: true
+          schema:
+            type: string
+          description: Mã của Game
+      responses:
+        200:
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Game'
+        404:
+          description: Không tìm thấy Game
+
+  /sessions/start:
+    post:
+      summary: Start or continue a game session
+      tags: [GameSession]
+      security:
+        - bearerAuth: []
+          apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - gameId
+              properties:
+                gameId:
+                  type: integer
+                  example: 1
+      responses:
+        201:
+          description: New session started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: New game session started
+                  session:
+                    $ref: '#/components/schemas/GameSession'
+        200:
+          description: Continue existing session
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Continue existing session
+                  session:
+                    $ref: '#/components/schemas/GameSession'
+
+  /sessions/{id}/save:
+    put:
+      summary: Save current game session
+      tags: [GameSession]
+      security:
+        - bearerAuth: []
+          apiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                board_state:
+                  type: object
+                score:
+                  type: integer
+                play_time_seconds:
+                  type: integer
+      responses:
+        200:
+          description: Session saved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Session saved
+                  session:
+                    $ref: '#/components/schemas/GameSession'
+
+  /sessions/{id}/complete:
+    put:
+      summary: Complete a game session
+      tags: [GameSession]
+      security:
+        - bearerAuth: []
+          apiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                score:
+                  type: integer
+                play_time_seconds:
+                  type: integer
+      responses:
+        200:
+          description: Session completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Session completed
+                  session:
+                    $ref: '#/components/schemas/GameSession'
+
+  /sessions/{id}/load:
+    get:
+      summary: Load a saved game session
+      tags: [GameSession]
+      security:
+        - bearerAuth: []
+          apiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Game session loaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Game session loaded successfully
+                  session:
+                    $ref: '#/components/schemas/GameSession'
+
+
+  /sessions/{id}:
+    delete:
+      summary: Delete a game session
+      tags: [GameSession]
+      security:
+        - bearerAuth: []
+          apiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Session deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Game session deleted successfully
+
+
+  /sessions/history:
+    get:
+      summary: Get game session history
+      tags: [GameSession]
+      security:
+        - bearerAuth: []
+          apiKeyAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        200:
+          description: Session history fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Session history fetched successfully
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      total:
+                        type: integer
+                      totalPages:
+                        type: integer
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/GameSession'
+
+  /users/me:
+    get:
+      tags:
+        - User
+      summary: Get current user profile
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  username:
+                    type: string
+                  email:
+                    type: string
+                  avatar_url:
+                    type: string
+                    nullable: true
+                  dark_mode:
+                    type: boolean
+        401:
+          description: Unauthorized
+        404:
+          description: User not found
+        500:
+          description: Server error
+
+    put:
+      tags:
+        - User
+      summary: Update current user information
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: quannguyen
+                avatar_url:
+                  type: string
+                  example: https://example.com/avatar.png
+                dark_mode:
+                  type: boolean
+                  example: true
+      responses:
+        200:
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User updated successfully
+                  user:
+                    $ref: '#/components/schemas/User'
+        400:
+          description: Invalid input
+        401:
+          description: Unauthorized
+        404:
+          description: User not found
+        500:
+          description: Server error
+
+  /users/me/password:
+    put:
+      tags:
+        - User
+      summary: Change current user password
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - currentPassword
+                - newPassword
+              properties:
+                currentPassword:
+                  type: string
+                  example: oldPassword123
+                newPassword:
+                  type: string
+                  example: newPassword123
+      responses:
+        200:
+          description: Password changed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Password changed successfully
+        400:
+          description: Current password is incorrect or invalid input
+        401:
+          description: Unauthorized
+        404:
+          description: User not found
+        500:
+          description: Server error
+
+                
+          
+  

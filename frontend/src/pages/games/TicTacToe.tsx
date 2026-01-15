@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { useGameSound } from "@/hooks/useGameSound";
 import { triggerWinEffects } from "@/lib/fireworks";
 import { GameHeader } from "@/components/games/GameHeader";
+import useDocumentTitle from "@/hooks/useDocumentTitle";
 
 type SquareValue = "X" | "O" | null;
 
@@ -77,6 +78,7 @@ function getBotMove(squares: SquareValue[], botPiece: "X" | "O") {
 }
 
 export default function TicTacToe() {
+  useDocumentTitle("Trò Tic Tac Toe");
   const [squares, setSquares] = useState<SquareValue[]>(Array(9).fill(null));
   const [playerPiece, setPlayerPiece] = useState<"X" | "O">("X");
   const [xIsNext, setXIsNext] = useState(true);

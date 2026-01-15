@@ -14,6 +14,7 @@ import { useGameSound } from "@/hooks/useGameSound";
 import { triggerWinEffects } from "@/lib/fireworks";
 
 import { GameHeader } from "@/components/games/GameHeader";
+import useDocumentTitle from "@/hooks/useDocumentTitle";
 
 const BOARD_SIZE = 15;
 
@@ -114,6 +115,7 @@ const getBestMove = (
 };
 
 export default function CaroGame() {
+  useDocumentTitle("Trò Caro");
   const [board, setBoard] = useState<(string | null)[]>(
     Array(BOARD_SIZE * BOARD_SIZE).fill(null)
   );

@@ -201,3 +201,156 @@
   );
   background-size: calc(100% / 10) calc(100% / 10); /* Khớp với GRID_SIZE */
 }
+
+
+/* --- ADMIN LIGHT MODE (Warm Professional) --- */
+.admin-light {
+  /* Base Colors - Soft Beige/Taupe palette */
+  --background: hsl(40, 15%, 96%);              /* #F7F6F4 - Soft warm ivory */
+  --foreground: hsl(215, 25%, 15%);             /* #1D2430 - Deep blue-gray */
+  
+  /* Surface/Card - Slightly darker than background for depth */
+  --card: hsl(40, 18%, 92%);                    /* #F0EDE7 - Warm pearl */
+  --card-foreground: hsl(215, 25%, 15%);
+  
+  /* Popover - Clean white with warmth */
+  --popover: hsl(40, 30%, 98%);                 /* #FAF9F7 - Warm white */
+  --popover-foreground: hsl(215, 25%, 15%);
+  
+  /* Primary - Teal for professionalism */
+  --primary: hsl(175, 60%, 45%);                /* #2DB5A3 - Teal */
+  --primary-foreground: hsl(0, 0%, 100%);
+  
+  /* Secondary - Muted Teal */
+  --secondary: hsl(175, 40%, 70%);              /* #8FCFC4 - Light teal */
+  --secondary-foreground: hsl(215, 25%, 15%);
+  
+  /* Muted - For subtle backgrounds */
+  --muted: hsl(40, 12%, 88%);                   /* #E5E2DC - Warm gray */
+  --muted-foreground: hsl(215, 15%, 45%);       /* #5F6B7A - Medium gray */
+  
+  /* Accent - Coral for CTAs */
+  --accent: hsl(12, 76%, 61%);                  /* #E9714D - Coral */
+  --accent-side: hsl(12, 76%, 55%);             /* #E55C36 - Darker coral */
+  --accent-foreground: hsl(0, 0%, 100%);
+  
+  /* Destructive - Red */
+  --destructive: hsl(0, 72%, 51%);              /* #DC2626 - Red */
+  --destructive-foreground: hsl(0, 0%, 100%);
+  
+  /* Borders & Inputs */
+  --border: hsl(40, 12%, 80%);                  /* #D3CFC7 - Warm border */
+  --input: hsl(40, 18%, 92%);                   /* Same as card */
+  --ring: hsl(175, 60%, 45%);                   /* Primary teal */
+  
+  --radius: 0.75rem;
+}
+
+/* --- ADMIN DARK MODE (Cool Professional Slate) --- */
+.admin-dark {
+  /* Base Colors - Deep blue-gray slate */
+  --background: hsl(220, 40%, 8%);              /* #0C1018 - Deep slate */
+  --foreground: hsl(210, 30%, 96%);             /* #F2F4F7 - Almost white */
+  
+  /* Surface/Card - Elevated slate */
+  --card: hsl(220, 35%, 12%);                   /* #14181F - Lighter slate */
+  --card-foreground: hsl(210, 30%, 96%);
+  
+  /* Popover - Solid dark surface */
+  --popover: hsl(220, 40%, 10%);                /* #0F131A - Dark popover */
+  --popover-foreground: hsl(210, 30%, 96%);
+  
+  /* Primary - Electric Blue */
+  --primary: hsl(200, 95%, 50%);                /* #0EA5E9 - Bright blue */
+  --primary-foreground: hsl(220, 40%, 8%);      /* Dark text on bright bg */
+  
+  /* Secondary - Muted Blue */
+  --secondary: hsl(200, 60%, 30%);              /* #1E5A7A - Muted blue */
+  --secondary-foreground: hsl(210, 30%, 96%);
+  
+  /* Muted - Subtle slate */
+  --muted: hsl(220, 30%, 16%);                  /* #1D232E - Subtle slate */
+  --muted-foreground: hsl(215, 15%, 65%);       /* #939BA8 - Medium slate */
+  
+  /* Accent - Vibrant Purple */
+  --accent: hsl(270, 70%, 60%);                 /* #A855F7 - Purple */
+  --accent-side: hsl(270, 70%, 50%);            /* #8B33D9 - Darker purple */
+  --accent-foreground: hsl(0, 0%, 100%);
+  
+  /* Destructive - Bright Red */
+  --destructive: hsl(0, 85%, 60%);              /* #EF4444 - Bright red */
+  --destructive-foreground: hsl(0, 0%, 100%);
+  
+  /* Borders & Inputs */
+  --border: hsl(220, 25%, 22%);                 /* #2A3140 - Slate border */
+  --input: hsl(220, 35%, 12%);                  /* Same as card */
+  --ring: hsl(200, 95%, 50%);                   /* Primary blue */
+  
+  --radius: 0.75rem;
+}
+
+/* ========================================
+   ADMIN UTILITIES (Support both themes)
+   ======================================== */
+
+@layer components {
+  /* Admin Input/Select Style */
+  .admin-input {
+    @apply w-full px-4 py-2.5 rounded-lg font-mono text-sm;
+    @apply bg-input border border-border;
+    @apply text-foreground placeholder:text-muted-foreground;
+    @apply focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20;
+    @apply transition-all duration-200;
+  }
+
+  /* Admin Card/Surface */
+  .admin-surface {
+    @apply bg-card backdrop-blur-xl border border-border rounded-xl;
+  }
+
+  /* Admin Glass Effect */
+  .admin-glass {
+    @apply bg-card/50 backdrop-blur-xl border border-border/50;
+  }
+
+  /* Primary Button */
+  .admin-btn-primary {
+    @apply px-4 py-2.5 rounded-xl font-mono font-bold;
+    @apply bg-primary text-primary-foreground;
+    @apply hover:opacity-90 transition-all;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary/50;
+  }
+
+  /* Secondary Button */
+  .admin-btn-secondary {
+    @apply px-4 py-2.5 rounded-xl font-mono;
+    @apply bg-muted text-muted-foreground border border-border;
+    @apply hover:bg-muted/80 transition-all;
+  }
+
+  /* Accent Text */
+  .admin-accent {
+    @apply text-accent;
+  }
+
+  /* Primary Text */
+  .admin-primary {
+    @apply text-primary;
+  }
+}
+
+@layer utilities {
+  @keyframes gradient-x {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
+  .animate-gradient-x {
+    background-size: 200% auto;
+    animation: gradient-x 3s ease infinite;
+  }
+}

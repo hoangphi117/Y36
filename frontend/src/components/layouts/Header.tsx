@@ -1,9 +1,37 @@
-import { ModeToggle } from "@/features/ThemeButton";
-import { Link } from "react-router-dom";
-import { Home, Trophy, LogIn, Leaf } from "lucide-react";
-import { RoundButton } from "../ui/round-button";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  Home,
+  Trophy,
+  LogIn,
+  Leaf,
+  LogOut,
+  User as UserIcon,
+} from "lucide-react";
+import { RoundButton } from "@/components/ui/round-button";
+import { useAuthStore } from "@/stores/useAuthStore";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export const Header = () => {
+  const { user, logout } = useAuthStore();
+  const navigate = useNavigate();
+
+  console.log("Current User in Header:", user);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/auth/login");
+  };
+
+  const firstLetter = user?.username?.charAt(0).toUpperCase() || "U";
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto w-[90%] md:w-[80%] h-20 flex items-center justify-between">
@@ -23,7 +51,6 @@ export const Header = () => {
           </div>
         </Link>
 
-        {/* NAVIGATION */}
         <nav className="hidden md:flex items-center gap-10">
           <Link
             to="/"
@@ -41,19 +68,58 @@ export const Header = () => {
           </Link>
         </nav>
 
-        {/* ACTIONS */}
         <div className="flex items-center gap-4">
-          <ModeToggle />
-          <Link to="/auth/login">
-            <RoundButton
-              size="medium"
-              variant="primary"
-              className="flex items-center gap-2"
-            >
-              <LogIn className="w-4 h-4 shrink-0" />
-              <span className="whitespace-nowrap">Đăng nhập</span>
-            </RoundButton>
-          </Link>
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger className="outline-none">
+                <div className="flex items-center gap-3 pl-1 pr-2 py-1 rounded-full border border-transparent hover:bg-muted transition-colors cursor-pointer">
+                  <div className="hidden sm:flex flex-col items-start">
+                    <span className="text-sm font-bold">
+                      Xin chào, {user.username || user.name}
+                    </span>
+                  </div>
+                  <Avatar className="h-10 w-10 border-2 border-primary/20">
+                    <AvatarImage
+                      src={user?.avatar_url ?? undefined}
+                      alt={user?.username ?? "User"}
+                    />
+                    <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                      {firstLetter}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 rounded-xl p-2">
+                <DropdownMenuLabel className="font-bold text-muted-foreground text-xs uppercase tracking-wider">
+                  Tài khoản
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="cursor-pointer font-medium rounded-lg focus:bg-primary/10 focus:text-primary">
+                  <UserIcon className="mr-2 h-4 w-4" />
+                  <Link to="/profile">Hồ sơ của tôi</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="cursor-pointer text-destructive font-medium focus:bg-destructive/10 focus:text-destructive rounded-lg"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Đăng xuất</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Link to="/auth/login">
+              <RoundButton
+                size="medium"
+                variant="primary"
+                className="flex items-center gap-2"
+              >
+                <LogIn className="w-4 h-4 shrink-0" />
+                <span className="whitespace-nowrap">Đăng nhập</span>
+              </RoundButton>
+            </Link>
+          )}
         </div>
       </div>
     </header>

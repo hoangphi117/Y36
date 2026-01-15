@@ -14,6 +14,7 @@ import {
 import { useGameSound } from "@/hooks/useGameSound";
 
 import { GameHeader } from "@/components/games/GameHeader";
+import useDocumentTitle from "@/hooks/useDocumentTitle";
 
 // --- CẤU HÌNH GAME ---
 const GRID_SIZE = 20;
@@ -25,6 +26,7 @@ const INITIAL_SNAKE = [
 const INITIAL_DIRECTION = { x: 0, y: -1 }; // Đi lên
 
 export default function SnakeGame() {
+  useDocumentTitle("Trò Rắn Săn Mồi");
   const [snake, setSnake] = useState(INITIAL_SNAKE);
   const [food, setFood] = useState({ x: 5, y: 5 });
   const [direction, setDirection] = useState(INITIAL_DIRECTION);
