@@ -67,7 +67,7 @@ class User {
       ]);
   }
 
-  static async searchUsersWithFriendStatus(currentUserId, username) {
+  static async searchUsersWithFriendStatus(currentUserId, username,limit=10,offset=0) {
     return db("users as u")
       .leftJoin("friendships as f", function () {
         this.on(function () {
@@ -79,6 +79,7 @@ class User {
         });
       })
       .where("u.username", "ilike", `%${username}%`)
+      .andWhere("u.role", "customer") 
       .andWhere("u.id", "!=", currentUserId)
       .select(
         "u.id",
@@ -97,7 +98,19 @@ class User {
           [currentUserId, currentUserId]
         )
       )
-      .limit(10);
+      .limit(limit)
+      .offset(offset);
+  }
+
+  static async countSearchUsers(currentUserId, username) {
+    const result = await db("users as u")
+      .where("u.username", "ilike", `%${username}%`)
+      .andWhere("u.role", "customer")
+      .andWhere("u.id", "!=", currentUserId)
+      .count("u.id as total")
+      .first();
+
+    return parseInt(result.total);
   }
 }
 
