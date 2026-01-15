@@ -194,8 +194,8 @@ export default function MemoryFreeGame() {
         >
           {/* Game header */}
           <div className="text-center mb-4 sm:mb-8">
-            <h1 className="text-2xl sm:text-4xl font-black text-primary mb-1 sm:mb-2">Memory Game</h1>
-            <p className="text-muted-foreground text-sm sm:text-lg">Free Mode - Practice & Relax</p>
+            <h1 className="text-2xl sm:text-4xl font-black text-primary mb-1 sm:mb-2">CỜ TRÍ NHỚ</h1>
+            <p className="text-muted-foreground text-sm sm:text-lg">Chế độ tự do - Luyện tập</p>
           </div>
 
           {/* Game info cards */}

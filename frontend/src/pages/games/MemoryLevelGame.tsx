@@ -30,12 +30,12 @@ const ICONS = [icon1, icon2, icon3, icon4, icon5, icon6, icon7, icon8, icon9, ic
 
 // Level config: {pairs, timeLimit}
 const LEVEL_CONFIG = [
-  { pairs: 6, timeLimit: 90 },
-  { pairs: 8, timeLimit: 120 },
-  { pairs: 10, timeLimit: 150 },
-  { pairs: 12, timeLimit: 180 },
-  { pairs: 14, timeLimit: 210 },
-  { pairs: 16, timeLimit: 240 },
+  { pairs: 6, timeLimit: 45 },
+  { pairs: 8, timeLimit: 60 },
+  { pairs: 10, timeLimit: 70 },
+  { pairs: 12, timeLimit: 80 },
+  { pairs: 14, timeLimit: 90 },
+  { pairs: 16, timeLimit: 100 },
 ];
 
 interface Card {
@@ -234,7 +234,7 @@ export default function MemoryLevelGame() {
         >
           {/* Game header */}
           <div className="text-center mb-4 sm:mb-8">
-            <h1 className="text-2xl sm:text-4xl font-black text-primary mb-1 sm:mb-2">Memory Game</h1>
+            <h1 className="text-2xl sm:text-4xl font-black text-primary mb-1 sm:mb-2">CỜ TRÍ NHỚ</h1>
             <p className="text-muted-foreground text-sm sm:text-lg">Level {currentLevel + 1} / {LEVEL_CONFIG.length}</p>
           </div>
 
