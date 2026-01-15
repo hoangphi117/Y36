@@ -95,4 +95,43 @@ const changePassword = async (req, res) => {
     });
   }
 };
-module.exports = { updateMe, profile, changePassword };
+
+const searchUsers = async (req, res) => {
+  try {
+    const currentUserId = req.user.id;
+    const { username } = req.query;
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    if (!username) {
+      return res.status(400).json({ message: "username is required" });
+    }
+
+    const [users, total] = await Promise.all([
+      User.searchUsersWithFriendStatus(
+        currentUserId,
+        username,
+        limit,
+        offset
+      ),
+      User.countSearchUsers(currentUserId, username),
+    ]);
+
+    res.status(200).json({
+      results: users.length,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      data: users,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+module.exports = { updateMe, profile, changePassword,searchUsers };
