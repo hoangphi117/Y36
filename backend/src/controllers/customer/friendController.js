@@ -1,0 +1,42 @@
+const Friend = require("../../models/Friendship");
+const User = require("../../models/User");
+
+class FriendController {
+  async sendFriendRequest(req, res) {
+    try {
+      const fromUserId = req.user.id;
+      const { userId: toUserId } = req.params;
+
+      if (fromUserId === toUserId) {
+        return res
+          .status(400)
+          .json({ message: "Cannot send friend request to yourself" });
+      }
+
+      const targetUser = await User.findById(toUserId);
+      if (!targetUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const existing = await Friend.findBetweenUsers(fromUserId, toUserId);
+
+      if (existing) {
+        return res.status(400).json({
+          message: `Friendship already exists with status: ${existing.status}`,
+        });
+      }
+
+      await Friendship.sendFriendRequest(fromUserId, toUserId);
+      return res.status(201).json({
+        message: "Friend request sent successfully",
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  }
+}
+
+module.exports = new FriendController();
