@@ -13,8 +13,16 @@ const ICONS = [
  * @param matched - Array of matched card indices
  * @returns Array of BoardCard objects
  */
+
+interface Card {
+  id: number;
+  iconIndex: number;
+  isFlipped: boolean;
+  isMatched: boolean;
+}
+
 export const convertCardsToBoardState = (
-  cards: any[],
+  cards: Card[],
   flipped: number[],
   matched: number[]
 ): BoardCard[] => {
