@@ -1,4 +1,4 @@
-import type { BoardCard, MemorySessionSave } from "@/types/memorySession";
+import type { BoardCard, MemorySessionSave } from "@/types/memoryGame";
 
 const ICONS = [
   "icon1", "icon2", "icon3", "icon4", "icon5", "icon6",

@@ -17,7 +17,7 @@ import icon16 from "@/assets/memoryIcons/icon16.png";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { GameHeader } from "@/components/games/GameHeader";
-import { AlarmClock, Play, RefreshCcw } from "lucide-react";
+import { AlarmClock, History, Play, RefreshCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BackToSelectionButton } from "@/components/games/memory/SettingButtons";
 import StatCard from "@/components/games/memory/StatCard";
@@ -26,7 +26,8 @@ import { useNavigate } from "react-router-dom";
 import calcLevelScore from "@/utils/clacScoreMemoryGame";
 import { RoundButton } from "@/components/ui/round-button";
 import { convertCardsToBoardState, createSessionSave } from "@/utils/memorySessionHelper";
-import type { MemorySessionSave } from "@/types/memorySession";
+import type { MemorySessionResponse, MemorySessionSave } from "@/types/memoryGame";
+import memoryApi from "@/services/memoryApi";
 
 const ICONS = [icon1, icon2, icon3, icon4, icon5, icon6, icon7, icon8, icon9, icon10, icon11, icon12, icon13, icon14, icon15, icon16];
 
@@ -50,7 +51,7 @@ interface Card {
 type GameStatus = "playing" | "completed" | "lost";
 
 export default function MemoryLevelGame() {
-  const navigate = useNavigate();
+  const navigate = useNavigate(); 
 
   const [currentLevel, setCurrentLevel] = useState(0);
   const [cards, setCards] = useState<Card[]>([]);
@@ -61,6 +62,20 @@ export default function MemoryLevelGame() {
   const [totalScore, setTotalScore] = useState(0);
   const [moves, setMoves] = useState(0);
   const [isStarted, setIsStarted] = useState(false);
+
+
+  // session state type
+  // const [session, setSession] = useState<MemorySessionResponse | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+
+  // Load default game session from API
+  useEffect(() => {
+    const fetchGameSession = async () => {
+      const res = await memoryApi.getDetail("memory");
+      console.log("check res get detail: ", res);
+    };
+    fetchGameSession();
+  }, []);
 
   // Generate shuffled cards
   const generateCards = (pairs: number): Card[] => {
@@ -105,11 +120,14 @@ export default function MemoryLevelGame() {
   };
 
   // Save game (can be called to send to API)
-  const saveGameSession = () => {
+  const saveGameSession = async () => {
     const sessionData = getCurrentSessionState();
     console.log("Game session to save:", sessionData);
-    // TODO: Send to API with PUT request
-    // await api.put('/memory/save', sessionData);
+
+    const newSession = await memoryApi.startSession(6);
+    console.log("check start new session: ", newSession);
+    setSessionId(newSession.session.id);
+    console.log("check new session Id: ", newSession.session.id);
     return sessionData;
   };
 
@@ -288,11 +306,23 @@ export default function MemoryLevelGame() {
           <div className="flex flex-row gap-2 mb-4 items-center justify-center">
             <BackToSelectionButton backToSelection={backToSelection} />
             {isStarted && (
-                <RoundButton size="small"  onClick={restartGame} className="hover:bg-primary/90 text-[0.8rem] sm:py-2 rounded-md">
-                    <RefreshCcw className="w-5 h-5" />
-                    <span className="hidden min-[375px]:inline ml-1">Chơi lại</span>
-                </RoundButton>
+              <RoundButton size="small"  onClick={restartGame} className="hover:bg-primary/90 text-[0.8rem] sm:py-2 rounded-md">
+                <RefreshCcw className="w-5 h-5" />
+                <span className="hidden min-[375px]:inline ml-1">Chơi lại</span>
+              </RoundButton>
             )}
+            {isStarted && (
+              <RoundButton size="small" onClick={saveGameSession} className="hover:bg-primary/90 text-[0.8rem] sm:py-2 rounded-md">
+                Lưu
+              </RoundButton>
+            )}
+            <RoundButton
+              size="small"
+              className="hover:bg-primary/90 text-[0.8rem] sm:py-2 rounded-md"
+            >
+              <History className="w-5 h-5" />
+              <span className="hidden min-[375px]:inline ml-1">Lịch sử</span>
+            </RoundButton>
           </div>
 
           {/* Game board */}
