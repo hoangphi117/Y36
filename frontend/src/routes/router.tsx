@@ -7,7 +7,9 @@ import CaroGame from "@/pages/games/CaroGame";
 import TicTacToe from "@/pages/games/TicTacToe";
 import SnakeGame from "@/pages/games/Snake";
 import Match3Game from "@/pages/games/Match3Game";
-import MemoryGame from "@/pages/games/MemoryGame";
+import MemoryModeSelection from "@/pages/games/MemoryModeSelection";
+import MemoryLevelGame from "@/pages/games/MemoryLevelGame";
+import MemoryFreeGame from "@/pages/games/MemoryFreeGame";
 import LoginPage from "@/pages/auth/LoginPage";
 import RegisterPage from "@/pages/auth/RegisterPage";
 
@@ -36,7 +38,15 @@ const router = createBrowserRouter([
   },
   {
     path: "/memory",
-    element: <MemoryGame />,
+    element: <MemoryModeSelection />,
+  },
+  {
+    path: "/memory-level",
+    element: <MemoryLevelGame />,
+  },
+  {
+    path: "/memory-free",
+    element: <MemoryFreeGame />,
   },
   {
     path: "/auth/login",

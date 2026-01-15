@@ -1,7 +1,6 @@
 import { BoxButton } from "@/components/ui/box-button";
 import { motion } from "framer-motion";
-import { Clock, Infinity as InfinityIcon, Layers, Play, Star, Trophy } from "lucide-react";
-import PairSelector from "./PairSelector";
+import { Clock, Layers, Play, Star, Trophy } from "lucide-react";
 
 interface LevelModeCardProps {
     startLevelMode: () => void;
@@ -63,14 +62,9 @@ const LevelModeCard = ({ startLevelMode }: LevelModeCardProps) => {
 
 interface FreeModeCardProps {
     startFreeMode: () => void;
-    freePairs: number;
-    setFreePairs: (pairs: number) => void;
-    freeTime: number;
-    setFreeTime: (time: number) => void;
 }
 
-const FreeModeCard = ({ startFreeMode, freePairs, setFreePairs, freeTime, setFreeTime }: FreeModeCardProps) => {
-    const timeOptions = [30, 60, 90, 120, 180, 0]; // 0 đại diện cho Không giới hạn
+const FreeModeCard = ({ startFreeMode }: FreeModeCardProps) => {
 
     return (
         <motion.div
@@ -82,44 +76,6 @@ const FreeModeCard = ({ startFreeMode, freePairs, setFreePairs, freeTime, setFre
               <Play fill="currentColor" size={20} className="sm:w-6 sm:h-6" /> Chơi tự do
             </h2>
             <p className="text-xs sm:text-base text-muted-foreground mb-4 sm:mb-8">Tùy chỉnh thử thách theo cách của bạn</p>
-
-            <div className="space-y-4 sm:space-y-8">
-              {/* pair selector */}
-              <div>
-                <div className="flex items-center gap-2 text-foreground font-bold text-sm sm:text-base">
-                  <Layers size={16} className="sm:w-[18px] sm:h-[18px] text-primary" />
-                  <label>Số lượng cặp thẻ:</label>
-                  <span className="text-primary text-lg sm:text-xl">{freePairs}</span>
-                </div>
-                <PairSelector value={freePairs} onChange={setFreePairs} />
-              </div>
-
-              {/* time selector */}
-              <div>
-                <div className="flex items-center gap-2 mb-2 sm:mb-4 text-foreground font-bold text-sm sm:text-base">
-                  <Clock size={16} className="sm:w-[18px] sm:h-[18px] text-accent" />
-                  <label>Thời gian giới hạn:</label>
-                  <span className="text-accent text-lg sm:text-xl">
-                    {freeTime === 0 ? "Không giới hạn" : `${freeTime}s`}
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                    {timeOptions.map((t) => (
-                        <button
-                            key={t}
-                            onClick={() => setFreeTime(t)}
-                            className={`flex-1 min-w-[60px] sm:min-w-[70px] py-2 sm:py-3 rounded-xl text-xs sm:text-base font-bold transition-all border-2 flex items-center justify-center gap-1 ${
-                                freeTime === t
-                                ? "bg-accent border-accent text-white shadow-[0_0_15px_rgba(var(--accent),0.4)]"
-                                : "bg-secondary/50 border-transparent hover:border-accent/50"
-                            }`}
-                        >
-                        {t === 0 ? <InfinityIcon size={18} className="sm:w-5 sm:h-5" /> : `${t}s`}
-                        </button>
-                    ))}
-                </div>
-              </div>
-            </div>
 
             <BoxButton 
                 onClick={startFreeMode} 
