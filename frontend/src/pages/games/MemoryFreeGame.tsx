@@ -25,6 +25,8 @@ import { GameStatusOverlay } from "@/components/games/memory/GameBoardOverlay";
 import { useNavigate } from "react-router-dom";
 import { RoundButton } from "@/components/ui/round-button";
 import SettingDialog from "@/components/games/memory/SettingDialog";
+import { convertCardsToBoardState, createSessionSave } from "@/utils/memorySessionHelper";
+import type { MemorySessionSave } from "@/types/memorySession";
 
 const ICONS = [icon1, icon2, icon3, icon4, icon5, icon6, icon7, icon8, icon9, icon10, icon11, icon12, icon13, icon14, icon15, icon16];
 
@@ -77,6 +79,29 @@ export default function MemoryFreeGame() {
     setFreeGameStatus("playing");
     setFreeTimeLeft(freeTime);
     setIsStarted(true);
+  };
+
+  // Get current game session state
+  const getCurrentSessionState = (): MemorySessionSave => {
+    const boardState = convertCardsToBoardState(freeCards, freeFlipped, freeMatched);
+    return createSessionSave(
+      boardState,
+      freeGameStatus,
+      freeTimeLeft,
+      0, // currentLevel (0 for free mode)
+      0, // moves (0 for free mode)
+      0, // totalScore (0 for free mode)
+      "free"
+    );
+  };
+
+  // Save game (can be called to send to API)
+  const saveGameSession = () => {
+    const sessionData = getCurrentSessionState();
+    console.log("Game session to save:", sessionData);
+    // TODO: Send to API with PUT request
+    // await api.put('/memory/save', sessionData);
+    return sessionData;
   };
 
   // Handle card flip

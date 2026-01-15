@@ -25,6 +25,8 @@ import { GameStatusOverlay } from "@/components/games/memory/GameBoardOverlay";
 import { useNavigate } from "react-router-dom";
 import calcLevelScore from "@/utils/clacScoreMemoryGame";
 import { RoundButton } from "@/components/ui/round-button";
+import { convertCardsToBoardState, createSessionSave } from "@/utils/memorySessionHelper";
+import type { MemorySessionSave } from "@/types/memorySession";
 
 const ICONS = [icon1, icon2, icon3, icon4, icon5, icon6, icon7, icon8, icon9, icon10, icon11, icon12, icon13, icon14, icon15, icon16];
 
@@ -86,6 +88,29 @@ export default function MemoryLevelGame() {
     setTimeLeft(levelConfig.timeLimit);
     setMoves(0);
     setIsStarted(true);
+  };
+
+  // Get current game session state
+  const getCurrentSessionState = (): MemorySessionSave => {
+    const boardState = convertCardsToBoardState(cards, flipped, matched);
+    return createSessionSave(
+      boardState,
+      gameStatus,
+      timeLeft,
+      currentLevel,
+      moves,
+      totalScore,
+      "level"
+    );
+  };
+
+  // Save game (can be called to send to API)
+  const saveGameSession = () => {
+    const sessionData = getCurrentSessionState();
+    console.log("Game session to save:", sessionData);
+    // TODO: Send to API with PUT request
+    // await api.put('/memory/save', sessionData);
+    return sessionData;
   };
 
   // Handle card flip
