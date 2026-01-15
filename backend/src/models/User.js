@@ -66,6 +66,39 @@ class User {
         "created_at",
       ]);
   }
+
+  static async searchUsersWithFriendStatus(currentUserId, username) {
+    return db("users as u")
+      .leftJoin("friendships as f", function () {
+        this.on(function () {
+          this.on("f.user_id_1", "=", db.raw("?", [currentUserId]))
+            .andOn("f.user_id_2", "=", "u.id");
+        }).orOn(function () {
+          this.on("f.user_id_2", "=", db.raw("?", [currentUserId]))
+            .andOn("f.user_id_1", "=", "u.id");
+        });
+      })
+      .where("u.username", "ilike", `%${username}%`)
+      .andWhere("u.id", "!=", currentUserId)
+      .select(
+        "u.id",
+        "u.username",
+        "u.avatar_url",
+        db.raw(
+          `
+          CASE
+            WHEN f.status = 'accepted' THEN 'accepted'
+            WHEN f.status = 'pending' AND f.user_id_1 = ? THEN 'pending_outgoing'
+            WHEN f.status = 'pending' AND f.user_id_2 = ? THEN 'pending_incoming'
+            WHEN f.status = 'blocked' THEN 'blocked'
+            ELSE 'none'
+          END AS friend_status
+          `,
+          [currentUserId, currentUserId]
+        )
+      )
+      .limit(10);
+  }
 }
 
 module.exports = User;
