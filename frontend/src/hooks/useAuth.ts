@@ -47,7 +47,6 @@ export const useLogin = () => {
       };
 
       setAuth(fullUser, data.token);
-
       setTheme(fullUser.dark_mode ? "dark" : "light");
       toast.success("Đăng nhập thành công!");
       navigate("/");

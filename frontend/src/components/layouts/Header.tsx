@@ -1,4 +1,3 @@
-import { ModeToggle } from "@/features/ThemeButton";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Home,
@@ -23,6 +22,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 export const Header = () => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
+
+  console.log("Current User in Header:", user);
 
   const handleLogout = () => {
     logout();
@@ -68,15 +69,13 @@ export const Header = () => {
         </nav>
 
         <div className="flex items-center gap-4">
-          <ModeToggle />
-
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger className="outline-none">
                 <div className="flex items-center gap-3 pl-1 pr-2 py-1 rounded-full border border-transparent hover:bg-muted transition-colors cursor-pointer">
                   <div className="hidden sm:flex flex-col items-start">
-                    <span className="text-sm font-bold truncate max-w-[100px]">
-                      Xin chào, {user.username}
+                    <span className="text-sm font-bold">
+                      Xin chào, {user.username || user.name}
                     </span>
                   </div>
                   <Avatar className="h-10 w-10 border-2 border-primary/20">
@@ -97,7 +96,7 @@ export const Header = () => {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="cursor-pointer font-medium rounded-lg focus:bg-primary/10 focus:text-primary">
                   <UserIcon className="mr-2 h-4 w-4" />
-                  <span>Hồ sơ cá nhân</span>
+                  <Link to="/profile">Hồ sơ của tôi</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem

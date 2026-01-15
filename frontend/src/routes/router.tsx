@@ -17,13 +17,17 @@ import { AdminUsersPage } from "@/pages/admin/AdminUsersPage";
 import { AdminGamesPage } from "@/pages/admin/AdminGamesPage";
 import { AdminLoginPage } from "@/pages/admin/AdminLoginPage";
 import AdminStatsPage from "@/pages/admin/AdminStatsPage";
+import ProfilePage from "@/pages/user/profile/Profile";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <MainLayout />,
     errorElement: <NotFoundPage />,
-    children: [{ index: true, element: <HomePage /> }, {}],
+    children: [
+      { index: true, element: <HomePage /> },
+      { path: "profile", element: <ProfilePage /> },
+    ],
   },
   {
     path: "/caro",
