@@ -111,6 +111,12 @@ components:
         updated_at:
           type: string
           format: date-time
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Server error
 
 # --- ĐƯỜNG DẪN API ---
 paths:
@@ -657,46 +663,87 @@ paths:
 
   /games:
     get:
-      summary: Lấy danh sách Game công khai
-      tags: [Games]
-      responses:
-        200:
-          description: Thành công
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Game'
-                  
-  /games/{code}:
-    get:
-      summary: Lấy thông tin chi tiết Game công khai theo mã
-      tags: [Games]
+      tags:
+        - Games
+      summary: Get all active games
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      description: Get list of active games with optional search
       parameters:
-        - in: path
-          name: code
-          required: true
+        - in: query
+          name: search
           schema:
             type: string
-          description: Mã của Game
+          description: Search game by name or code
       responses:
         200:
-          description: Thành công
+          description: List of active games
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Game'
+                type: object
+                properties:
+                  total:
+                    type: integer
+                    example: 7
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Game'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+                  
+  /games/{id}:
+    get:
+      tags:
+        - Games
+      summary: Get game by ID
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      description: Retrieve an active game by its ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Game ID
+      responses:
+        200:
+          description: Successfully retrieved game
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Game'
         404:
-          description: Không tìm thấy Game
+          description: Game not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /sessions/start:
     post:
       summary: Start or continue a game session
       tags: [GameSession]
       security:
-        - bearerAuth: []
-          apiKeyAuth: []
+        - ApiKeyAuth: []
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -740,8 +787,8 @@ paths:
       summary: Save current game session
       tags: [GameSession]
       security:
-        - bearerAuth: []
-          apiKeyAuth: []
+        - ApiKeyAuth: []
+        - BearerAuth: []
       parameters:
         - name: id
           in: path
@@ -781,8 +828,8 @@ paths:
       summary: Complete a game session
       tags: [GameSession]
       security:
-        - bearerAuth: []
-          apiKeyAuth: []
+        - ApiKeyAuth: []
+        - BearerAuth: []
       parameters:
         - name: id
           in: path
@@ -820,8 +867,8 @@ paths:
       summary: Load a saved game session
       tags: [GameSession]
       security:
-        - bearerAuth: []
-          apiKeyAuth: []
+        - ApiKeyAuth: []
+        - BearerAuth: []
       parameters:
         - name: id
           in: path
@@ -849,8 +896,8 @@ paths:
       summary: Delete a game session
       tags: [GameSession]
       security:
-        - bearerAuth: []
-          apiKeyAuth: []
+        - ApiKeyAuth: []
+        - BearerAuth: []
       parameters:
         - name: id
           in: path
@@ -876,8 +923,8 @@ paths:
       summary: Get game session history
       tags: [GameSession]
       security:
-        - bearerAuth: []
-          apiKeyAuth: []
+        - ApiKeyAuth: []
+        - BearerAuth: []
       parameters:
         - name: page
           in: query
@@ -922,8 +969,8 @@ paths:
         - User
       summary: Get current user profile
       security:
-        - bearerAuth: []
-          apiKeyAuth: []
+        - ApiKeyAuth: []
+        - BearerAuth: []
       responses:
         200:
           description: User profile retrieved successfully
@@ -956,8 +1003,8 @@ paths:
         - User
       summary: Update current user information
       security:
-        - bearerAuth: []
-          apiKeyAuth: []
+        - ApiKeyAuth: []
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -1002,8 +1049,8 @@ paths:
         - User
       summary: Change current user password
       security:
-        - bearerAuth: []
-          apiKeyAuth: []
+        - ApiKeyAuth: []
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -1046,8 +1093,8 @@ paths:
         - User
       summary: Search users by username
       security:
-        - bearerAuth: []
-          apiKeyAuth: []
+        - ApiKeyAuth: []
+        - BearerAuth: []
       parameters:
         - in: query
           name: username
