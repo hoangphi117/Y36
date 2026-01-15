@@ -17,12 +17,14 @@ import icon16 from "@/assets/memoryIcons/icon16.png";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { GameHeader } from "@/components/games/GameHeader";
-import { AlarmClock, Play } from "lucide-react";
+import { AlarmClock, Play, RefreshCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { BackToSelectionButton, RefreshGameButton } from "@/components/games/memory/SettingButtons";
+import { BackToSelectionButton } from "@/components/games/memory/SettingButtons";
 import StatCard from "@/components/games/memory/StatCard";
 import { GameStatusOverlay } from "@/components/games/memory/GameBoardOverlay";
 import { useNavigate } from "react-router-dom";
+import calcLevelScore from "@/utils/clacScoreMemoryGame";
+import { RoundButton } from "@/components/ui/round-button";
 
 const ICONS = [icon1, icon2, icon3, icon4, icon5, icon6, icon7, icon8, icon9, icon10, icon11, icon12, icon13, icon14, icon15, icon16];
 
@@ -130,9 +132,15 @@ export default function MemoryLevelGame() {
 
     const levelConfig = LEVEL_CONFIG[currentLevel];
     if (matched.length === levelConfig.pairs * 2) {
-      // Calculate score: base 100 + bonus from remaining time
-      const bonusPoints = Math.floor((timeLeft / levelConfig.timeLimit) * 50);
-      const levelScore = 100 + bonusPoints;
+
+      // Calculate score
+      const levelScore = calcLevelScore({
+        pairs: levelConfig.pairs,
+        timeLeft,
+        timeLimit: levelConfig.timeLimit,
+        moves
+      });
+
       setTotalScore(prev => prev + levelScore);
       setGameStatus("completed");
     }
@@ -161,6 +169,13 @@ export default function MemoryLevelGame() {
   const backToSelection = () => {
     navigate("/memory");
   };
+
+  // restart level 1
+  const restartGame = () => {
+    setIsStarted(false);
+    setTotalScore(0);
+    setCurrentLevel(0);
+  }
 
   // Calculate responsive columns based on screen width and card count
   const getResponsiveColumns = (totalCards: number): number => {
@@ -247,7 +262,12 @@ export default function MemoryLevelGame() {
 
           <div className="flex flex-row gap-2 mb-4 items-center justify-center">
             <BackToSelectionButton backToSelection={backToSelection} />
-            {isStarted && <RefreshGameButton restartGame={initializeLevelGame} />}
+            {isStarted && (
+                <RoundButton size="small"  onClick={restartGame} className="hover:bg-primary/90 text-[0.8rem] sm:py-2 rounded-md">
+                    <RefreshCcw className="w-5 h-5" />
+                    <span className="hidden min-[375px]:inline ml-1">Chơi lại</span>
+                </RoundButton>
+            )}
           </div>
 
           {/* Game board */}
@@ -300,14 +320,14 @@ export default function MemoryLevelGame() {
             {/* Game Status Overlay */}
             {isStarted && (gameStatus === "completed" || gameStatus === "lost") && (
               <motion.div
-                className="absolute inset-0 bg-background/40 rounded-2xl flex items-center justify-center"
+                className="absolute inset-0 bg-black/70 backdrop-blur-sm rounded-2xl flex items-center justify-center"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
               >
                 <GameStatusOverlay 
                   totalScore={totalScore} 
                   gameStatus={gameStatus} 
-                  action={gameStatus === "completed" ? nextLevel : initializeLevelGame}
+                  action={gameStatus === "completed" ? nextLevel : restartGame}
                   currentLevel={currentLevel}
                 />
               </motion.div>
