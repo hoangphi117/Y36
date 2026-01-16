@@ -75,16 +75,120 @@ class FriendController {
 
       if (!deleted) {
         return res.status(400).json({
-          message: 'No pending friend request found',
+          message: "No pending friend request found",
         });
       }
 
       return res.status(200).json({
-        message: 'Friend request rejected',
+        message: "Friend request rejected",
       });
     } catch (error) {
       return res.status(500).json({
-        message: 'Server error',
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  }
+
+  async unfriend(req, res) {
+    try {
+      const currentUserId = req.user.id;
+      const { userId: otherUserId } = req.params;
+
+      const deleted = await Friend.unfriend(currentUserId, otherUserId);
+
+      if (!deleted) {
+        return res.status(400).json({
+          message: "No friendship found to unfriend",
+        });
+      }
+
+      return res.status(200).json({
+        message: "Unfriended successfully",
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  }
+
+  async blockUser(req, res) {
+    try {
+      const currentUserId = req.user.id;
+      const { userId: blockedId } = req.params;
+
+      if (currentUserId === blockedId) {
+        return res.status(400).json({ message: "Cannot block yourself" });
+      }
+
+      await Friend.blockUser(currentUserId, blockedId);
+
+      return res.status(200).json({
+        message: "User blocked successfully",
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  }
+
+  async getFriends(req, res) {
+    try {
+      const result = await Friend.getFriends(req.user.id, req.query);
+      res.status(200).json(result);
+    } catch (error) {
+      res.status(500).json({
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  }
+
+  async getIncomingRequests(req, res) {
+    try {
+      const userId = req.user.id;
+      const { page = 1, limit = 10 } = req.query;
+
+      const result = await Friend.getIncomingRequests(userId, {
+        page,
+        limit,
+      });
+
+      return res.status(200).json({
+        message: "Get incoming requests successfully",
+        ...result,
+      });
+    } catch (error) {
+      console.error("Get incoming requests error:", error);
+      return res.status(500).json({
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  }
+
+  async getOutgoingRequests(req, res) {
+    try {
+      const userId = req.user.id;
+      const { page = 1, limit = 10 } = req.query;
+
+      const result = await Friend.getOutgoingRequests(userId, {
+        page,
+        limit,
+      });
+
+      return res.status(200).json({
+        message: "Get outgoing requests successfully",
+        ...result,
+      });
+    } catch (error) {
+      console.error("Get outgoing requests error:", error);
+      return res.status(500).json({
+        message: "Server error",
         error: error.message,
       });
     }
