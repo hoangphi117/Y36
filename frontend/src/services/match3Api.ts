@@ -1,0 +1,18 @@
+import api from "@/lib/axios";
+import type { IMatch3Game, Match3SessionResponse, Match3SessionSave } from "@/types/match3Game";
+
+const match3Api = {
+    getDetail(code = "match3") {
+        return api.get<IMatch3Game>(`/games/${code}`).then(res => res.data);
+    },
+
+    startSession(gameId: number) {
+        return api.post<Match3SessionResponse>(`/sessions/start`, { gameId }).then(res => res.data);
+    },
+
+    saveSession(id: string, sessionData: Match3SessionSave) {
+        return api.put<Match3SessionResponse>(`/sessions/${id}/save`, sessionData).then(res => res.data)
+    }
+}
+
+export default match3Api;
