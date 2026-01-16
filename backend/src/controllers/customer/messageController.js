@@ -108,4 +108,44 @@ class MessageController {
       });
     }
   }
+
+  async deleteMessage(req, res) {
+    try {
+      const userId = req.user.id;
+      const { messageId } = req.params;
+
+      if (!messageId) {
+        return res.status(400).json({ message: "messageId is required" });
+      }
+
+      const deleted = await Message.deleteMessage(messageId, userId);
+
+      return res.status(200).json({
+        message: "Message deleted successfully",
+        deleted,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  }
+
+  async countUnread(req, res) {
+    try {
+      const userId = req.user.id;
+
+      const count = await Message.countUnread(userId);
+
+      return res.status(200).json({
+        unread: count,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  }
 }
