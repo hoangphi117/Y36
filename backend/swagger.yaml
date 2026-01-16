@@ -962,6 +962,12 @@ paths:
           schema:
             type: integer
             default: 10
+        - name: gameId
+          in: query
+          description: Filter session history by game ID
+          schema:
+            type: integer
+            example: 3
       responses:
         200:
           description: Session history fetched
