@@ -4,9 +4,6 @@ import {
   Send,
   Search,
   MessageSquare,
-  MoreVertical,
-  Phone,
-  Video,
   Trash2,
   Check,
   CheckCheck,
@@ -39,8 +36,10 @@ import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { EmojiPickerButton } from "./EmojiPickerButton";
+import useDocumentTitle from "@/hooks/useDocumentTitle";
 
 const ChatPage = () => {
+  useDocumentTitle("Tin nhắn");
   const { user: currentUser } = useAuthStore();
   const location = useLocation();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -216,22 +215,7 @@ const ChatPage = () => {
                   <h3 className="font-bold leading-none">
                     {currentChatUser?.username || "Người dùng"}
                   </h3>
-                  <span className="text-xs text-green-500 font-medium flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-green-500" />{" "}
-                    Online
-                  </span>
                 </div>
-              </div>
-              <div className="flex gap-2 text-muted-foreground">
-                <Button variant="ghost" size="icon">
-                  <Phone className="w-5 h-5" />
-                </Button>
-                <Button variant="ghost" size="icon">
-                  <Video className="w-5 h-5" />
-                </Button>
-                <Button variant="ghost" size="icon">
-                  <MoreVertical className="w-5 h-5" />
-                </Button>
               </div>
             </div>
 

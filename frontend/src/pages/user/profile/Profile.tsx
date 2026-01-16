@@ -26,10 +26,12 @@ import EditProfileView from "./EditProfile";
 import ChangePasswordView from "./ChangePassword";
 import { GameHistory } from "./GameHistory";
 import { FriendsTab } from "./FriendsTab";
+import useDocumentTitle from "@/hooks/useDocumentTitle";
 
 type ViewMode = "view" | "edit" | "password";
 
 const ProfilePage = () => {
+  useDocumentTitle("Hồ sơ của tôi");
   const { data: user, isLoading, isError } = useUserProfile();
   const [mode, setMode] = useState<ViewMode>("view");
   const updateProfile = useUpdateProfile();

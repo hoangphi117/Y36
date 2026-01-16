@@ -1,6 +1,7 @@
 import { GameCard } from "@/components/games/GameCard";
 import { useNavigate } from "react-router-dom";
 import { useGameSound } from "@/hooks/useGameSound";
+import useDocumentTitle from "@/hooks/useDocumentTitle";
 
 const MY_GAMES = [
   {
@@ -38,15 +39,15 @@ const MY_GAMES = [
   {
     id: 5,
     title: "Cờ trí nhớ",
-    image:
-      "https://cdn-icons-png.flaticon.com/512/6168/6168860.png",
+    image: "https://cdn-icons-png.flaticon.com/512/6168/6168860.png",
     variant: "accent" as const,
     url: "/memory",
-  }
+  },
 ];
 
 export default function HomePage() {
   const navigate = useNavigate();
+  useDocumentTitle("Trang chủ");
 
   const { playSound } = useGameSound(true);
 
