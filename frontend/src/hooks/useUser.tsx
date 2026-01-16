@@ -31,14 +31,12 @@ export const useUpdateProfile = () => {
       const response = await api.put("/users/me", data);
       return response.data;
     },
-    onSuccess: (updatedUser) => {
+    onSuccess: (data) => {
       if (token) {
-        setAuth(updatedUser, token);
+        setAuth(data.message, token);
       }
 
-      console.log("Updatedaaaaaa user:", updatedUser);
-
-      setTheme(updatedUser.user.dark_mode ? "dark" : "light");
+      setTheme(data.user.dark_mode ? "dark" : "light");
 
       queryClient.invalidateQueries({ queryKey: ["user", "me"] });
 

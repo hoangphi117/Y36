@@ -23,14 +23,12 @@ export const Header = () => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
 
-  console.log("Current User in Header:", user);
-
   const handleLogout = () => {
     logout();
     navigate("/auth/login");
   };
 
-  const firstLetter = user?.username?.charAt(0).toUpperCase() || "U";
+  const firstLetter = user?.user.username?.charAt(0).toUpperCase() || "U";
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -75,7 +73,7 @@ export const Header = () => {
                 <div className="flex items-center gap-3 pl-1 pr-2 py-1 rounded-full border border-transparent hover:bg-muted transition-colors cursor-pointer">
                   <div className="hidden sm:flex flex-col items-start">
                     <span className="text-sm font-bold">
-                      Xin chào, {user.username || user.name}
+                      Xin chào, {user.user.username}
                     </span>
                   </div>
                   <Avatar className="h-10 w-10 border-2 border-primary/20">
