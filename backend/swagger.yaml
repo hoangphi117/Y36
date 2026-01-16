@@ -1172,6 +1172,7 @@ paths:
       summary: Send friend request
       tags: [Friends]
       security:
+        - ApiKeyAuth: []
         - BearerAuth: []
       parameters:
         - name: userId
@@ -1198,6 +1199,7 @@ paths:
       summary: Accept friend request
       tags: [Friends]
       security:
+        - ApiKeyAuth: []
         - BearerAuth: []
       parameters:
         - name: userId
@@ -1223,6 +1225,7 @@ paths:
       summary: Reject friend request
       tags: [Friends]
       security:
+        - ApiKeyAuth: []
         - BearerAuth: []
       parameters:
         - name: userId
@@ -1247,6 +1250,7 @@ paths:
       summary: Unfriend a user
       tags: [Friends]
       security:
+        - ApiKeyAuth: []
         - BearerAuth: []
       parameters:
         - name: userId
@@ -1265,6 +1269,193 @@ paths:
           description: No friendship found
         500:
           description: Server error
+
+  /friends/block/{userId}:
+    post:
+      summary: Block a user
+      tags: [Friends]
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Blocked
+          content:
+            application/json:
+              example:
+                message: User blocked successfully
+        400:
+          description: Cannot block yourself
+        500:
+          description: Server error
+
+  /friends/list:
+    get:
+      summary: Get friends list
+      tags: [Friends]
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            example: 1
+        - name: limit
+          in: query
+          description: Number of items per page
+          schema:
+            type: integer
+            example: 10
+        - name: search
+          in: query
+          description: Search by username
+          schema:
+            type: string
+            example: john
+      responses:
+        200:
+          description: Get friends successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: integer
+                    example: 1
+                  limit:
+                    type: integer
+                    example: 10
+                  total:
+                    type: integer
+                    example: 25
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        username:
+                          type: string
+                        avatar_url:
+                          type: string
+
+
+  /friends/requests/incoming:
+    get:
+      summary: Get incoming friend requests
+      tags: [Friends]
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            example: 1
+        - name: limit
+          in: query
+          description: Items per page
+          schema:
+            type: integer
+            example: 10
+      responses:
+        200:
+          description: Get incoming friend requests successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  page:
+                    type: integer
+                  limit:
+                    type: integer
+                  total:
+                    type: integer
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        created_at:
+                          type: string
+                          format: date-time
+                        id:
+                          type: string
+                          format: uuid
+                        username:
+                          type: string
+                        avatar_url:
+                          type: string
+
+  /friends/requests/outgoing:
+    get:
+      summary: Get outgoing friend requests
+      tags: [Friends]
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          description: Items per page
+          schema:
+            type: integer
+            example: 10
+      responses:
+        200:
+          description: Get outgoing friend requests successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  page:
+                    type: integer
+                  limit:
+                    type: integer
+                  total:
+                    type: integer
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        created_at:
+                          type: string
+                          format: date-time
+                        id:
+                          type: string
+                          format: uuid
+                        username:
+                          type: string
+                        avatar_url:
+                          type: string
+
+
 
   
                 
