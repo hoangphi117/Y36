@@ -183,13 +183,15 @@ class GameSessionController {
       const limit = parseInt(req.query.limit) || 10;
       const offset = (page - 1) * limit;
 
-      const sessions = await GameSession.findHistoryByUser(
-        userId,
-        limit,
-        offset
-      );
+      const gameId = req.query.gameId || null;
 
-      const { total } = await GameSession.countHistoryByUser(userId);
+      const sessions = await GameSession.findHistoryByUser(userId, {
+        gameId,
+        limit,
+        offset,
+      });
+
+      const { total } = await GameSession.countHistoryByUser(userId, gameId);
 
       return res.status(200).json({
         message: "Session history fetched successfully",
@@ -202,9 +204,9 @@ class GameSessionController {
         data: sessions,
       });
     } catch (error) {
-      console.error("GetSessionHistory error:", error);
       return res.status(500).json({
-        message: "Server error",
+        error: "error server",
+        message: error.message,
       });
     }
   }
