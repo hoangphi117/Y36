@@ -179,8 +179,8 @@ class GameSessionController {
     try {
       const userId = req.user.id;
 
-      const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 10;
+      const page = Math.max(parseInt(req.query.page) || 1, 1);
+      const limit = Math.max(parseInt(req.query.limit) || 10, 1);
       const offset = (page - 1) * limit;
 
       const gameId = req.query.gameId || null;
@@ -191,7 +191,8 @@ class GameSessionController {
         offset,
       });
 
-      const { total } = await GameSession.countHistoryByUser(userId, gameId);
+      const countResult = await GameSession.countHistoryByUser(userId, gameId);
+      const total = countResult?.total || 0;
 
       return res.status(200).json({
         message: "Session history fetched successfully",
