@@ -67,4 +67,22 @@ class MessageController {
       });
     }
   }
+
+  async getConversations(req, res) {
+    try {
+      const userId = req.user.id;
+
+      const conversations = await Message.getConversations(userId);
+
+      return res.status(200).json({
+        total: conversations.length,
+        data: conversations,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  }
 }
