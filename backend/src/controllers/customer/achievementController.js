@@ -38,5 +38,47 @@ class AchievementController {
     }
   }
 
-  
+   async myAchievements(req, res) {
+    try {
+      const userId = req.user.id;
+      const { gameId } = req.query;
+
+      const achievements = await Achievement.getByUser(userId, {
+        gameId,
+      });
+
+      return res.status(200).json({
+        total: achievements.length,
+        data: achievements,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  }
+
+  async friendAchievements(req, res) {
+    try {
+      const { userId } = req.params;
+      const { gameId } = req.query;
+
+      const achievements = await Achievement.getByFriend(userId, {
+        gameId,
+      });
+
+      return res.status(200).json({
+        total: achievements.length,
+        data: achievements,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  }
 }
+
+module.exports = new AchievementController();
