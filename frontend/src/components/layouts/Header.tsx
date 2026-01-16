@@ -6,9 +6,11 @@ import {
   Leaf,
   LogOut,
   User as UserIcon,
+  Users,
 } from "lucide-react";
 import { RoundButton } from "@/components/ui/round-button";
 import { useAuthStore } from "@/stores/useAuthStore";
+import { useUserProfile } from "@/hooks/useUser";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,17 +20,31 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
+import { useEffect } from "react";
 export const Header = () => {
-  const { user, logout } = useAuthStore();
+  const { user: localUser, token, logout, setAuth } = useAuthStore();
+
+  const { data: serverUser } = useUserProfile();
+
   const navigate = useNavigate();
+
+  const user = serverUser || localUser;
+
+  useEffect(() => {
+    if (serverUser && token) {
+      if (JSON.stringify(serverUser) !== JSON.stringify(localUser)) {
+        setAuth(serverUser, token);
+      }
+    }
+  }, [serverUser, token, localUser, setAuth]);
 
   const handleLogout = () => {
     logout();
     navigate("/auth/login");
   };
 
-  const firstLetter = user?.user.username?.charAt(0).toUpperCase() || "U";
+  const displayName = user?.username || "User";
+  const firstLetter = displayName.charAt(0).toUpperCase();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -73,13 +89,13 @@ export const Header = () => {
                 <div className="flex items-center gap-3 pl-1 pr-2 py-1 rounded-full border border-transparent hover:bg-muted transition-colors cursor-pointer">
                   <div className="hidden sm:flex flex-col items-start">
                     <span className="text-sm font-bold">
-                      Xin chào, {user.user.username}
+                      Xin chào, {displayName}
                     </span>
                   </div>
                   <Avatar className="h-10 w-10 border-2 border-primary/20">
                     <AvatarImage
                       src={user?.avatar_url ?? undefined}
-                      alt={user?.username ?? "User"}
+                      alt={displayName}
                     />
                     <AvatarFallback className="bg-primary/10 text-primary font-bold">
                       {firstLetter}
@@ -97,6 +113,12 @@ export const Header = () => {
                   <Link to="/profile">Hồ sơ của tôi</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem className="cursor-pointer font-medium rounded-lg focus:bg-primary/10 focus:text-primary">
+                  <Users className="mr-2 h-4 w-4" />
+                  <Link to="/profile?tab=friends">Bạn bè</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+
                 <DropdownMenuItem
                   onClick={handleLogout}
                   className="cursor-pointer text-destructive font-medium focus:bg-destructive/10 focus:text-destructive rounded-lg"

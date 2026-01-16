@@ -3,7 +3,6 @@ import api from "@/lib/axios";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useNavigate } from "react-router-dom";
 import type { RegisterFormValues, LoginFormValues } from "@/lib/schemas";
-import { useTheme } from "next-themes";
 import { toast } from "sonner";
 
 const registerApi = async (data: RegisterFormValues) => {
@@ -35,19 +34,11 @@ const loginApi = async (data: LoginFormValues) => {
 export const useLogin = () => {
   const setAuth = useAuthStore((state) => state.setAuth);
   const navigate = useNavigate();
-  const { setTheme } = useTheme();
 
   return useMutation({
     mutationFn: loginApi,
     onSuccess: (data) => {
-      const fullUser = {
-        ...data.user,
-        avatar_url: data.user.avatar_url || "https://github.com/shadcn.png",
-        dark_mode: data.user.dark_mode ?? false,
-      };
-
-      setAuth(fullUser, data.token);
-      setTheme(fullUser.dark_mode ? "dark" : "light");
+      setAuth(data.user, data.token);
       toast.success("Đăng nhập thành công!");
       navigate("/");
     },
