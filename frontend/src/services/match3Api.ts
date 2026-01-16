@@ -12,6 +12,10 @@ const match3Api = {
 
     saveSession(id: string, sessionData: Match3SessionSave) {
         return api.put<Match3SessionResponse>(`/sessions/${id}/save`, sessionData).then(res => res.data)
+    },
+
+    completeSession(id: string, score: number, play_time_seconds: number) {
+        return api.put<Match3SessionResponse>(`/sessions/${id}/complete`, { score, play_time_seconds }).then(res => res.data)
     }
 }
 

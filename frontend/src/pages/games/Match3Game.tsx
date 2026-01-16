@@ -56,8 +56,8 @@ export default function Match3Game() {
   
   // New states for game modes and features
   const [gameMode, setGameMode] = useState<"time" | "rounds" | "endless">("time");
-  const [timeLimit, setTimeLimit] = useState(30); // seconds
-  const [targetMatches, setTargetMatches] = useState(10);
+  const [timeLimit, setTimeLimit] = useState(30); // Sẽ được set từ API hoặc default
+  const [targetMatches, setTargetMatches] = useState(10); // Sẽ được set từ API hoặc default
   const [matchesCount, setMatchesCount] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState(timeLimit);
   const [isPaused, setIsPaused] = useState(false);
@@ -65,19 +65,23 @@ export default function Match3Game() {
 
   const [targetScore, setTargetScore] = useState(500);
 
+  // session 
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [shouldCompleteSession, setShouldCompleteSession] = useState(false);
+
   const activeCandies = useMemo(() => CANDY_TYPES.slice(0, numCandyTypes), [numCandyTypes]);
 
-  // load default board config
-  useEffect(() => {
-    const fetchGameSession = async () => {
-      const res = await match3Api.getDetail(); 
-      console.log("check res detail: ", res);
-    }
-    fetchGameSession();
-  }, []);
 
   // create board
   const startGame = useCallback(() => {
+
+    // create new game session 
+    const createGameSession = async () => {
+      const res = await match3Api.startSession(5); 
+      setCurrentSessionId(res.session.id);
+    }
+    createGameSession();
+
     const randomBoard: string[] = [];
     for (let i = 0; i < boardSize * boardSize; i++) {
       const row = Math.floor(i / boardSize);
@@ -213,6 +217,10 @@ export default function Match3Game() {
         if (newTime <= 0) {
           clearInterval(timer);
           setShowGameOver(true);
+          // Delay để đảm bảo tất cả match cuối được xử lý trước khi gửi điểm
+          setTimeout(() => {
+            setShouldCompleteSession(true);
+          }, 500);
           return 0;
         }
         return newTime;
@@ -227,8 +235,25 @@ export default function Match3Game() {
     if (gameMode === "rounds" && matchesCount >= targetMatches && isGameActive) {
       // setIsGameActive(false);
       setShowGameOver(true);
+      // Delay để đảm bảo tất cả match cuối được xử lý trước khi gửi điểm
+      setTimeout(() => {
+        setShouldCompleteSession(true);
+      }, 500);
     }
   }, [matchesCount, targetMatches, gameMode, isGameActive]);
+
+  // Complete session when game ends 
+  useEffect(() => {
+    if (shouldCompleteSession && currentSessionId) {
+      const completeSession = async () => {
+        const play_time_seconds = gameMode === "time" ? timeLimit - timeRemaining : 0;
+        const res = await match3Api.completeSession(currentSessionId, score, play_time_seconds);
+        console.log("check complete res: ", res);
+      };
+      completeSession();
+      setShouldCompleteSession(false);
+    }
+  }, [shouldCompleteSession, currentSessionId, score, gameMode, timeLimit, timeRemaining]);
 
   // handle swap
   const handleSquareClick = (idx: number) => {
@@ -260,7 +285,7 @@ export default function Match3Game() {
     const commonData = {
       matrix,
       totalScore: score,
-      current_combo: 0, // hoặc biến combo hiện tại của bạn
+      current_combo: 0, 
     };
 
     if (gameMode === "rounds") {
@@ -269,10 +294,15 @@ export default function Match3Game() {
         moves_remaining: targetMatches - matchesCount
       });
     } 
-    else {
+    else if(gameMode === "time") {
       return createSessionSave({
         ...commonData,
         time_remaining: timeRemaining
+      });
+    }
+    else {
+      return createSessionSave({
+        ...commonData,
       });
     }
   };
@@ -280,12 +310,10 @@ export default function Match3Game() {
   // Save game
   const saveGameSession = async () => {
     const sessionSaveData = getCurrentSessionState();
-    console.log("Game session to save:", sessionSaveData);
 
-    const newSession = await match3Api.startSession(6);
-    console.log("check new session: ", newSession);
-    const res = await match3Api.saveSession(newSession.session.id, sessionSaveData);
-    console.log("check save res: ", res);
+    if(!currentSessionId) return;
+
+    await match3Api.saveSession(currentSessionId, sessionSaveData);
     return sessionSaveData;
   };
 
@@ -395,6 +423,8 @@ export default function Match3Game() {
                 setTargetMatches={setTargetMatches}
                 timeLimit={timeLimit}
                 targetMatches={targetMatches}
+                defaultTimeLimit={30}
+                defaultTargetMatches={10}
               />
 
               {/* Board Settings */}
