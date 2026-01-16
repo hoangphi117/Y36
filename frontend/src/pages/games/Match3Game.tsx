@@ -26,6 +26,10 @@ import iceBorder from "@/assets/candyIcons/iceBorder.png"
 import calcTargetScore from "@/utils/calcScoreMatch3Game";
 import { GameBoardConfig, GameMode, TimeAndRoundsConfig } from "@/components/games/match3/GameSettings";
 import { GameOverOverlay, GamePauseOverlay, GameStartOverlay } from "@/components/games/match3/GameBoardOverlay";
+import match3Api from "@/services/match3Api";
+import { PauseMenu } from "@/components/games/memory/PauseMenu";
+import type { Match3SessionSave } from "@/types/match3Game";
+import { convertBoard, createSessionSave } from "@/utils/match3SessionHelper";
 
 
 const BOARD_SIZE = 6;
@@ -62,6 +66,15 @@ export default function Match3Game() {
   const [targetScore, setTargetScore] = useState(500);
 
   const activeCandies = useMemo(() => CANDY_TYPES.slice(0, numCandyTypes), [numCandyTypes]);
+
+  // load default board config
+  useEffect(() => {
+    const fetchGameSession = async () => {
+      const res = await match3Api.getDetail(); 
+      console.log("check res detail: ", res);
+    }
+    fetchGameSession();
+  }, []);
 
   // create board
   const startGame = useCallback(() => {
@@ -239,6 +252,58 @@ export default function Match3Game() {
       }
       setSelectedSquare(null);
     }
+  };
+
+  const getCurrentSessionState = (): Match3SessionSave => {
+    const matrix = convertBoard(board, boardSize);
+    
+    const commonData = {
+      matrix,
+      totalScore: score,
+      current_combo: 0, // hoặc biến combo hiện tại của bạn
+    };
+
+    if (gameMode === "rounds") {
+      return createSessionSave({
+        ...commonData,
+        moves_remaining: targetMatches - matchesCount
+      });
+    } 
+    else {
+      return createSessionSave({
+        ...commonData,
+        time_remaining: timeRemaining
+      });
+    }
+  };
+
+  // Save game
+  const saveGameSession = async () => {
+    const sessionSaveData = getCurrentSessionState();
+    console.log("Game session to save:", sessionSaveData);
+
+    const newSession = await match3Api.startSession(6);
+    console.log("check new session: ", newSession);
+    const res = await match3Api.saveSession(newSession.session.id, sessionSaveData);
+    console.log("check save res: ", res);
+    return sessionSaveData;
+  };
+
+  const handleSaveAndExit = async () => {
+    try {
+      // Save game session
+      await saveGameSession();
+      setIsGameActive(false);
+      setIsPaused(false);
+    } catch (error) {
+      console.error("Error saving game:", error);
+    }
+  };
+
+  // Handle restart from pause menu
+  const handleRestartFromPause = () => {
+    setIsPaused(false);
+    startGame();
   };
 
   return (
@@ -423,6 +488,14 @@ export default function Match3Game() {
           />
         )}
       </div>
+        {isPaused && (
+          <PauseMenu 
+            onContinue={() => setIsPaused(!isPaused)}
+            onSaveAndExit={handleSaveAndExit}
+            onRestart={handleRestartFromPause}
+          />
+        )}
+        
       </div>
 
         <div className="mt-8 px-4 max-w-2xl">

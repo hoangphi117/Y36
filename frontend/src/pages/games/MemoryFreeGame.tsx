@@ -84,27 +84,25 @@ export default function MemoryFreeGame() {
   };
 
   // Get current game session state
-  const getCurrentSessionState = (): MemorySessionSave => {
-    const boardState = convertCardsToBoardState(freeCards, freeFlipped, freeMatched);
-    return createSessionSave(
-      boardState,
-      freeGameStatus,
-      freeTimeLeft,
-      0, // currentLevel (0 for free mode)
-      0, // moves (0 for free mode)
-      0, // totalScore (0 for free mode)
-      "free"
-    );
-  };
+  // const getCurrentSessionState = (): MemorySessionSave => {
+  //   const board = convertCardsToBoardState(cards, flipped, matched);
+  //   return createSessionSave(
+  //     board,
+  //     freeTimeLeft,
+  //     0,
+  //     0,
+  //     totalScore,
+  //   );
+  // };
 
   // Save game (can be called to send to API)
-  const saveGameSession = () => {
-    const sessionData = getCurrentSessionState();
-    console.log("Game session to save:", sessionData);
-    // TODO: Send to API with PUT request
-    // await api.put('/memory/save', sessionData);
-    return sessionData;
-  };
+  // const saveGameSession = () => {
+  //   const sessionData = getCurrentSessionState();
+  //   console.log("Game session to save:", sessionData);
+  //   // TODO: Send to API with PUT request
+  //   // await api.put('/memory/save', sessionData);
+  //   return sessionData;
+  // };
 
   // Handle card flip
   const handleFreeCardFlip = (cardId: number) => {
@@ -196,10 +194,10 @@ export default function MemoryFreeGame() {
   };
 
   // Handle restart from pause menu
-  const handleRestartFromPause = () => {
-    setIsPaused(false);
-    restartFreeGame();
-  };
+  // const handleRestartFromPause = () => {
+  //   setIsPaused(false);
+  //   restartFreeGame();
+  // };
 
   // Calculate responsive columns
   const getResponsiveColumns = (totalCards: number): number => {
@@ -286,7 +284,7 @@ export default function MemoryFreeGame() {
           <div className="flex flex-row gap-2 sm:gap-3 items-center justify-start mb-3">
             <BackToSelectionButton backToSelection={backToSelection} />
             { isStarted &&  freeGameStatus === "playing" && <RefreshGameButton restartGame={initializeFreeGame} />}
-            {isStarted && freeGameStatus === "playing" && (
+            {/* {isStarted && freeGameStatus === "playing" && (
               <RoundButton 
                 size="small"
                 className="rounded-md"
@@ -295,7 +293,7 @@ export default function MemoryFreeGame() {
                 <Pause className="w-5 h-5" />
                 <span className="hidden min-[375px]:inline ml-1">Tạm dừng</span>
               </RoundButton>
-            )}
+            )} */}
             <RoundButton 
                 size="small"
                 className="rounded-md"
