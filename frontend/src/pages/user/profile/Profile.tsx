@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mail, Edit, LayoutDashboard, Gamepad2, BarChart3 } from "lucide-react";
+import { Mail, Edit, LayoutDashboard, BarChart3 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import {
 import { useUserProfile, useUpdateProfile } from "@/hooks/useUser";
 import EditProfileView from "./EditProfile";
 import ChangePasswordView from "./ChangePassword";
+import { GameHistory } from "./GameHistory";
 
 type ViewMode = "view" | "edit" | "password";
 
@@ -39,7 +40,6 @@ const ProfilePage = () => {
         user={user}
         onBack={() => setMode("view")}
         onSave={handleSave}
-        // THÊM DÒNG NÀY: Truyền hàm để mở trang đổi pass
         onOpenChangePassword={() => setMode("password")}
       />
     );
@@ -101,11 +101,7 @@ const ProfilePage = () => {
           </TabsContent>
 
           <TabsContent value="game" className="mt-6">
-            <EmptyState
-              icon={<Gamepad2 className="h-10 w-10" />}
-              title="Lịch sử đấu"
-              description="Chưa có dữ liệu trò chơi."
-            />
+            <GameHistory />
           </TabsContent>
 
           <TabsContent value="stats" className="mt-6">
