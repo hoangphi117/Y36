@@ -7,6 +7,7 @@ router.post("/request/:userId", friendController.sendFriendRequest);
 router.post("/accept/:userId", friendController.acceptFriendRequest);
 router.post("/reject/:userId", friendController.rejectFriendRequest);
 router.delete("/unfriend/:userId", friendController.unfriend);
+router.post("/block/:userId",friendController.blockUser)
 
 router.get("/list", friendController.getFriends);
 router.get('/requests/incoming', friendController.getIncomingRequests);

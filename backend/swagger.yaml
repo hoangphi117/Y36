@@ -1218,6 +1218,55 @@ paths:
         500:
           description: Server error
 
+  /friends/reject/{userId}:
+    post:
+      summary: Reject friend request
+      tags: [Friends]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Rejected
+          content:
+            application/json:
+              example:
+                message: Friend request rejected
+        400:
+          description: No pending request
+        500:
+          description: Server error
+
+  /friends/unfriend/{userId}:
+    delete:
+      summary: Unfriend a user
+      tags: [Friends]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Unfriended
+          content:
+            application/json:
+              example:
+                message: Unfriended successfully
+        400:
+          description: No friendship found
+        500:
+          description: Server error
+
+  
                 
           
   
