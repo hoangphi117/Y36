@@ -59,7 +59,7 @@ class GameSession {
     }
 
     const result = await query.count("* as total").first();
-    return Number(result.total);
+    return { total: result ? Number(result.total) : 0 };
   }
 }
 
