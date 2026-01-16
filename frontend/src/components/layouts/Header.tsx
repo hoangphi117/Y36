@@ -7,6 +7,7 @@ import {
   LogOut,
   User as UserIcon,
   Users,
+  MessageSquare,
 } from "lucide-react";
 import { RoundButton } from "@/components/ui/round-button";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -116,6 +117,11 @@ export const Header = () => {
                 <DropdownMenuItem className="cursor-pointer font-medium rounded-lg focus:bg-primary/10 focus:text-primary">
                   <Users className="mr-2 h-4 w-4" />
                   <Link to="/profile?tab=friends">Bạn bè</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="cursor-pointer font-medium rounded-lg focus:bg-primary/10 focus:text-primary">
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  <Link to="/messages">Tin nhắn</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
 

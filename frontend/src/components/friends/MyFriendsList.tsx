@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Search, Users, MessageSquare, UserMinus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -16,7 +17,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useFriendsList, useFriendActions } from "@/hooks/useUser";
-import { useDebounce } from "@/hooks/useDebounce"; // Import hook
+import { useDebounce } from "@/hooks/useDebounce";
 import { LoadingState, EmptyState } from "./FriendCommon";
 import { BlockButton } from "./FriendAction";
 
@@ -25,6 +26,9 @@ export const MyFriendsList = () => {
   const debouncedSearch = useDebounce(search, 500);
   const { unfriend } = useFriendActions();
 
+  // 2. Khởi tạo hook navigate
+  const navigate = useNavigate();
+
   const { data, isLoading } = useFriendsList({
     page: 1,
     limit: 50,
@@ -32,6 +36,21 @@ export const MyFriendsList = () => {
   });
 
   const friends = data?.data || [];
+
+  // 3. Hàm xử lý khi bấm nút Chat
+  const handleChat = (friend: any) => {
+    // Chuyển hướng sang trang /messages
+    // Kèm theo state chứa thông tin người cần chat để ChatPage tự động chọn
+    navigate("/messages", {
+      state: {
+        selectedUser: {
+          id: friend.id || friend.user_id,
+          username: friend.username,
+          avatar_url: friend.avatar_url,
+        },
+      },
+    });
+  };
 
   return (
     <div className="space-y-4">
@@ -71,16 +90,17 @@ export const MyFriendsList = () => {
                 </div>
 
                 <div className="flex gap-1">
+                  {/* 4. Gắn hàm handleChat vào nút MessageSquare */}
                   <Button
                     variant="ghost"
                     size="icon"
                     title="Nhắn tin"
                     className="h-8 w-8"
+                    onClick={() => handleChat(friend)}
                   >
                     <MessageSquare className="h-4 w-4 text-muted-foreground hover:text-primary" />
                   </Button>
 
-                  {/* Nút Hủy kết bạn */}
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button

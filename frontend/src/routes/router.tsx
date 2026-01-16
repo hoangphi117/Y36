@@ -1,5 +1,6 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 
+import { useAuthStore } from "@/stores/useAuthStore";
 import { MainLayout } from "@/components/layouts/MainLayout";
 import HomePage from "../pages/home/HomePage";
 import NotFoundPage from "@/pages/NotFoundPage";
@@ -12,6 +13,8 @@ import MemoryLevelGame from "@/pages/games/MemoryLevelGame";
 import MemoryFreeGame from "@/pages/games/MemoryFreeGame";
 import LoginPage from "@/pages/auth/LoginPage";
 import RegisterPage from "@/pages/auth/RegisterPage";
+import ProfilePage from "@/pages/user/profile/Profile";
+import ChatPage from "@/pages/user/chat/ChatPage";
 
 // ===== ADMIN IMPORTS =====
 import { AdminGuard } from "@/components/admin/auth/AdminGuard";
@@ -21,7 +24,12 @@ import { AdminUsersPage } from "@/pages/admin/AdminUsersPage";
 import { AdminGamesPage } from "@/pages/admin/AdminGamesPage";
 import { AdminLoginPage } from "@/pages/admin/AdminLoginPage";
 import AdminStatsPage from "@/pages/admin/AdminStatsPage";
-import ProfilePage from "@/pages/user/profile/Profile";
+
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { token } = useAuthStore();
+  if (!token) return <Navigate to="/auth/login" replace />;
+  return <>{children}</>;
+};
 
 const router = createBrowserRouter([
   {
@@ -30,7 +38,22 @@ const router = createBrowserRouter([
     errorElement: <NotFoundPage />,
     children: [
       { index: true, element: <HomePage /> },
-      { path: "profile", element: <ProfilePage /> },
+      {
+        path: "profile",
+        element: (
+          <ProtectedRoute>
+            <ProfilePage />{" "}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "messages",
+        element: (
+          <ProtectedRoute>
+            <ChatPage />
+          </ProtectedRoute>
+        ),
+      },
     ],
   },
   {
