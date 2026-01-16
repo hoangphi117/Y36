@@ -23,7 +23,7 @@ export interface MemorySessionResponse {
     id: string;
     user_id: string;
     game_id: string;
-    status: "playing" | "completed" | "lost";
+    status: string;
     score: number;
     play_time_seconds: number;
     board_state: board_state;

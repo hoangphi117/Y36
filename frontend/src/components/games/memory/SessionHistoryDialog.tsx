@@ -1,6 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Clock, Calendar, X, Play, Trash2 } from 'lucide-react';
-import { cn } from '@/lib/utils'; // Giả định dùng utility của Shadcn hoặc Tailwind-merge
 import type { IGameSession } from '@/types/gameSession';
 
 // Hàm format thời gian chơi (giây -> phút:giây)
