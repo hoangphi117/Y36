@@ -40,7 +40,6 @@ class GameSession {
   ) {
     const query = db("game_sessions")
       .where({ user_id: userId })
-      .whereNot({ status: "playing" });
 
     if (gameId) {
       query.andWhere("game_id", gameId);
@@ -52,7 +51,6 @@ class GameSession {
   static async countHistoryByUser(userId, gameId = null) {
     const query = db("game_sessions")
       .where({ user_id: userId })
-      .whereNot({ status: "playing" });
 
     if (gameId) {
       query.andWhere("game_id", gameId);

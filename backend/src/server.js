@@ -11,6 +11,8 @@ const basicAuth = require('./middlewares/basicAuthMiddleware');
 app.use(cors());
 app.use(express.json());
 
+app.use('/uploads',express.static("uploads"));
+
 app.use('/api-docs', basicAuth, swaggerConfig.serve, swaggerConfig.setup);
 
 app.use('/api',checkApiKey, router);
@@ -21,4 +23,12 @@ app.get("/", (req, res) => {
 
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
+});
+
+app.use((err, req, res, next) => {
+  console.error("ERROR:", err);
+
+  res.status(err.status || 400).json({
+    message: err.message || "Something went wrong",
+  });
 });
