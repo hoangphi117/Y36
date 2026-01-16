@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, use } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   RefreshCcw, 
@@ -56,8 +56,8 @@ export default function Match3Game() {
   
   // New states for game modes and features
   const [gameMode, setGameMode] = useState<"time" | "rounds" | "endless">("time");
-  const [timeLimit, setTimeLimit] = useState(30); // Sẽ được set từ API hoặc default
-  const [targetMatches, setTargetMatches] = useState(10); // Sẽ được set từ API hoặc default
+  const [timeLimit, setTimeLimit] = useState(30); 
+  const [targetMatches, setTargetMatches] = useState(10); 
   const [matchesCount, setMatchesCount] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState(timeLimit);
   const [isPaused, setIsPaused] = useState(false);
@@ -68,9 +68,38 @@ export default function Match3Game() {
   // session 
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [shouldCompleteSession, setShouldCompleteSession] = useState(false);
+  const [isConfigLoaded, setIsConfigLoaded] = useState(false);
 
   const activeCandies = useMemo(() => CANDY_TYPES.slice(0, numCandyTypes), [numCandyTypes]);
 
+  // load default config from API
+  useEffect(() => {
+    const fetchGameConfig = async () => {
+      try {
+        const gameDetail = await match3Api.getDetail(5);
+        console.log("check default config: ", gameDetail.data.default_config);
+        const config = gameDetail.data.default_config;
+        setBoardSize(config.cols);
+        setNumCandyTypes(config.candy_types);
+        setTimeLimit(config.time_limit);
+        setTargetScore(config.target_score);
+
+        if(config.moves_limit > 0) {
+          setGameMode("rounds");
+          setTargetMatches(config.moves_limit);
+        } else {
+          setGameMode("time");
+        }
+        
+        setIsConfigLoaded(true);
+
+      } catch (error) {
+        console.error("Error fetching game config:", error);
+        setIsConfigLoaded(true); // Vẫn cho hiển thị nếu lỗi
+      }
+    };
+    fetchGameConfig();
+  }, []);
 
   // create board
   const startGame = useCallback(() => {
@@ -333,6 +362,18 @@ export default function Match3Game() {
     setIsPaused(false);
     startGame();
   };
+
+  // Hiển thị loading trong khi chờ config
+  if (!isConfigLoaded) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background text-foreground">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Đang tải cài đặt game...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center min-h-screen bg-background text-foreground pb-10">

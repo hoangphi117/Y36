@@ -2,8 +2,8 @@ import api from "@/lib/axios";
 import type { IMatch3Game, Match3SessionResponse, Match3SessionSave } from "@/types/match3Game";
 
 const match3Api = {
-    getDetail(code = "match3") {
-        return api.get<IMatch3Game>(`/games/${code}`).then(res => res.data);
+    getDetail(id: number) {
+        return api.get<{data: IMatch3Game}>(`/games/${id}`).then(res => res.data);
     },
 
     startSession(gameId: number) {
