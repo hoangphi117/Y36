@@ -85,4 +85,27 @@ class MessageController {
       });
     }
   }
+
+  async markAsRead(req, res) {
+    try {
+      const currentUserId = req.user.id;
+      const { userId: otherUserId } = req.params;
+
+      if (!otherUserId) {
+        return res.status(400).json({ message: "userId is required" });
+      }
+
+      const updated = await Message.markAsRead(currentUserId, otherUserId);
+
+      return res.status(200).json({
+        message: "Messages marked as read",
+        updated,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  }
 }
