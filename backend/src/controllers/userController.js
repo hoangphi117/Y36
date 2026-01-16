@@ -4,12 +4,15 @@ const bcrypt = require("bcryptjs");
 const updateMe = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { username, avatar_url, dark_mode } = req.body;
+    const { username, dark_mode } = req.body;
 
     const updateData = {};
     if (username !== undefined) updateData.username = username;
-    if (avatar_url !== undefined) updateData.avatar_url = avatar_url;
     if (dark_mode !== undefined) updateData.dark_mode = dark_mode;
+
+     if (req.file) {
+      updateData.avatar_url = req.file.path;  
+    }
 
     const [updatedUser] = await User.updateById(userId, updateData);
 
