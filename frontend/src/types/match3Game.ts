@@ -40,7 +40,7 @@ export interface Match3SessionResponse {
         score: number;
         play_time_seconds: number;
         board_state: board_state;
-        session_config: session_config;
+        session_config: default_config;
         created_at: string;
         updated_at: string;
     };
