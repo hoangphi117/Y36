@@ -34,6 +34,7 @@ import { useNavigate } from "react-router-dom";
 import { LoadGameDialog } from "@/components/dialogs/LoadGameDialog";
 import { useGameSession } from "@/hooks/useGameSession";
 import type { board_state } from "@/types/match3Game";
+import { toast } from "sonner";
 
 
 const BOARD_SIZE = 6;
@@ -214,8 +215,8 @@ export default function Match3Game() {
       
       // Complete session cũ nếu có
       if (currentSessionId) {
-        await match3Api.completeSession(currentSessionId, score, 
-          gameMode === "time" ? timeLimit - timeRemaining : 0);
+        //   gameMode === "time" ? timeLimit - timeRemaining : 0);
+        await gameSession.saveGame(true);
         setCurrentSessionId(null);
       }
       
@@ -419,6 +420,13 @@ export default function Match3Game() {
     gameSession.loadGame(sessionId);
   }
 
+  // delete saved game
+  const handleDeleteGame = async (sessionId: string) => {
+    await match3Api.deleteSession(sessionId);
+    await gameSession.fetchSavedSessions();
+    toast.success("Đã xóa ván chơi!");
+  }
+
   // Hiển thị loading
   if (isInitializing) {
     return (
@@ -498,6 +506,7 @@ export default function Match3Game() {
             sessions={gameSession.savedSessions}
             onLoadSession={handleLoadGame}
             onNewGame={gameSession.startGame}  
+            onDeleteSession={handleDeleteGame}
           >
             <RoundButton 
               size="small" 

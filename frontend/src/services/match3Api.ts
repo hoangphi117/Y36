@@ -16,6 +16,10 @@ const match3Api = {
 
     completeSession(id: string, score: number, play_time_seconds: number) {
         return api.put<Match3SessionResponse>(`/sessions/${id}/complete`, { score, play_time_seconds }).then(res => res.data)
+    },
+
+    deleteSession(id: string) {
+        return api.delete(`/sessions/${id}`).then(res => res.data);
     }
 }
 
