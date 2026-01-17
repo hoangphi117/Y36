@@ -3,7 +3,6 @@ import api from "@/lib/axios";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useNavigate } from "react-router-dom";
 import type { RegisterFormValues, LoginFormValues } from "@/lib/schemas";
-import { useTheme } from "next-themes";
 import { toast } from "sonner";
 
 const registerApi = async (data: RegisterFormValues) => {
@@ -18,7 +17,9 @@ export const useRegister = () => {
   return useMutation({
     mutationFn: registerApi,
     onSuccess: (_) => {
-      toast.success("Đăng ký thành công! Vui lòng đăng nhập.");
+      toast.success("Đăng ký thành công! Vui lòng đăng nhập.", {
+        duration: 2500,
+      });
       navigate("/auth/login");
     },
     onError: (error: any) => {
@@ -35,20 +36,12 @@ const loginApi = async (data: LoginFormValues) => {
 export const useLogin = () => {
   const setAuth = useAuthStore((state) => state.setAuth);
   const navigate = useNavigate();
-  const { setTheme } = useTheme();
 
   return useMutation({
     mutationFn: loginApi,
     onSuccess: (data) => {
-      const fullUser = {
-        ...data.user,
-        avatar_url: data.user.avatar_url || "https://github.com/shadcn.png",
-        dark_mode: data.user.dark_mode ?? false,
-      };
-
-      setAuth(fullUser, data.token);
-      setTheme(fullUser.dark_mode ? "dark" : "light");
-      toast.success("Đăng nhập thành công!");
+      setAuth(data.user, data.token);
+      toast.success("Đăng nhập thành công!", { duration: 1500 });
       navigate("/");
     },
     onError: (error: any) => {

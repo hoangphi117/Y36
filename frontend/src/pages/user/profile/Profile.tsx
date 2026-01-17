@@ -1,5 +1,13 @@
-import { useState } from "react";
-import { Mail, Edit, LayoutDashboard, Gamepad2, BarChart3 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import {
+  Mail,
+  Edit,
+  LayoutDashboard,
+  BarChart3,
+  Users,
+  Gamepad2,
+} from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -16,15 +24,38 @@ import {
 import { useUserProfile, useUpdateProfile } from "@/hooks/useUser";
 import EditProfileView from "./EditProfile";
 import ChangePasswordView from "./ChangePassword";
+import { GameHistory } from "./GameHistory";
+import { FriendsTab } from "./FriendsTab";
+import useDocumentTitle from "@/hooks/useDocumentTitle";
+import type { UpdateProfileValues } from "@/lib/schemas";
 
 type ViewMode = "view" | "edit" | "password";
 
 const ProfilePage = () => {
+  useDocumentTitle("Hồ sơ của tôi");
   const { data: user, isLoading, isError } = useUserProfile();
   const [mode, setMode] = useState<ViewMode>("view");
   const updateProfile = useUpdateProfile();
 
-  const handleSave = async (data: any) => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState("overview");
+
+  useEffect(() => {
+    const tabFromUrl = searchParams.get("tab");
+    if (
+      tabFromUrl &&
+      ["overview", "game", "stats", "friends"].includes(tabFromUrl)
+    ) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    setSearchParams({ tab: value }); // Cập nhật URL mà không reload trang
+  };
+
+  const handleSave = async (data: UpdateProfileValues | FormData) => {
     try {
       await updateProfile.mutateAsync(data);
     } catch (error) {}
@@ -39,7 +70,6 @@ const ProfilePage = () => {
         user={user}
         onBack={() => setMode("view")}
         onSave={handleSave}
-        // THÊM DÒNG NÀY: Truyền hàm để mở trang đổi pass
         onOpenChangePassword={() => setMode("password")}
       />
     );
@@ -50,50 +80,105 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
+    <div className="min-h-screen bg-background p-3 sm:p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
-        <Tabs defaultValue="overview">
+        <Tabs value={activeTab} onValueChange={handleTabChange}>
           {/* ===== HEADER ===== */}
-          <div className="bg-card border rounded-2xl p-6 shadow-sm space-y-6">
-            <div className="flex flex-col md:flex-row items-center gap-6">
-              <Avatar className="h-24 w-24 border-4 border-background shadow-md">
-                <AvatarImage src={user.avatar_url || ""} />
-                <AvatarFallback className="text-2xl font-bold bg-primary/10 text-primary">
-                  {user.username.slice(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+          <div className="bg-card border rounded-2xl p-4 md:p-6 shadow-sm space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
+              {/* Avatar */}
+              <div className="flex justify-center md:justify-start">
+                <Avatar className="h-20 w-20 md:h-24 md:w-24 border-4 border-background shadow-md">
+                  <AvatarImage src={user.avatar_url || ""} />
+                  <AvatarFallback className="text-xl md:text-2xl font-bold bg-primary/10 text-primary">
+                    {user.username.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
 
-              <div className="flex-1 text-center md:text-left">
-                <h1 className="text-3xl font-bold">{user.username}</h1>
+              {/* Info */}
+              <div className="flex-1 text-center md:text-left space-y-1">
+                <h1 className="text-xl md:text-3xl font-bold">
+                  {user.username}
+                </h1>
                 <p className="text-sm text-muted-foreground flex items-center gap-1 justify-center md:justify-start">
-                  <Mail className="h-4 w-4" /> {user.email}
+                  <Mail className="h-4 w-4" />
+                  <span className="truncate max-w-[220px] md:max-w-none">
+                    {user.email}
+                  </span>
                 </p>
               </div>
 
-              <Button onClick={() => setMode("edit")} className="gap-2">
+              {/* Action */}
+              <Button
+                onClick={() => setMode("edit")}
+                className="w-full md:w-auto gap-2"
+              >
                 <Edit className="h-4 w-4" /> Edit Profile
               </Button>
             </div>
 
-            {/* ===== TABS ===== */}
-            <TabsList className="grid w-full grid-cols-3 max-w-md mx-auto">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="game">Game</TabsTrigger>
-              <TabsTrigger value="stats">Stats</TabsTrigger>
-            </TabsList>
+            {/* ===== TABS (SỬA ĐỔI TẠI ĐÂY) ===== */}
+            <div className="pt-4">
+              <TabsList
+                className="
+                  flex w-full justify-start overflow-x-auto h-auto p-1 gap-2
+                  md:grid md:grid-cols-4 md:max-w-md md:mx-auto
+                  [&::-webkit-scrollbar]:h-1
+                  [&::-webkit-scrollbar-thumb]:bg-primary/30
+                  [&::-webkit-scrollbar-thumb]:rounded-full
+                "
+              >
+                <TabsTrigger
+                  value="overview"
+                  className="flex items-center gap-2 px-4 py-2 whitespace-nowrap min-w-fit md:min-w-0"
+                >
+                  <LayoutDashboard className="w-4 h-4 md:w-5 md:h-5 text-secondary-foreground/70" />
+                  <span>Tổng quan</span>
+                </TabsTrigger>
+
+                <TabsTrigger
+                  value="game"
+                  className="flex items-center gap-2 px-4 py-2 whitespace-nowrap min-w-fit md:min-w-0"
+                >
+                  <Gamepad2 className="w-4 h-4 md:w-5 md:h-5 text-secondary-foreground/70" />
+                  <span>Lịch sử đấu</span>
+                </TabsTrigger>
+
+                <TabsTrigger
+                  value="stats"
+                  className="flex items-center gap-2 px-4 py-2 whitespace-nowrap min-w-fit md:min-w-0"
+                >
+                  <BarChart3 className="w-4 h-4 md:w-5 md:h-5 text-secondary-foreground/70" />
+                  <span>Stats</span>
+                </TabsTrigger>
+
+                <TabsTrigger
+                  value="friends"
+                  className="flex items-center gap-2 px-4 py-2 whitespace-nowrap min-w-fit md:min-w-0"
+                >
+                  <Users className="w-4 h-4 md:w-5 md:h-5 text-secondary-foreground/70" />
+                  <span>Bạn bè</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
           </div>
 
           {/* ===== CONTENT ===== */}
+          {/* Các phần TabsContent giữ nguyên không cần sửa đổi */}
           <TabsContent value="overview" className="mt-6">
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+              <CardHeader className="pb-2 md:pb-4">
+                <CardTitle className="flex items-center gap-2 text-base md:text-lg">
                   <LayoutDashboard className="h-5 w-5 text-primary" />
                   Thông tin chung
                 </CardTitle>
-                <CardDescription>Thông tin cơ bản về tài khoản</CardDescription>
+                <CardDescription className="text-sm">
+                  Thông tin cơ bản về tài khoản
+                </CardDescription>
               </CardHeader>
-              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+              <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <InfoBox label="User ID" value={user.user_id} mono />
                 <InfoBox label="Trạng thái" value={user.status} />
               </CardContent>
@@ -101,11 +186,7 @@ const ProfilePage = () => {
           </TabsContent>
 
           <TabsContent value="game" className="mt-6">
-            <EmptyState
-              icon={<Gamepad2 className="h-10 w-10" />}
-              title="Lịch sử đấu"
-              description="Chưa có dữ liệu trò chơi."
-            />
+            <GameHistory />
           </TabsContent>
 
           <TabsContent value="stats" className="mt-6">
@@ -114,6 +195,10 @@ const ProfilePage = () => {
               title="Thống kê"
               description="Dữ liệu thống kê sẽ hiển thị tại đây."
             />
+          </TabsContent>
+
+          <TabsContent value="friends" className="mt-6">
+            <FriendsTab />
           </TabsContent>
         </Tabs>
       </div>

@@ -4,12 +4,15 @@ const bcrypt = require("bcryptjs");
 const updateMe = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { username, avatar_url, dark_mode } = req.body;
+    const { username, dark_mode } = req.body;
 
     const updateData = {};
     if (username !== undefined) updateData.username = username;
-    if (avatar_url !== undefined) updateData.avatar_url = avatar_url;
     if (dark_mode !== undefined) updateData.dark_mode = dark_mode;
+
+    if (req.file) {
+      updateData.avatar_url = req.file.path;
+    }
 
     const [updatedUser] = await User.updateById(userId, updateData);
 
@@ -66,7 +69,7 @@ const changePassword = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const isMatch =  bcrypt.compareSync(currentPassword, user.password_hash);
+    const isMatch = bcrypt.compareSync(currentPassword, user.password_hash);
     if (!isMatch) {
       return res.status(400).json({ message: "Current password is incorrect" });
     }
@@ -110,12 +113,7 @@ const searchUsers = async (req, res) => {
     }
 
     const [users, total] = await Promise.all([
-      User.searchUsersWithFriendStatus(
-        currentUserId,
-        username,
-        limit,
-        offset
-      ),
+      User.searchUsersWithFriendStatus(currentUserId, username, limit, offset),
       User.countSearchUsers(currentUserId, username),
     ]);
 
@@ -134,4 +132,4 @@ const searchUsers = async (req, res) => {
     });
   }
 };
-module.exports = { updateMe, profile, changePassword,searchUsers };
+module.exports = { updateMe, profile, changePassword, searchUsers };

@@ -1,22 +1,36 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { RoundButton } from "@/components/ui/round-button";
 import {
   RefreshCcw,
-  Settings2,
   Volume2,
   VolumeX,
   Trophy,
   Frown,
+  Loader2,
+  Upload,
+  Download,
+  Clock,
+  LogOut,
+  User,
+  Bot,
 } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 import { useGameSound } from "@/hooks/useGameSound";
 import { triggerWinEffects } from "@/lib/fireworks";
-
 import { GameHeader } from "@/components/games/GameHeader";
 import useDocumentTitle from "@/hooks/useDocumentTitle";
+import { useGameSession } from "@/hooks/useGameSession";
+
+import { LoadGameDialog } from "./LoadGameDialog";
 
 const BOARD_SIZE = 15;
+
+interface CaroGameProps {
+  gameId: number;
+  winCondition: number;
+}
 
 const checkWin = (
   board: (string | null)[],
@@ -25,7 +39,6 @@ const checkWin = (
 ) => {
   const player = board[index];
   if (!player) return null;
-
   const row = Math.floor(index / BOARD_SIZE);
   const col = index % BOARD_SIZE;
   const directions = [
@@ -34,11 +47,9 @@ const checkWin = (
     [1, 1],
     [1, -1],
   ];
-
   for (const [dx, dy] of directions) {
     let count = 1;
     let winningCells = [index];
-
     for (let i = 1; i < winCondition; i++) {
       const r = row + i * dx,
         c = col + i * dy;
@@ -82,192 +93,330 @@ const getBestMove = (
 ) => {
   if (board.every((cell) => cell === null))
     return Math.floor((BOARD_SIZE * BOARD_SIZE) / 2);
-
   let bestScore = -Infinity;
   let move = -1;
-
   for (let i = 0; i < board.length; i++) {
     if (board[i] !== null) continue;
+    const r = Math.floor(i / BOARD_SIZE);
+    const c = i % BOARD_SIZE;
+    let hasNeighbor = false;
+    for (let dx = -2; dx <= 2; dx++) {
+      for (let dy = -2; dy <= 2; dy++) {
+        if (dx === 0 && dy === 0) continue;
+        const nr = r + dx,
+          nc = c + dy;
+        if (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE) {
+          if (board[nr * BOARD_SIZE + nc] !== null) {
+            hasNeighbor = true;
+            break;
+          }
+        }
+      }
+      if (hasNeighbor) break;
+    }
+    if (!hasNeighbor) continue;
     let score = 0;
-
     board[i] = botPiece;
     if (checkWin(board, i, winCondition)) score += 10000;
     else if (checkWin(board, i, winCondition - 1)) score += 100;
     board[i] = null;
-
     board[i] = playerPiece;
     if (checkWin(board, i, winCondition)) score += 5000;
     else if (checkWin(board, i, winCondition - 1)) score += 80;
     board[i] = null;
-
-    const r = Math.floor(i / BOARD_SIZE),
-      c = i % BOARD_SIZE;
     score +=
       Math.random() * 5 -
       (Math.abs(r - BOARD_SIZE / 2) + Math.abs(c - BOARD_SIZE / 2));
-
     if (score > bestScore) {
       bestScore = score;
       move = i;
     }
   }
+  if (move === -1) {
+    const empties = board
+      .map((v, k) => (v === null ? k : null))
+      .filter((v) => v !== null) as number[];
+    if (empties.length > 0)
+      return empties[Math.floor(Math.random() * empties.length)];
+  }
   return move;
 };
 
-export default function CaroGame() {
-  useDocumentTitle("Trò Caro");
+export default function CaroGame({ gameId, winCondition }: CaroGameProps) {
+  useDocumentTitle(`Cờ Caro (${winCondition} ô)`);
+
   const [board, setBoard] = useState<(string | null)[]>(
     Array(BOARD_SIZE * BOARD_SIZE).fill(null)
   );
   const [playerPiece, setPlayerPiece] = useState<"X" | "O">("X");
   const [isPlayerTurn, setIsPlayerTurn] = useState(true);
-  const [winner, setWinner] = useState<string | null>(null);
   const [winningLine, setWinningLine] = useState<number[]>([]);
-  const [winCondition, setWinCondition] = useState<4 | 5>(5);
+  const [winner, setWinner] = useState<string | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
 
-  const { playSound } = useGameSound(soundEnabled);
+  const { playSound: originalPlaySound } = useGameSound();
+  const playSound = (type: string) =>
+    soundEnabled && originalPlaySound(type as any);
   const botPiece = playerPiece === "X" ? "O" : "X";
+
+  const boardRef = useRef(board);
+  const playerPieceRef = useRef(playerPiece);
+  const isPlayerTurnRef = useRef(isPlayerTurn);
+  const winnerRef = useRef(winner);
+
+  useEffect(() => {
+    boardRef.current = board;
+    playerPieceRef.current = playerPiece;
+    isPlayerTurnRef.current = isPlayerTurn;
+    winnerRef.current = winner;
+  }, [board, playerPiece, isPlayerTurn, winner]);
+
+  const getBoardState = useCallback(
+    () => ({
+      board: boardRef.current,
+      playerPiece: playerPieceRef.current,
+      isPlayerTurn: isPlayerTurnRef.current,
+      winner: winnerRef.current,
+    }),
+    []
+  );
+
+  const {
+    session,
+    currentPlayTime,
+    savedSessions,
+    isLoading,
+    isSaving,
+    showLoadDialog,
+    setShowLoadDialog,
+    startGame,
+    loadGame,
+    saveGame,
+    completeGame,
+    quitGame,
+    fetchSavedSessions,
+    resetTimer,
+  } = useGameSession({ gameId, getBoardState });
+
+  console.log("CaroGame session:", session);
+
+  const handleRestart = async () => {
+    setBoard(Array(BOARD_SIZE * BOARD_SIZE).fill(null));
+    setWinner(null);
+    setWinningLine([]);
+    setIsPlayerTurn(true);
+    setPlayerPiece("X");
+    resetTimer();
+    await startGame();
+  };
+
+  const handleSwitchSide = (p: "X" | "O") => {
+    setPlayerPiece(p);
+    setBoard(Array(BOARD_SIZE * BOARD_SIZE).fill(null));
+    setWinner(null);
+    setWinningLine([]);
+    setIsPlayerTurn(true);
+    resetTimer();
+  };
+
+  const handleManualSave = () => saveGame(true);
+  const handleOpenSavedGames = async () => {
+    await fetchSavedSessions();
+    setShowLoadDialog(true);
+  };
+
+  const formatTime = (totalSeconds: number) => {
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs
+      .toString()
+      .padStart(2, "0")}`;
+  };
+
+  useEffect(() => {
+    if (session?.board_state) {
+      const state = session.board_state;
+      if (state.board) setBoard(state.board);
+      if (state.playerPiece) setPlayerPiece(state.playerPiece);
+      if (state.isPlayerTurn !== undefined) setIsPlayerTurn(state.isPlayerTurn);
+      setWinner(null);
+      setWinningLine([]);
+    } else if (session && !session.board_state) {
+      setBoard(Array(BOARD_SIZE * BOARD_SIZE).fill(null));
+      setWinner(null);
+      setWinningLine([]);
+      setIsPlayerTurn(true);
+    }
+  }, [session]);
 
   const handleMove = useCallback(
     (index: number, piece: string) => {
-      if (board[index] || winner) return;
-
+      if (board[index] || winner || session?.status !== "playing") return;
       playSound("pop");
       const newBoard = [...board];
       newBoard[index] = piece;
       setBoard(newBoard);
-
       const winLine = checkWin(newBoard, index, winCondition);
       if (winLine) {
         setWinner(piece);
         setWinningLine(winLine);
-        if (piece === playerPiece) {
-          playSound("win");
-          triggerWinEffects();
-        } else {
-          playSound("lose");
-        }
       } else {
-        setIsPlayerTurn(piece === botPiece);
+        setIsPlayerTurn(piece !== playerPiece);
       }
     },
-    [board, winner, winCondition, playerPiece, botPiece, playSound]
+    [board, winner, winCondition, playerPiece, session?.status, playSound]
   );
 
   useEffect(() => {
-    if (!isPlayerTurn && !winner) {
+    if (!session || session.status !== "playing" || winner) return;
+    const xCount = board.filter((c) => c === "X").length;
+    const oCount = board.filter((c) => c === "O").length;
+    const isXTurn = xCount === oCount;
+    const currentTurnSymbol = isXTurn ? "X" : "O";
+    const isBotTurn = currentTurnSymbol === botPiece;
+    if (isBotTurn) {
       const timer = setTimeout(() => {
         const move = getBestMove(board, winCondition, botPiece, playerPiece);
         if (move !== -1) handleMove(move, botPiece);
       }, 600);
       return () => clearTimeout(timer);
     }
-  }, [
-    isPlayerTurn,
-    winner,
-    board,
-    winCondition,
-    botPiece,
-    playerPiece,
-    handleMove,
-  ]);
+  }, [board, winCondition, botPiece, playerPiece, winner, session]);
 
-  const resetGame = () => {
-    setBoard(Array(BOARD_SIZE * BOARD_SIZE).fill(null));
-    setWinner(null);
-    setWinningLine([]);
-    setIsPlayerTurn(true);
-  };
+  useEffect(() => {
+    if (session?.status === "playing") {
+      if (winner) {
+        if (winner === playerPiece) {
+          playSound("win");
+          triggerWinEffects();
+          completeGame(1);
+        } else {
+          playSound("lose");
+          completeGame(-1);
+        }
+      } else if (board.every((cell) => cell !== null)) {
+        playSound("draw");
+        completeGame(0);
+      }
+    }
+  }, [winner, board, playerPiece, session?.status]);
+
+  const isBoardEmpty = board.every((c) => c === null);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[80vh] flex-col items-center justify-center gap-4">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="animate-pulse font-medium text-muted-foreground">
+          Đang tải dữ liệu Caro {winCondition} ô...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center min-h-screen bg-background text-foreground transition-colors duration-300">
       <GameHeader />
-
       <div className="flex flex-col items-center justify-center py-4 px-4 w-full max-w-4xl">
-        {/* HEADER & STATUS */}
-        <div className="text-center mb-6 space-y-2">
+        {/* HEADER */}
+        <div className="text-center mb-4 space-y-2">
           <h1 className="text-4xl sm:text-5xl font-black text-primary uppercase tracking-wider italic drop-shadow-[0_2px_10px_rgba(var(--primary),0.5)]">
             CARO {winCondition}
           </h1>
-          <p className="text-muted-foreground font-bold h-6 flex items-center justify-center gap-2">
+          <div className="h-8 flex items-center justify-center gap-2">
+            <div className="font-mono text-lg font-bold text-primary flex items-center gap-2 bg-primary/10 px-4 py-1 rounded-full border border-primary/20">
+              <Clock className="w-4 h-4" /> {formatTime(currentPlayTime)}
+            </div>
+            <div className="w-[1px] h-6 bg-border mx-2"></div>
             {winner ? (
               <span
                 className={cn(
-                  "text-xl animate-bounce",
+                  "text-xl font-bold animate-bounce",
                   winner === playerPiece ? "text-primary" : "text-destructive"
                 )}
               >
-                {winner === playerPiece ? "🎉 CHIẾN THẮNG!" : "🤖 BOT THẮNG!"}
+                {winner === playerPiece ? "🎉 BẠN THẮNG!" : "🤖 BOT THẮNG!"}
               </span>
             ) : (
-              <>
-                Lượt đi:
-                <span
-                  className={cn(
-                    "ml-1",
-                    isPlayerTurn ? "text-primary" : "text-muted-foreground"
-                  )}
-                >
-                  {isPlayerTurn ? "Bạn (" + playerPiece + ")" : "Bot..."}
-                </span>
-              </>
+              <span className="text-muted-foreground font-medium animate-pulse">
+                {(board.filter((c) => c !== null).length % 2 === 0 &&
+                  playerPiece === "X") ||
+                (board.filter((c) => c !== null).length % 2 !== 0 &&
+                  playerPiece === "O")
+                  ? "Lượt của bạn..."
+                  : "Bot đang tính..."}
+              </span>
             )}
-          </p>
+          </div>
         </div>
 
         {/* CONTROLS */}
-        <div className="flex flex-wrap gap-4 mb-8 justify-center items-center">
+        <div className="flex flex-wrap gap-4 mb-6 justify-center items-center relative z-20">
           <RoundButton
-            size="small"
+            onClick={handleManualSave}
+            disabled={isSaving || !!winner || session?.status !== "playing"}
             variant="primary"
-            onClick={() => {
-              resetGame();
-              playSound("button1");
-            }}
+            className="flex items-center gap-2 px-4"
           >
-            <RefreshCcw className="w-4 h-4 mr-2" /> CHƠI LẠI
+            {isSaving ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Upload className="w-4 h-4" />
+            )}{" "}
+            Lưu
           </RoundButton>
 
-          <div className="flex bg-muted p-1 rounded-2xl border-2 border-border shadow-sm">
-            {(["X", "O"] as const).map((p) => (
+          <LoadGameDialog
+            open={showLoadDialog}
+            onOpenChange={setShowLoadDialog}
+            sessions={savedSessions}
+            currentSessionId={session?.id}
+            onLoadSession={loadGame}
+            onNewGame={startGame}
+          >
+            {/* Nút Trigger nằm ở đây */}
+            <RoundButton
+              variant="neutral"
+              className="flex items-center gap-2 px-4"
+              onClick={handleOpenSavedGames}
+            >
+              <Download className="w-4 h-4" /> Tải
+            </RoundButton>
+          </LoadGameDialog>
+
+          {/* --- NÚT CHUYỂN CHẾ ĐỘ / MENU LINK --- */}
+
+          {isBoardEmpty && session?.status === "playing" && (
+            <div className="flex bg-muted p-1 rounded-full border border-border">
               <button
-                key={p}
-                onClick={() => {
-                  setPlayerPiece(p);
-                  resetGame();
-                  playSound("button1");
-                }}
+                onClick={() => handleSwitchSide("X")}
                 className={cn(
-                  "px-5 py-1 rounded-xl font-black transition-all cursor-pointer",
-                  playerPiece === p
-                    ? "bg-background text-primary shadow-md scale-105"
-                    : "opacity-50 hover:opacity-100"
+                  "flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold transition-all",
+                  playerPiece === "X"
+                    ? "bg-white text-primary shadow-sm"
+                    : "text-muted-foreground"
                 )}
               >
-                {p}
+                <User className="w-3 h-3" /> X
               </button>
-            ))}
-          </div>
-
-          <RoundButton
-            size="small"
-            variant="accent"
-            onClick={() => {
-              setWinCondition(winCondition === 5 ? 4 : 5);
-              resetGame();
-              playSound("button1");
-            }}
-          >
-            <Settings2 className="w-4 h-4 mr-2" />
-            {winCondition === 5 ? "CỬA 4" : "CỬA 5"}
-          </RoundButton>
+              <button
+                onClick={() => handleSwitchSide("O")}
+                className={cn(
+                  "flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold transition-all",
+                  playerPiece === "O"
+                    ? "bg-white text-primary shadow-sm"
+                    : "text-muted-foreground"
+                )}
+              >
+                <Bot className="w-3 h-3" /> O
+              </button>
+            </div>
+          )}
 
           <RoundButton
             size="small"
             variant="neutral"
             onClick={() => setSoundEnabled(!soundEnabled)}
-            className="w-12 px-0"
           >
             {soundEnabled ? (
               <Volume2 className="w-4 h-4" />
@@ -275,10 +424,19 @@ export default function CaroGame() {
               <VolumeX className="w-4 h-4" />
             )}
           </RoundButton>
+
+          <RoundButton
+            size="small"
+            variant="neutral"
+            onClick={quitGame}
+            title="Thoát"
+          >
+            <LogOut className="w-4 h-4" />
+          </RoundButton>
         </div>
 
-        {/* BÀN CỜ CARO */}
-        <div className="relative p-3 sm:p-4 bg-[var(--board-bg)] rounded-[2rem] shadow-2xl border-4 border-primary/30 transition-colors duration-300">
+        {/* BOARD (Giữ nguyên) */}
+        <div className="relative p-2 sm:p-3 bg-[var(--board-bg)] rounded-[1.5rem] shadow-2xl border-4 border-primary/30 transition-colors duration-300 overflow-hidden">
           <div
             className="grid gap-[1px] bg-border border-2 border-border"
             style={{
@@ -288,28 +446,22 @@ export default function CaroGame() {
             {board.map((cell, index) => (
               <button
                 key={index}
-                disabled={!!cell || !!winner || !isPlayerTurn}
+                disabled={!!cell || !!winner || session?.status !== "playing"}
                 onClick={() => handleMove(index, playerPiece)}
                 className={cn(
-                  "w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center text-lg sm:text-xl md:text-2xl font-black leading-none transition-colors duration-200",
-                  "bg-[var(--board-bg)] hover:bg-[var(--cell-hover)]", // Dùng biến CSS để đổi màu nền
+                  "w-6 h-6 sm:w-8 sm:h-8 md:w-9 md:h-9 flex items-center justify-center text-sm sm:text-lg md:text-xl font-black leading-none transition-colors duration-200",
+                  "bg-[var(--board-bg)] hover:bg-[var(--cell-hover)]",
                   winningLine.includes(index) &&
-                    "bg-accent/80 animate-pulse z-10" // Dùng accent color (Vàng ở Light, Hồng ở Dark)
+                    "bg-accent/80 animate-pulse z-10"
                 )}
               >
                 <AnimatePresence mode="wait">
                   {cell && (
                     <motion.span
-                      initial={{ scale: 0, rotate: -45 }}
-                      animate={{ scale: 1, rotate: 0 }}
-                      exit={{ scale: 0 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 300,
-                        damping: 15,
-                      }}
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
                       className={cn(
-                        "font-black text-2xl select-none drop-shadow-md",
+                        "font-black select-none drop-shadow-sm",
                         cell === playerPiece
                           ? "text-[var(--game-x)]"
                           : "text-[var(--game-o)]"
@@ -323,42 +475,40 @@ export default function CaroGame() {
             ))}
           </div>
 
-          {/* GAME OVER MODAL */}
+          {/* OVERLAY KẾT THÚC (Giữ nguyên) */}
           <AnimatePresence>
             {winner && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm rounded-[1.8rem]"
+                className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
               >
                 <motion.div
                   initial={{ scale: 0.5, y: 50 }}
                   animate={{ scale: 1, y: 0 }}
-                  className="bg-card p-8 rounded-[3rem] text-center shadow-2xl border-4 border-accent"
+                  className="bg-card p-6 md:p-8 rounded-[2rem] text-center shadow-2xl border-4 border-accent w-[90%] max-w-sm"
                 >
                   {winner === playerPiece ? (
-                    <Trophy className="w-20 h-20 text-accent mx-auto mb-4" />
+                    <Trophy className="w-16 h-16 text-accent mx-auto mb-2 animate-bounce" />
                   ) : (
-                    <Frown className="w-20 h-20 text-destructive mx-auto mb-4" />
+                    <Frown className="w-16 h-16 text-destructive mx-auto mb-2" />
                   )}
-                  <h2 className="text-4xl font-black mb-6 uppercase text-card-foreground">
+                  <h2 className="text-2xl md:text-3xl font-black mb-4 uppercase text-card-foreground">
                     {winner === playerPiece ? (
                       <span className="text-primary">XUẤT SẮC!</span>
                     ) : (
-                      <span className="text-destructive">TIẾC QUÁ!</span>
+                      <span className="text-destructive">THUA RỒI!</span>
                     )}
                   </h2>
-                  <RoundButton
-                    size="large"
-                    variant="accent"
-                    onClick={() => {
-                      resetGame();
-                      playSound("button");
-                    }}
-                  >
-                    CHƠI LẠI NÀO
-                  </RoundButton>
+                  <div className="flex gap-3 justify-center">
+                    <RoundButton variant="neutral" onClick={quitGame}>
+                      Thoát
+                    </RoundButton>
+                    <RoundButton variant="accent" onClick={handleRestart}>
+                      <RefreshCcw className="w-4 h-4 mr-2" /> Chơi Lại
+                    </RoundButton>
+                  </div>
                 </motion.div>
               </motion.div>
             )}

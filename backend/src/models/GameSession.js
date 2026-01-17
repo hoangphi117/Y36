@@ -36,30 +36,34 @@ class GameSession {
 
   static async findHistoryByUser(
     userId,
-    { gameId = null, limit = 10, offset = 0 }
+    { gameId = null, status = null, limit = 10, offset = 0 }
   ) {
-    const query = db("game_sessions")
-      .where({ user_id: userId })
-      .whereNot({ status: "playing" });
+    const query = db("game_sessions").where({ user_id: userId });
 
     if (gameId) {
       query.andWhere("game_id", gameId);
+    }
+
+    if (status) {
+      query.andWhere("status", status);
     }
 
     return query.orderBy("updated_at", "desc").limit(limit).offset(offset);
   }
 
-  static async countHistoryByUser(userId, gameId = null) {
-    const query = db("game_sessions")
-      .where({ user_id: userId })
-      .whereNot({ status: "playing" });
+  static async countHistoryByUser(userId, gameId = null, status = null) {
+    const query = db("game_sessions").where({ user_id: userId });
 
     if (gameId) {
       query.andWhere("game_id", gameId);
     }
 
+    if (status) {
+      query.andWhere("status", status);
+    }
+
     const result = await query.count("* as total").first();
-    return Number(result.total);
+    return { total: result ? Number(result.total) : 0 };
   }
 }
 
