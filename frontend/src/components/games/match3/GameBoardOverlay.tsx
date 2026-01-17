@@ -1,6 +1,6 @@
 import { RoundButton } from '@/components/ui/round-button';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Pause, Play, Settings2, RotateCcw, Star } from 'lucide-react';
+import { ArrowLeft, Pause, Play, Settings2, RotateCcw, Star, ChevronLeft } from 'lucide-react';
 
 interface CandyType {
     id: string;
@@ -81,11 +81,11 @@ const GamePauseOverlay = ({ resetToSetup }: GamePauseOverlayProps) => {
 interface GameOverOverlayProps {
     score: number;
     targetScore: number;
-    startGame: () => void;
-    resetToSetup: () => void;
+    onRestart: () => void;
+    onExit: () => void;
 }
 
-const GameOverOverlay = ({ score, targetScore, startGame, resetToSetup }: GameOverOverlayProps) => {
+const GameOverOverlay = ({ score, targetScore, onRestart, onExit }: GameOverOverlayProps) => {
   const calculateStars = (score: number, targetScore: number) => {
     if (score < targetScore) return 0
     if (score >= targetScore * 2.5) return 3
@@ -231,7 +231,7 @@ const GameOverOverlay = ({ score, targetScore, startGame, resetToSetup }: GameOv
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={startGame}
+            onClick={onRestart}
             className="flex items-center gap-2 px-6 py-3 bg-linear-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground font-bold rounded-xl transition-all duration-200 shadow-lg hover:shadow-primary/50 active:scale-95 border-b-4 border-primary/60 hover:border-primary/40"
           >
             <RotateCcw className="w-5 h-5" />
@@ -240,11 +240,11 @@ const GameOverOverlay = ({ score, targetScore, startGame, resetToSetup }: GameOv
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={resetToSetup}
+            onClick={onExit}
             className="flex items-center gap-2 px-6 py-3 bg-linear-to-r from-muted to-muted/80 hover:from-muted/90 hover:to-muted/70 text-foreground font-bold rounded-xl transition-all duration-200 shadow-lg hover:shadow-muted/50 active:scale-95 border-b-4 border-muted/60 hover:border-muted/40"
           >
-            <Settings2 className="w-5 h-5" />
-            Cài đặt
+            <ChevronLeft/>
+            về trang chủ
           </motion.button>
         </motion.div>
       </motion.div>
