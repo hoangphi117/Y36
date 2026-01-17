@@ -57,15 +57,19 @@ const router = createBrowserRouter([
     ],
   },
   {
-    path: "/caro",
-    element: <CaroGame />,
+    path: "/games/caro-5",
+    element: <CaroGame gameId={1} winCondition={5} />,
   },
   {
-    path: "/tic-tac-toe",
+    path: "/games/caro-4",
+    element: <CaroGame gameId={2} winCondition={4} />,
+  },
+  {
+    path: "/games/tic-tac-toe",
     element: <TicTacToe />,
   },
   {
-    path: "/snake",
+    path: "/games/snake",
     element: <SnakeGame />,
   },
   {

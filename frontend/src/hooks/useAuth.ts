@@ -17,7 +17,9 @@ export const useRegister = () => {
   return useMutation({
     mutationFn: registerApi,
     onSuccess: (_) => {
-      toast.success("Đăng ký thành công! Vui lòng đăng nhập.");
+      toast.success("Đăng ký thành công! Vui lòng đăng nhập.", {
+        duration: 2500,
+      });
       navigate("/auth/login");
     },
     onError: (error: any) => {
@@ -39,7 +41,7 @@ export const useLogin = () => {
     mutationFn: loginApi,
     onSuccess: (data) => {
       setAuth(data.user, data.token);
-      toast.success("Đăng nhập thành công!");
+      toast.success("Đăng nhập thành công!", { duration: 1500 });
       navigate("/");
     },
     onError: (error: any) => {

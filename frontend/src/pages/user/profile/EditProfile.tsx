@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from "react"; // [Thêm] hooks cần thiết
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
@@ -43,7 +44,8 @@ interface Props {
     dark_mode: boolean;
   };
   onBack?: () => void;
-  onSave: (data: UpdateProfileValues) => Promise<void> | void;
+  // [Cập nhật] onSave bây giờ nhận FormData hoặc UpdateProfileValues tùy cách xử lý
+  onSave: (data: FormData | UpdateProfileValues) => Promise<void> | void;
   onOpenChangePassword: () => void;
 }
 
@@ -54,6 +56,11 @@ const EditProfileView = ({
   onOpenChangePassword,
 }: Props) => {
   const navigate = useNavigate();
+
+  // [Thêm] State để lưu file ảnh và URL xem trước
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<UpdateProfileValues>({
     resolver: zodResolver(updateProfileSchema),
@@ -69,8 +76,36 @@ const EditProfileView = ({
     reset,
   } = form;
 
+  // Tính toán trạng thái thay đổi bao gồm cả việc có chọn file mới không
+  const hasChanges = isDirty || selectedFile !== null;
+
   const { showDialog, confirmNavigation, cancelNavigation, proceedNavigation } =
-    useUnsavedChanges(isDirty);
+    useUnsavedChanges(hasChanges);
+
+  // [Thêm] Xử lý khi chọn file
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      // Tạo URL tạm thời để hiển thị ảnh ngay lập tức
+      const objectUrl = URL.createObjectURL(file);
+      setPreviewUrl(objectUrl);
+    }
+  };
+
+  // [Thêm] Hàm kích hoạt input file khi bấm vào avatar
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  // Cleanup URL object khi component unmount để tránh rò rỉ bộ nhớ
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   const handleBack = () => {
     if (onBack) {
@@ -82,9 +117,34 @@ const EditProfileView = ({
 
   const onSubmit = async (data: UpdateProfileValues) => {
     try {
-      await onSave(data);
+      // 1. Nếu không có file ảnh mới, gửi JSON như cũ để tiết kiệm băng thông (tuỳ chọn)
+      // Nhưng để đồng bộ logic, ta có thể luôn gửi FormData hoặc kiểm tra như sau:
 
+      if (!selectedFile) {
+        // Nếu không đổi avatar, chỉ gọi hàm save với data gốc (JSON)
+        // Lưu ý: Backend cần support cả JSON và FormData, hoặc bạn phải ép convert sang FormData hết.
+        // Cách an toàn nhất là chuyển tất cả sang FormData như dưới đây:
+      }
+
+      const formData = new FormData();
+      formData.append("username", data.username);
+
+      // Convert boolean sang string rõ ràng
+      formData.append("dark_mode", String(data.dark_mode));
+
+      // Chỉ append file nếu người dùng đã chọn
+      if (selectedFile) {
+        formData.append("avatar", selectedFile);
+      }
+
+      // Gọi API
+      await onSave(formData); // Lưu ý: onSave cần chấp nhận kiểu FormData (đã sửa ở bước trước)
+
+      // Reset form với giá trị mới để tính năng "Unsaved Changes" hoạt động đúng
       reset(data);
+
+      // [Mẹo UX] Reset file đã chọn để user không upload lại file đó lần nữa nếu nhấn Save tiếp
+      setSelectedFile(null);
     } catch (error) {
       console.error("Lỗi khi lưu hồ sơ:", error);
     }
@@ -121,11 +181,27 @@ const EditProfileView = ({
           {/* CONTENT */}
           <Card className="border shadow-sm">
             <CardContent className="p-6 md:p-8 space-y-8">
-              {/* AVATAR */}
+              {/* AVATAR SECTION */}
               <div className="flex flex-col items-center gap-3">
-                <div className="relative group cursor-pointer">
+                {/* [Thêm] Input file ẩn */}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept="image/*"
+                  className="hidden"
+                />
+
+                <div
+                  className="relative group cursor-pointer"
+                  onClick={handleAvatarClick} // [Thêm] Sự kiện click
+                >
                   <Avatar className="h-28 w-28 border-4 border-card shadow-lg">
-                    <AvatarImage src={user.avatar_url || ""} />
+                    {/* Ưu tiên hiển thị previewUrl nếu có, nếu không thì dùng user.avatar_url */}
+                    <AvatarImage
+                      src={previewUrl || user.avatar_url || ""}
+                      className="object-cover"
+                    />
                     <AvatarFallback className="text-3xl font-bold bg-primary/10 text-primary">
                       {user.username.substring(0, 2).toUpperCase()}
                     </AvatarFallback>
@@ -138,7 +214,7 @@ const EditProfileView = ({
                 </div>
 
                 <p className="text-xs text-muted-foreground">
-                  Nhấn để thay đổi ảnh đại diện (tạm thời)
+                  Nhấn để thay đổi ảnh đại diện
                 </p>
               </div>
 
@@ -216,6 +292,7 @@ const EditProfileView = ({
                     )}
                   />
 
+                  {/* CHANGE PASSWORD SECTION */}
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2 text-muted-foreground">
                       <Lock className="h-4 w-4" /> Bảo mật
@@ -247,7 +324,7 @@ const EditProfileView = ({
                   <div className="pt-4 border-t flex gap-4">
                     <Button
                       type="submit"
-                      disabled={!isDirty || isSubmitting}
+                      disabled={!hasChanges || isSubmitting} // Dùng hasChanges thay vì isDirty
                       className="flex-1 gap-2"
                     >
                       {isSubmitting ? (

@@ -1,23 +1,28 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { RoundButton } from "@/components/ui/round-button";
 import {
-  RefreshCcw,
-  ArrowRightLeft,
   Trophy,
-  Frown,
   Minus,
   Volume2,
   VolumeX,
+  Loader2,
+  LogOut,
+  Download,
+  Upload,
+  Clock,
+  Bot,
+  User,
+  RefreshCcw,
 } from "lucide-react";
+import { RoundButton } from "@/components/ui/round-button";
 import { cn } from "@/lib/utils";
 import { useGameSound } from "@/hooks/useGameSound";
-import { triggerWinEffects } from "@/lib/fireworks";
 import { GameHeader } from "@/components/games/GameHeader";
 import useDocumentTitle from "@/hooks/useDocumentTitle";
+import { useGameSession } from "@/hooks/useGameSession";
+import { LoadGameDialog } from "./LoadGameDialog";
 
-type SquareValue = "X" | "O" | null;
-
+const GAME_ID = 4;
 const WIN_LINES = [
   [0, 1, 2],
   [3, 4, 5],
@@ -29,304 +34,376 @@ const WIN_LINES = [
   [2, 4, 6],
 ];
 
-function calculateWinner(squares: SquareValue[]) {
-  for (let i = 0; i < WIN_LINES.length; i++) {
-    const [a, b, c] = WIN_LINES[i];
-    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-      return { winner: squares[a], line: WIN_LINES[i] };
-    }
-  }
-  return null;
-}
-
-function getBotMove(squares: SquareValue[], botPiece: "X" | "O") {
-  const playerPiece = botPiece === "X" ? "O" : "X";
-
-  for (let i = 0; i < WIN_LINES.length; i++) {
-    const [a, b, c] = WIN_LINES[i];
-    const line = [squares[a], squares[b], squares[c]];
-    if (
-      line.filter((x) => x === botPiece).length === 2 &&
-      line.includes(null)
-    ) {
-      const idx = WIN_LINES[i].find((idx) => squares[idx] === null);
-      if (idx !== undefined) return idx;
-    }
-  }
-
-  for (let i = 0; i < WIN_LINES.length; i++) {
-    const [a, b, c] = WIN_LINES[i];
-    const line = [squares[a], squares[b], squares[c]];
-    if (
-      line.filter((x) => x === playerPiece).length === 2 &&
-      line.includes(null)
-    ) {
-      const idx = WIN_LINES[i].find((idx) => squares[idx] === null);
-      if (idx !== undefined) return idx;
-    }
-  }
-
-  if (!squares[4]) return 4;
-
-  const available = squares
-    .map((val, idx) => (val === null ? idx : null))
-    .filter((val) => val !== null) as number[];
-  if (available.length > 0) {
-    return available[Math.floor(Math.random() * available.length)];
-  }
-  return -1;
-}
+type SquareValue = "X" | "O" | null;
+type PlayerSymbol = "X" | "O";
 
 export default function TicTacToe() {
-  useDocumentTitle("Trò Tic Tac Toe");
+  useDocumentTitle("Tic Tac Toe");
+
   const [squares, setSquares] = useState<SquareValue[]>(Array(9).fill(null));
-  const [playerPiece, setPlayerPiece] = useState<"X" | "O">("X");
   const [xIsNext, setXIsNext] = useState(true);
-  const [isDraw, setIsDraw] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [userSymbol, setUserSymbol] = useState<PlayerSymbol>("X");
 
-  const { playSound } = useGameSound(soundEnabled);
-
-  const winInfo = calculateWinner(squares);
-  const winner = winInfo?.winner;
-  const botPiece = playerPiece === "X" ? "O" : "X";
-  const isPlayerTurn =
-    (xIsNext && playerPiece === "X") || (!xIsNext && playerPiece === "O");
+  const squaresRef = useRef(squares);
+  const xIsNextRef = useRef(xIsNext);
 
   useEffect(() => {
-    if (winner) {
-      if (winner === playerPiece) {
-        triggerWinEffects();
-        playSound("win");
-      } else {
-        playSound("lose");
-      }
-    } else if (!squares.includes(null)) {
-      setIsDraw(true);
-      playSound("draw");
+    squaresRef.current = squares;
+    xIsNextRef.current = xIsNext;
+  }, [squares, xIsNext]);
+
+  const getBoardState = () => ({
+    squares: squaresRef.current,
+    xIsNext: xIsNextRef.current,
+    winner: calculateWinner(squaresRef.current),
+  });
+
+  const {
+    session,
+    currentPlayTime,
+    savedSessions,
+    isLoading,
+    isSaving,
+    showLoadDialog,
+    setShowLoadDialog,
+    startGame,
+    loadGame,
+    saveGame,
+    completeGame,
+    quitGame,
+    fetchSavedSessions,
+    resetTimer,
+  } = useGameSession({ gameId: GAME_ID, getBoardState });
+
+  console.log("Session:", session);
+
+  const { playSound: originalPlaySound } = useGameSound();
+  const playSound = (type: string) =>
+    soundEnabled && originalPlaySound(type as any);
+
+  useEffect(() => {
+    if (session?.board_state) {
+      const { squares: s, xIsNext: x } = session.board_state as any;
+      if (s) setSquares(s);
+      if (x !== undefined) setXIsNext(x);
+    } else if (session && !session.board_state) {
+      setSquares(Array(9).fill(null));
+      setXIsNext(true);
     }
-  }, [winner, squares, playerPiece, playSound]);
+  }, [session]);
+
+  const winner = calculateWinner(squares);
+  const isDraw = !winner && squares.every((square) => square !== null);
+
+  const formatTime = (totalSeconds: number) => {
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs
+      .toString()
+      .padStart(2, "0")}`;
+  };
 
   useEffect(() => {
-    if (!isPlayerTurn && !winner && !isDraw) {
+    if (!session || session.status !== "playing" || winner || isDraw) return;
+
+    const isBotTurn =
+      (xIsNext && userSymbol === "O") || (!xIsNext && userSymbol === "X");
+
+    if (isBotTurn) {
       const timer = setTimeout(() => {
-        const move = getBotMove(squares, botPiece);
-        if (move !== -1) handleMove(move);
-      }, 600);
+        const emptyIndices = squares
+          .map((val, idx) => (val === null ? idx : null))
+          .filter((val) => val !== null) as number[];
+
+        if (emptyIndices.length > 0) {
+          const randomIdx =
+            emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+          handleMove(randomIdx);
+        }
+      }, 500);
       return () => clearTimeout(timer);
     }
-  }, [isPlayerTurn, winner, isDraw, squares, botPiece]);
+  }, [xIsNext, userSymbol, squares, session, winner, isDraw]);
+
+  useEffect(() => {
+    if (session?.status === "playing") {
+      if (winner) {
+        if (winner === userSymbol) {
+          playSound("win");
+          completeGame(1);
+        } else {
+          playSound("win");
+          completeGame(-1);
+        }
+      } else if (isDraw) {
+        playSound("draw");
+        completeGame(0);
+      }
+    }
+  }, [winner, isDraw, session?.status, userSymbol]);
 
   const handleMove = (i: number) => {
-    if (squares[i] || winner || isDraw) return;
+    if (squares[i] || winner || isDraw || session?.status !== "playing") return;
 
     const nextSquares = squares.slice();
     nextSquares[i] = xIsNext ? "X" : "O";
+
     setSquares(nextSquares);
     setXIsNext(!xIsNext);
-    playSound("pop");
+    playSound("move");
   };
 
-  const resetGame = () => {
+  const handleUserClick = (i: number) => {
+    const isBotTurn =
+      (xIsNext && userSymbol === "O") || (!xIsNext && userSymbol === "X");
+    if (isBotTurn) return;
+    handleMove(i);
+  };
+
+  const handleSwitchSide = (symbol: PlayerSymbol) => {
+    setUserSymbol(symbol);
+
     setSquares(Array(9).fill(null));
-    setIsDraw(false);
-    setXIsNext(true); // X luôn đi trước
+
+    setXIsNext(true);
+
+    resetTimer();
   };
 
-  const switchPiece = () => {
-    playSound("button1");
-    setPlayerPiece((prev) => (prev === "X" ? "O" : "X"));
-    resetGame();
+  const movesCount = squares.filter((s) => s !== null).length;
+  const canSwitchSide =
+    session?.status === "playing" &&
+    !winner &&
+    !isDraw &&
+    (movesCount === 0 || (movesCount === 1 && userSymbol === "O"));
+
+  const handleManualSave = () => saveGame(true);
+  const handleOpenSavedGames = async () => {
+    await fetchSavedSessions();
+    setShowLoadDialog(true);
   };
+
+  const handleRestart = async () => {
+    setSquares(Array(9).fill(null));
+
+    setXIsNext(true);
+
+    setUserSymbol("X");
+
+    resetTimer();
+
+    await startGame();
+  };
+
+  function calculateWinner(squares: SquareValue[]) {
+    for (let i = 0; i < WIN_LINES.length; i++) {
+      const [a, b, c] = WIN_LINES[i];
+      if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c])
+        return squares[a];
+    }
+    return null;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[80vh] flex-col items-center justify-center gap-4">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="animate-pulse font-medium text-muted-foreground">
+          Đang đồng bộ dữ liệu...
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <>
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] p-4">
       <GameHeader />
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 transition-colors duration-500 bg-[var(--ttt-bg-gradient)]">
-        {/* 1. KHU VỰC ĐIỂM SỐ */}
-        <div className="flex flex-col mb-5">
-          <div className="flex items-center gap-8 mb-8">
-            <div
-              className={cn(
-                "flex flex-col items-center transition-all",
-                isPlayerTurn ? "scale-110 opacity-100" : "opacity-40"
-              )}
-            >
-              <div
-                className={cn(
-                  "w-16 h-16 rounded-2xl flex items-center justify-center text-3xl font-black shadow-lg mb-2",
-                  playerPiece === "X"
-                    ? "bg-[var(--ttt-text-x)] text-white"
-                    : "bg-[var(--ttt-text-o)] text-white"
-                )}
-              >
-                {playerPiece}
-              </div>
-              <span className="font-bold text-xs uppercase tracking-tighter text-muted-foreground">
-                Bạn
-              </span>
-            </div>
 
-            <div className="text-xl font-black opacity-20 italic">VS</div>
-
-            <div
-              className={cn(
-                "flex flex-col items-center transition-all",
-                !isPlayerTurn ? "scale-110 opacity-100" : "opacity-40"
-              )}
-            >
-              <div
-                className={cn(
-                  "w-16 h-16 rounded-2xl flex items-center justify-center text-3xl font-black shadow-lg mb-2",
-                  botPiece === "X"
-                    ? "bg-[var(--ttt-text-x)] text-white"
-                    : "bg-[var(--ttt-text-o)] text-white"
-                )}
-              >
-                {botPiece}
-              </div>
-              <span className="font-bold text-xs uppercase tracking-tighter text-muted-foreground">
-                Bot
-              </span>
-            </div>
-          </div>
-          <p className="text-center text-muted-foreground text-lg font-bold uppercase opacity-70">
-            <span className="text-red-500 font-black">X</span> sẽ được đi trước
-          </p>
-        </div>
-
-        {/* GAME BOARD */}
-        <div className="relative p-6 rounded-[2.5rem] border-2 border-border shadow-2xl bg-[var(--ttt-board-bg)]">
-          <div className="grid grid-cols-3 gap-4">
-            {squares.map((sq, i) => (
-              <button
-                key={i}
-                onClick={() => isPlayerTurn && handleMove(i)}
-                className={cn(
-                  "w-20 h-20 sm:w-24 sm:h-24 rounded-2xl flex items-center justify-center text-5xl font-black transition-all",
-                  "bg-[var(--ttt-cell-bg)] hover:bg-[var(--ttt-cell-hover)] shadow-inner",
-                  // Màu sắc quân cờ theo biến CSS
-                  sq === "X" && "text-[var(--ttt-text-x)]",
-                  sq === "O" && "text-[var(--ttt-text-o)]",
-                  // Hiệu ứng khi thắng
-                  winInfo?.line.includes(i) &&
-                    (sq === "X"
-                      ? "bg-[var(--ttt-text-x)] text-white scale-105"
-                      : "bg-[var(--ttt-text-o)] text-white scale-105")
-                )}
-              >
-                <AnimatePresence>
-                  {sq && (
-                    <motion.span
-                      initial={{ scale: 0.2, rotate: -20 }}
-                      animate={{ scale: 1, rotate: 0 }}
-                    >
-                      {sq}
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </button>
-            ))}
-          </div>
-
-          {/* OVERLAY KẾT QUẢ */}
-          <AnimatePresence>
-            {(winner || isDraw) && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[var(--ttt-board-bg)] backdrop-blur-sm rounded-[2.5rem]"
-              >
-                <motion.div
-                  initial={{ scale: 0.5, y: 20 }}
-                  animate={{ scale: 1, y: 0 }}
-                  className="text-center"
-                >
-                  {winner ? (
-                    <>
-                      <div className="mb-2">
-                        {winner === playerPiece ? (
-                          <Trophy className="w-16 h-16 text-yellow-500 mx-auto" />
-                        ) : (
-                          <Frown className="w-16 h-16 text-gray-400 mx-auto" />
-                        )}
-                      </div>
-                      <h2
-                        className={cn(
-                          "text-3xl font-black uppercase mb-6",
-                          winner === "X" ? "text-red-500" : "text-blue-500"
-                        )}
-                      >
-                        {winner === playerPiece ? "THẮNG RỒI!" : "THUA RỒI!"}
-                      </h2>
-                    </>
-                  ) : (
-                    <>
-                      <Minus className="w-16 h-16 text-gray-400 mx-auto mb-2" />
-                      <h2 className="text-3xl font-black uppercase text-gray-600 mb-6">
-                        HÒA NHAU!
-                      </h2>
-                    </>
-                  )}
-
-                  <RoundButton
-                    size="medium"
-                    variant={
-                      winner === "X"
-                        ? "danger"
-                        : winner === "O"
-                        ? "primary"
-                        : "neutral"
-                    }
-                    onClick={() => {
-                      resetGame();
-                      playSound("button");
-                    }}
-                  >
-                    Chơi ván mới
-                  </RoundButton>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* FOOTER CONTROLS */}
-        <div className="flex gap-4 mt-10">
+      {/* Control Bar */}
+      <div className="flex flex-wrap justify-center gap-4 mb-6">
+        <RoundButton
+          onClick={handleManualSave}
+          disabled={
+            isSaving || !!winner || !!isDraw || session?.status !== "playing"
+          }
+          variant="primary"
+          className="flex items-center gap-2 px-6"
+        >
+          {isSaving ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Upload className="w-4 h-4" />
+          )}
+          Lưu Game
+        </RoundButton>
+        <LoadGameDialog
+          open={showLoadDialog}
+          onOpenChange={setShowLoadDialog}
+          sessions={savedSessions}
+          currentSessionId={session?.id}
+          onLoadSession={loadGame}
+          onNewGame={startGame}
+        >
           <RoundButton
-            size="small"
             variant="neutral"
-            onClick={() => {
-              resetGame();
-              playSound("button");
-            }}
+            className="flex items-center gap-2 px-4"
+            onClick={handleOpenSavedGames}
           >
-            <RefreshCcw className="w-5 h-5" />
+            <Download className="w-4 h-4" /> Tải
           </RoundButton>
-          <RoundButton
-            size="small"
-            variant="accent"
-            onClick={switchPiece}
-            className="gap-2"
-          >
-            <ArrowRightLeft className="w-5 h-5" /> Đổi quân (Bot X)
-          </RoundButton>
-
-          <RoundButton
-            size="small"
-            variant="neutral"
-            onClick={() => setSoundEnabled(!soundEnabled)}
-            className="w-12 px-0"
-          >
-            {soundEnabled ? (
-              <Volume2 className="w-4 h-4" />
-            ) : (
-              <VolumeX className="w-4 h-4" />
-            )}
-          </RoundButton>
-        </div>
+        </LoadGameDialog>
       </div>
-    </>
+
+      {/* Info & Switch Side */}
+      <div className="flex items-center gap-6 mb-4">
+        <div className="font-mono text-lg font-bold text-primary flex items-center gap-2 bg-primary/10 px-4 py-1.5 rounded-full border border-primary/20">
+          <Clock className="w-4 h-4" /> {formatTime(currentPlayTime)}
+        </div>
+
+        {/* Nút đổi quân: Hiện nếu game chưa kết thúc và (bàn cờ trống hoặc chỉ có Bot vừa đi) */}
+        {canSwitchSide && (
+          <div className="flex items-center bg-muted rounded-full p-1 border border-border">
+            <button
+              onClick={() => handleSwitchSide("X")}
+              className={cn(
+                "flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold transition-all",
+                userSymbol === "X"
+                  ? "bg-white text-primary shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <User className="w-3 h-3" /> Cầm X
+            </button>
+            <button
+              onClick={() => handleSwitchSide("O")}
+              className={cn(
+                "flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold transition-all",
+                userSymbol === "O"
+                  ? "bg-white text-primary shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Bot className="w-3 h-3" /> Cầm O
+            </button>
+          </div>
+        )}
+      </div>
+
+      {!winner && !isDraw && (
+        <div className="mb-2 text-sm text-muted-foreground animate-pulse">
+          {(xIsNext && userSymbol === "X") || (!xIsNext && userSymbol === "O")
+            ? "Lượt của bạn..."
+            : "Máy đang suy nghĩ..."}
+        </div>
+      )}
+
+      {/* Board Area */}
+      <div className="relative">
+        <div className="grid grid-cols-3 gap-2 bg-muted p-3 rounded-2xl shadow-inner border-2 border-border/50">
+          {squares.map((square, i) => (
+            <motion.button
+              key={i}
+              whileHover={{ scale: 0.98 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => handleUserClick(i)}
+              disabled={
+                !!square ||
+                !!winner ||
+                !!isDraw ||
+                session?.status !== "playing"
+              }
+              className={cn(
+                "w-20 h-20 md:w-24 md:h-24 bg-surface rounded-xl text-5xl font-extrabold flex items-center justify-center shadow-sm border border-border/20 transition-colors",
+                square === "X" && "text-red-500 bg-red-50 dark:bg-red-950/20",
+                square === "O" &&
+                  "text-blue-500 bg-blue-50 dark:bg-blue-950/20",
+                !square && !winner && "hover:bg-accent/10 cursor-pointer"
+              )}
+            >
+              <AnimatePresence>
+                {square === "X" && (
+                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                    X
+                  </motion.div>
+                )}
+                {square === "O" && (
+                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                    O
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.button>
+          ))}
+        </div>
+
+        {/* End Game Overlay */}
+        <AnimatePresence>
+          {(winner || isDraw) && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-10 flex items-center justify-center bg-background/60 backdrop-blur-sm rounded-2xl"
+            >
+              <motion.div
+                initial={{ scale: 0.8, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                className="bg-card border-2 border-primary/20 p-6 rounded-2xl shadow-2xl text-center space-y-4 w-[90%]"
+              >
+                {winner ? (
+                  <>
+                    <Trophy className="w-16 h-16 text-yellow-500 mx-auto animate-bounce" />
+                    <h2 className="text-2xl font-bold">
+                      {winner === userSymbol ? "Bạn Thắng!" : "Bạn Thua!"}
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      {winner === userSymbol ? "+1 Điểm" : "-1 Điểm"}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <Minus className="w-16 h-16 text-muted-foreground mx-auto" />
+                    <h2 className="text-2xl font-bold">Hòa!</h2>
+                    <p className="text-sm text-muted-foreground">+0 Điểm</p>
+                  </>
+                )}
+
+                <div className="flex gap-2 justify-center pt-2">
+                  <RoundButton variant="neutral" onClick={quitGame}>
+                    Thoát
+                  </RoundButton>
+                  <RoundButton variant="primary" onClick={handleRestart}>
+                    <RefreshCcw className="w-4 h-4 mr-1" /> Chơi lại
+                  </RoundButton>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      <div className="flex gap-4 mt-8">
+        <RoundButton
+          size="small"
+          variant="neutral"
+          onClick={() => setSoundEnabled(!soundEnabled)}
+        >
+          {soundEnabled ? (
+            <Volume2 className="w-5 h-5" />
+          ) : (
+            <VolumeX className="w-5 h-5" />
+          )}
+        </RoundButton>
+        <RoundButton
+          size="small"
+          variant="neutral"
+          onClick={quitGame}
+          title="Thoát Game"
+        >
+          <LogOut className="w-5 h-5" />
+        </RoundButton>
+      </div>
+    </div>
   );
 }

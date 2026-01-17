@@ -21,12 +21,11 @@ export interface GameSession {
   id: string;
   user_id: string;
   game_id: number;
-  status: "playing" | "finished" | "abandoned";
+  status: "playing" | "completed" | "saved" | "abandoned";
   score: number;
   play_time_seconds: number;
-  board_state: TicTacToeBoardState | {};
-  session_config: SessionConfig;
-  started_at: string;
+  board_state: any;
+  session_config: any;
   updated_at: string;
 }
 

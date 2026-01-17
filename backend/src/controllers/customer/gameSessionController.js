@@ -47,16 +47,20 @@ class GameSessionController {
     try {
       const userId = req.user.id;
       const { id } = req.params;
-      const { board_state, score, play_time_seconds } = req.body;
+      const { board_state, score, play_time_seconds, status } = req.body;
 
       const session = await GameSession.findById(id);
       if (!session || session.user_id !== userId) {
         return res.status(404).json({ message: "Session not found" });
       }
 
-      if (session.status !== "playing") {
+      const isEditable =
+        session.status === "playing" || session.status === "saved";
+      const isSettingAbandoned = status === "abandoned";
+
+      if (!isEditable && !isSettingAbandoned) {
         return res.status(400).json({
-          message: "Cannot save a completed or inactive session",
+          message: "Cannot save a completed or abandoned session",
         });
       }
 
@@ -66,10 +70,16 @@ class GameSessionController {
       if (play_time_seconds !== undefined)
         updateData.play_time_seconds = play_time_seconds;
 
+      if (status === "abandoned") {
+        updateData.status = "abandoned";
+      } else if (status === "saved") {
+        updateData.status = "saved";
+      }
+
       const [updatedSession] = await GameSession.updateById(id, updateData);
 
       return res.status(200).json({
-        message: "Session saved",
+        message: status === "abandoned" ? "Session abandoned" : "Session saved",
         session: updatedSession,
       });
     } catch (error) {
@@ -132,9 +142,13 @@ class GameSessionController {
         });
       }
 
+      const [updatedSession] = await GameSession.updateById(id, {
+        status: "playing",
+      });
+
       return res.status(200).json({
         message: "Game session loaded successfully",
-        session,
+        session: updatedSession,
       });
     } catch (error) {
       console.error("LoadSession error:", error);
@@ -185,13 +199,20 @@ class GameSessionController {
 
       const gameId = req.query.gameId || null;
 
+      const status = req.query.status || null;
+
       const sessions = await GameSession.findHistoryByUser(userId, {
         gameId,
+        status,
         limit,
         offset,
       });
 
-      const countResult = await GameSession.countHistoryByUser(userId, gameId);
+      const countResult = await GameSession.countHistoryByUser(
+        userId,
+        gameId,
+        status
+      );
       const total = countResult?.total || 0;
 
       return res.status(200).json({

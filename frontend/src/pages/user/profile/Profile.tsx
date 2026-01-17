@@ -27,6 +27,7 @@ import ChangePasswordView from "./ChangePassword";
 import { GameHistory } from "./GameHistory";
 import { FriendsTab } from "./FriendsTab";
 import useDocumentTitle from "@/hooks/useDocumentTitle";
+import type { UpdateProfileValues } from "@/lib/schemas";
 
 type ViewMode = "view" | "edit" | "password";
 
@@ -54,7 +55,7 @@ const ProfilePage = () => {
     setSearchParams({ tab: value }); // Cập nhật URL mà không reload trang
   };
 
-  const handleSave = async (data: any) => {
+  const handleSave = async (data: UpdateProfileValues | FormData) => {
     try {
       await updateProfile.mutateAsync(data);
     } catch (error) {}

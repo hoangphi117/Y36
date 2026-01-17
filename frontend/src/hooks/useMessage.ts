@@ -117,14 +117,14 @@ export const useDeleteMessage = () => {
       await api.delete(`/messages/${messageId}`);
     },
     onSuccess: (_, messageId) => {
-      toast.success("Đã xóa tin nhắn");
+      toast.success("Đã xóa tin nhắn", { duration: 1500 });
       // Invalidate tất cả các query messages liên quan để cập nhật UI ngay lập tức
       // Lưu ý: Cần invalidate chính xác query key đang active
       queryClient.invalidateQueries({ queryKey: ["messages"] });
       queryClient.invalidateQueries({ queryKey: ["conversations"] }); // Cập nhật lại last_message nếu lỡ xóa tin cuối
     },
     onError: () => {
-      toast.error("Không thể xóa tin nhắn");
+      toast.error("Không thể xóa tin nhắn", { duration: 1500 });
     },
   });
 };

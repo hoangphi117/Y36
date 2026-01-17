@@ -32,8 +32,16 @@ export const useUpdateProfile = () => {
   const { setTheme } = useTheme();
 
   return useMutation({
-    mutationFn: async (data: UpdateProfileValues) => {
-      const response = await api.put("/users/me", data);
+    mutationFn: async (data: UpdateProfileValues | FormData) => {
+      const isFormData = data instanceof FormData;
+      const config = isFormData
+        ? {
+            headers: {
+              "Content-Type": undefined,
+            },
+          }
+        : {};
+      const response = await api.put("/users/me", data, config);
       return response.data;
     },
     onSuccess: (data) => {
@@ -45,7 +53,7 @@ export const useUpdateProfile = () => {
 
       queryClient.invalidateQueries({ queryKey: ["user", "me"] });
 
-      toast.success("Cập nhật hồ sơ thành công!");
+      toast.success("Cập nhật hồ sơ thành công!", { duration: 1500 });
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || "Lỗi cập nhật hồ sơ");
@@ -109,7 +117,7 @@ export const useFriendActions = () => {
       return await api.post(`/friends/request/${userId}`);
     },
     onSuccess: () => {
-      toast.success("Đã gửi lời mời kết bạn!");
+      toast.success("Đã gửi lời mời kết bạn!", { duration: 1500 });
       invalidateFriendData();
     },
     onError: (error: any) => {
@@ -122,7 +130,7 @@ export const useFriendActions = () => {
       return await api.post(`/friends/accept/${userId}`);
     },
     onSuccess: () => {
-      toast.success("Đã chấp nhận kết bạn!");
+      toast.success("Đã chấp nhận kết bạn!", { duration: 1500 });
       invalidateFriendData();
     },
     onError: (error: any) => {
@@ -147,7 +155,7 @@ export const useFriendActions = () => {
     mutationFn: async (userId: string) =>
       await api.delete(`/friends/unfriend/${userId}`),
     onSuccess: () => {
-      toast.success("Đã hủy kết bạn");
+      toast.success("Đã hủy kết bạn", { duration: 1500 });
       invalidateFriendData();
     },
     onError: () => toast.error("Lỗi khi hủy kết bạn"),
@@ -157,7 +165,7 @@ export const useFriendActions = () => {
     mutationFn: async (userId: string) =>
       await api.post(`/friends/block/${userId}`),
     onSuccess: () => {
-      toast.success("Đã chặn người dùng này");
+      toast.success("Đã chặn người dùng này", { duration: 1500 });
       invalidateFriendData();
     },
     onError: (error: any) => {
