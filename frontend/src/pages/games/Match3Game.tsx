@@ -29,7 +29,7 @@ import { GameOverOverlay } from "@/components/games/match3/GameBoardOverlay";
 import { SettingsDialog } from "@/components/games/match3/SettingsDialog";
 import match3Api from "@/services/match3Api";
 import { PauseMenu } from "@/components/games/memory/PauseMenu";
-import { convertBoard } from "@/utils/match3SessionHelper";
+import { convertBoard, restoreBoard } from "@/utils/match3SessionHelper";
 import { useNavigate } from "react-router-dom";
 import { LoadGameDialog } from "@/components/dialogs/LoadGameDialog";
 import { useGameSession } from "@/hooks/useGameSession";
@@ -93,7 +93,7 @@ export default function Match3Game() {
   }, [board, boardSize, score, gameMode, targetMatches, matchesCount, timeRemaining]);
 
   // Tích hợp useGameSession (chỉ dùng để load saved sessions, không auto-start)
-  const gameSession = useGameSession({ gameId: 5, getBoardState,  });
+  const gameSession = useGameSession({ gameId: 5, getBoardState });
 
   // Hàm tạo random board (đảm bảo không có matches ban đầu)
   const createRandomBoard = useCallback((size: number, candyTypes: number): string[] => {
@@ -132,88 +132,168 @@ export default function Match3Game() {
     gameSession.startGame();
   }, []);
 
+  // Debug: Log khi board hoặc boardSize thay đổi
+  useEffect(() => {
+    console.log("Board/BoardSize changed:", { 
+      boardSize, 
+      boardLength: board.length, 
+      expectedLength: boardSize * boardSize,
+      matches: board.length === boardSize * boardSize 
+    });
+  }, [board, boardSize]);
+
   // Xử lý khi session được tạo/load từ useGameSession
   useEffect(() => {
-    if (!gameSession.session) return;
-    
-    const newSession = gameSession.session;
-    
-    // Chỉ khởi tạo nếu chưa có currentSessionId hoặc session ID khác
-    if (currentSessionId === newSession.id) return;
-    
-    setCurrentSessionId(newSession.id);
-    
-    // Lấy config từ session
-    const config = newSession.session_config;
-    setBoardSize(config.cols);
-    setNumCandyTypes(config.candy_types);
-    setTimeLimit(config.time_limit);
-    setTargetScore(config.target_score);
+    try {
+      if (!gameSession.session) {
+        console.log("No session, skipping");
+        return;
+      }
+      
+      const newSession = gameSession.session;
+      
+      // Log để debug
+      console.log("Session changed, loading config:", newSession);
+      console.log("Session config:", newSession.session_config);
+      
+      setCurrentSessionId(newSession.id);
+      
+      // Lấy config từ session - có thể ở default_config hoặc trực tiếp
+      const rawConfig = newSession.session_config;
+      const config = rawConfig.default_config || rawConfig;
+      
+      // Kiểm tra config có đầy đủ không
+      if (!config || !config.cols || !config.candy_types) {
+        console.error("Invalid config:", rawConfig);
+        return;
+      }
+      
+      console.log("Applying config:", config);
+      setBoardSize(config.cols);
+      setNumCandyTypes(config.candy_types);
+      setTimeLimit(config.time_limit);
+      setTargetScore(config.target_score);
 
-    // Xác định game mode dựa trên moves_limit
-    if(config.moves_limit && config.moves_limit > 0) {
-      setGameMode("rounds");
-      setTargetMatches(config.moves_limit);
-      setTimeRemaining(0);
-    } else if(config.time_limit && config.time_limit > 0) {
-      setGameMode("time");
-      setTimeRemaining(config.time_limit);
-    } else {
-      // Default to time mode nếu cả 2 đều là 0
-      setGameMode("time");
-      setTimeRemaining(30);
+      // Kiểm tra board_state có dữ liệu không
+      const sessionData = newSession.board_state as { score?: number; board_state?: board_state } | null;
+      const hasBoardState = sessionData && sessionData.board_state && sessionData.board_state.matrix;
+
+      console.log("Has board state?", hasBoardState);
+
+      if (hasBoardState) {
+        console.log("Restoring from board state");
+        // Restore board từ saved board_state
+        const boardState = sessionData.board_state!;
+        const restoredBoard = restoreBoard(boardState.matrix);
+        setBoard(restoredBoard);
+        
+        // Restore score
+        if (sessionData.score !== undefined) {
+          setScore(sessionData.score);
+        }
+        
+        // Restore game mode và progress
+        if (config.moves_limit && config.moves_limit > 0) {
+          setGameMode("rounds");
+          setTargetMatches(config.moves_limit);
+          const movesRemaining = boardState.moves_remaining ?? config.moves_limit;
+          setMatchesCount(config.moves_limit - movesRemaining);
+          setTimeRemaining(0);
+        } else if (config.time_limit && config.time_limit > 0) {
+          setGameMode("time");
+          const timeRemaining = boardState.time_remaining ?? config.time_limit;
+          setTimeRemaining(timeRemaining);
+        }
+      } else {
+        console.log("Creating new random board with size:", config.cols, "candy types:", config.candy_types);
+        // Tạo board mới bằng random (session mới hoặc chưa có board_state)
+        const randomBoard = createRandomBoard(config.cols, config.candy_types);
+        console.log("Random board created, length:", randomBoard.length);
+        setBoard(randomBoard);
+        setScore(0);
+        setMatchesCount(0);
+        
+        // Xác định game mode dựa trên moves_limit
+        if(config.moves_limit && config.moves_limit > 0) {
+          console.log("Setting rounds mode:", config.moves_limit);
+          setGameMode("rounds");
+          setTargetMatches(config.moves_limit);
+          setTimeRemaining(0);
+        } else if(config.time_limit && config.time_limit > 0) {
+          console.log("Setting time mode:", config.time_limit);
+          setGameMode("time");
+          setTimeRemaining(config.time_limit);
+        } else {
+          console.log("Setting default time mode");
+          // Default to time mode nếu cả 2 đều là 0
+          setGameMode("time");
+          setTimeRemaining(30);
+        }
+      }
+      
+      setIsPaused(false);
+      setShowGameOver(false);
+      setIsInitializing(false);
+      
+      console.log("Session loading complete");
+    } catch (error) {
+      console.error("Error loading session:", error);
     }
-    
-    // Khởi tạo board
-    const randomBoard = createRandomBoard(config.cols, config.candy_types);
-    setBoard(randomBoard);
-    setScore(0);
-    setMatchesCount(0);
-    setIsPaused(false);
-    setShowGameOver(false);
-    
-    setIsInitializing(false);
-  }, [gameSession.session, currentSessionId, createRandomBoard]);
+  }, [gameSession.session, createRandomBoard]);
 
   // Hàm restart game với settings mới
   const restartGameWithSettings = useCallback(async () => {
     try {
+      console.log("=== Restart with settings START ===");
+      console.log("Current settings:", { gameMode, boardSize, numCandyTypes, timeLimit, targetMatches });
+      
       // Reset game over state ngay lập tức
       setShowGameOver(false);
       setIsPaused(false);
       
       // Complete session cũ nếu có
       if (currentSessionId) {
+        console.log("Completing old session:", currentSessionId);
         await match3Api.completeSession(currentSessionId, score, 
           gameMode === "time" ? timeLimit - timeRemaining : 0);
+        // Reset currentSessionId để useEffect có thể xử lý session mới
+        setCurrentSessionId(null);
       }
       
-      // Tạo session mới
-      const res = await match3Api.startSession(5);
-      const newSession = res.session;
-      setCurrentSessionId(newSession.id);
-      
-      // Tính target score dựa trên settings hiện tại (đã được update từ dialog)
+      // Tính target score dựa trên settings hiện tại
+      let target = 500;
       if(gameMode === "time") {
-        const target = calcTargetScore(gameMode, boardSize, numCandyTypes, timeLimit);
-        setTargetScore(target);
-        setTimeRemaining(timeLimit);
+        target = calcTargetScore(gameMode, boardSize, numCandyTypes, timeLimit);
       }
       else if(gameMode === "rounds") {
-        const target = calcTargetScore(gameMode, boardSize, numCandyTypes, targetMatches);
-        setTargetScore(target);
-        setTimeRemaining(0);
+        target = calcTargetScore(gameMode, boardSize, numCandyTypes, targetMatches);
       }
       
-      // Tạo board mới với settings hiện tại
-      const randomBoard = createRandomBoard(boardSize, numCandyTypes);
-      setBoard(randomBoard);
-      setScore(0);
-      setMatchesCount(0);
+      // Tạo sessionConfig từ settings hiện tại
+      const sessionConfig = {
+        mode: "vs_ai",
+        ai_level: "easy",
+        seed_version: "v3_heavy",
+        default_config: {
+          cols: boardSize,
+          rows: boardSize,
+          time_limit: gameMode === "time" ? timeLimit : 0,
+          candy_types: numCandyTypes,
+          moves_limit: gameMode === "rounds" ? targetMatches : 0,
+          target_score: target,
+        }
+      };
+
+      console.log("Creating new session with config:", sessionConfig);
+      
+      // Tạo session mới với custom config
+      await gameSession.startGame(sessionConfig);
+      
+      console.log("=== Restart with settings END ===");
     } catch (error) {
       console.error("Error restarting game:", error);
     }
-  }, [currentSessionId, score, gameMode, timeLimit, timeRemaining, boardSize, numCandyTypes, targetMatches, createRandomBoard]);
+  }, [currentSessionId, score, gameMode, timeLimit, timeRemaining, boardSize, numCandyTypes, targetMatches, gameSession]);
 
   // Hàm restart game nhanh (không thay đổi settings)
   const quickRestart = useCallback(async () => {
