@@ -8,9 +8,14 @@ import { useAuthStore } from "@/stores/useAuthStore";
 interface UseGameSessionProps {
   gameId: number;
   getBoardState: () => any;
+  isPaused?: boolean; // [MỚI] Nhận trạng thái pause từ game
 }
 
-export function useGameSession({ gameId, getBoardState }: UseGameSessionProps) {
+export function useGameSession({
+  gameId,
+  getBoardState,
+  isPaused,
+}: UseGameSessionProps) {
   const navigate = useNavigate();
   const [session, setSession] = useState<GameSession | null>(null);
   const [savedSessions, setSavedSessions] = useState<GameSession[]>([]);
@@ -20,6 +25,7 @@ export function useGameSession({ gameId, getBoardState }: UseGameSessionProps) {
 
   const sessionRef = useRef<GameSession | null>(null);
   const startTimeRef = useRef<number>(0);
+  const pauseStartTimeRef = useRef<number | null>(null);
 
   const [currentPlayTime, setCurrentPlayTime] = useState(0);
 
@@ -33,9 +39,26 @@ export function useGameSession({ gameId, getBoardState }: UseGameSessionProps) {
   }, [session]);
 
   useEffect(() => {
+    if (isPaused) {
+      // Bắt đầu pause: ghi lại thời điểm
+      pauseStartTimeRef.current = Date.now();
+    } else {
+      // Kết thúc pause: tính khoảng thời gian đã nghỉ
+      if (pauseStartTimeRef.current) {
+        const pauseDuration = Date.now() - pauseStartTimeRef.current;
+        // Dời thời gian bắt đầu về phía sau tương ứng với thời gian nghỉ
+        // Để công thức (now - startTime) vẫn ra kết quả đúng
+        startTimeRef.current += pauseDuration;
+        pauseStartTimeRef.current = null;
+      }
+    }
+  }, [isPaused]);
+
+  useEffect(() => {
     let intervalId: number;
 
-    if (session?.status === "playing") {
+    // [SỬA] Chỉ chạy timer khi playing VÀ không bị pause
+    if (session?.status === "playing" && !isPaused) {
       intervalId = window.setInterval(() => {
         const now = Date.now();
         const elapsed = Math.floor((now - startTimeRef.current) / 1000);
@@ -46,16 +69,24 @@ export function useGameSession({ gameId, getBoardState }: UseGameSessionProps) {
     return () => {
       if (intervalId) window.clearInterval(intervalId);
     };
-  }, [session?.status, session?.id]);
+  }, [session?.status, session?.id, isPaused]);
 
   const resetTimer = useCallback(() => {
     startTimeRef.current = Date.now();
     setCurrentPlayTime(0);
+    pauseStartTimeRef.current = null; // Reset cả pause ref
   }, []);
 
   const getCurrentTimeForApi = () => {
     if (!startTimeRef.current) return 0;
-    return Math.floor((Date.now() - startTimeRef.current) / 1000);
+
+    // Nếu đang pause khi save, phải trừ thời gian pause hiện tại ra
+    let adjustment = 0;
+    if (isPaused && pauseStartTimeRef.current) {
+      adjustment = Date.now() - pauseStartTimeRef.current;
+    }
+
+    return Math.floor((Date.now() - startTimeRef.current - adjustment) / 1000);
   };
 
   const fetchSavedSessions = useCallback(async () => {
@@ -79,7 +110,8 @@ export function useGameSession({ gameId, getBoardState }: UseGameSessionProps) {
 
       setSession(newSession);
       setShowLoadDialog(false);
-      toast.success(res.data.message);
+      // Reset pause state khi start game mới
+      pauseStartTimeRef.current = null;
     } catch (error: any) {
       toast.error("Lỗi tạo game: " + error.message);
     } finally {
@@ -97,6 +129,7 @@ export function useGameSession({ gameId, getBoardState }: UseGameSessionProps) {
       setShowLoadDialog(false);
       startTimeRef.current =
         Date.now() - loadedSession.play_time_seconds * 1000;
+      pauseStartTimeRef.current = null; // Reset pause state
       toast.success("Đã tải lại ván game!", { duration: 1500 });
     } catch (error: any) {
       toast.error("Lỗi tải game: " + error.message);
@@ -142,22 +175,25 @@ export function useGameSession({ gameId, getBoardState }: UseGameSessionProps) {
         if (manual) setIsSaving(false);
       }
     },
-    [getBoardState, fetchSavedSessions]
+    [getBoardState, fetchSavedSessions, isPaused] // Thêm isPaused
   );
 
-  const completeGame = useCallback(async (score: number) => {
-    if (!sessionRef.current) return;
-    try {
-      const playTime = getCurrentTimeForApi();
-      await axiosClient.put(`/sessions/${sessionRef.current.id}/complete`, {
-        score,
-        play_time_seconds: playTime,
-      });
-      setSession(null);
-    } catch (error) {
-      console.error("Complete error", error);
-    }
-  }, []);
+  const completeGame = useCallback(
+    async (score: number) => {
+      if (!sessionRef.current) return;
+      try {
+        const playTime = getCurrentTimeForApi();
+        await axiosClient.put(`/sessions/${sessionRef.current.id}/complete`, {
+          score,
+          play_time_seconds: playTime,
+        });
+        setSession(null);
+      } catch (error) {
+        console.error("Complete error", error);
+      }
+    },
+    [isPaused]
+  );
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {

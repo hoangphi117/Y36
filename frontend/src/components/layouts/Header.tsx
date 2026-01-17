@@ -83,6 +83,20 @@ export const Header = () => {
             <Trophy className="w-5 h-5 group-hover:text-yellow-500 transition-all" />
             <span>Xếp hạng</span>
           </Link>
+          <Link
+            to="/messages"
+            className="flex items-center gap-2 font-bold text-muted-foreground hover:text-primary transition-all"
+          >
+            <MessageSquare className="w-5 h-5 group-hover:text-yellow-500 transition-all" />
+            <span>Tin nhắn</span>
+          </Link>
+          <Link
+            to="/profile?tab=friends"
+            className="flex items-center gap-2 font-bold text-muted-foreground hover:text-primary transition-all"
+          >
+            <Users className="w-5 h-5 group-hover:text-yellow-500 transition-all" />
+            <span>Bạn bè</span>
+          </Link>
         </nav>
 
         <div className="flex items-center gap-4">
@@ -106,22 +120,25 @@ export const Header = () => {
                   </Avatar>
                 </div>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 rounded-xl p-2">
+              <DropdownMenuContent
+                align="end"
+                className="w-56 bg-background rounded-xl p-2"
+              >
                 <DropdownMenuLabel className="font-bold text-muted-foreground text-xs uppercase tracking-wider">
                   Tài khoản
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer font-medium rounded-lg focus:bg-primary/10 focus:text-primary">
+                <DropdownMenuItem className="cursor-pointer font-medium rounded-lg text-card-foreground focus:bg-primary/10 focus:text-primary">
                   <UserIcon className="mr-2 h-4 w-4" />
                   <Link to="/profile">Hồ sơ của tôi</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer font-medium rounded-lg focus:bg-primary/10 focus:text-primary">
+                <DropdownMenuItem className="cursor-pointer font-medium rounded-lg text-card-foreground focus:bg-primary/10 focus:text-primary">
                   <Users className="mr-2 h-4 w-4" />
                   <Link to="/profile?tab=friends">Bạn bè</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer font-medium rounded-lg focus:bg-primary/10 focus:text-primary">
+                <DropdownMenuItem className="cursor-pointer font-medium rounded-lg text-card-foreground focus:bg-primary/10 focus:text-primary">
                   <MessageSquare className="mr-2 h-4 w-4" />
                   <Link to="/messages">Tin nhắn</Link>
                 </DropdownMenuItem>

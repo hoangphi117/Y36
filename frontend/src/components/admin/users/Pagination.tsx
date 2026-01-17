@@ -14,9 +14,9 @@ export const Pagination = ({ page, totalPages, onPageChange }: PaginationProps) 
       <button
         onClick={() => onPageChange(page - 1)}
         disabled={page === 1}
-        className="p-2 rounded-lg hover:bg-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="p-2 rounded-lg hover:bg-primary/10 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
       >
-        <ChevronLeft className="w-5 h-5" />
+        <ChevronLeft className="w-5 h-5 cursor-pointer" />
       </button>
 
       <span className="px-4 py-2 font-mono text-sm bg-card border border-border rounded-lg">
@@ -26,9 +26,9 @@ export const Pagination = ({ page, totalPages, onPageChange }: PaginationProps) 
       <button
         onClick={() => onPageChange(page + 1)}
         disabled={page === totalPages}
-        className="p-2 rounded-lg hover:bg-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="p-2 rounded-lg hover:bg-primary/10 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
       >
-        <ChevronRight className="w-5 h-5" />
+        <ChevronRight className="w-5 h-5 cursor-pointer" />
       </button>
     </div>
   );

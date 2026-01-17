@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import type { Game } from '@/services/admin/gameService';
 import { GameToggle } from './GameToggle';
-import { Settings, Gamepad2 } from 'lucide-react';
+import { Settings, Gamepad2, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface GameCardProps {
@@ -49,6 +49,15 @@ export const GameCard = ({ game, onToggle, onEdit, isUpdating }: GameCardProps) 
             </p>
           </div>
         </div>
+
+        {game.rating !== undefined && (
+          <div className="flex items-center gap-1.5">
+            <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+            <span className="text-sm font-bold text-foreground">
+              {Number(game.rating).toFixed(1)}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Description */}
@@ -107,7 +116,7 @@ export const GameCard = ({ game, onToggle, onEdit, isUpdating }: GameCardProps) 
             'hover:bg-primary/10'
           )}
         >
-          <Settings className="w-5 h-5 text-muted-foreground hover:text-primary transition-colors" />
+          <Settings className="w-5 h-5 text-muted-foreground hover:text-primary transition-colors cursor-pointer" />
         </motion.button>
       </div>
     </motion.div>

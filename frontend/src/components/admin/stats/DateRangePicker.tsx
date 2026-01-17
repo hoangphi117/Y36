@@ -48,7 +48,7 @@ export const DateRangePicker = ({ startDate, endDate, onRangeChange, className }
             onClick={() => handlePreset(preset.days, index)}
             className={cn(
               "px-3 py-1.5 text-xs font-mono font-medium rounded-lg transition-all duration-200",
-              "border",
+              "border cursor-pointer",
               activePreset === index
                 ? "bg-primary/20 border-primary text-primary font-bold"
                 : "bg-muted border-border text-muted-foreground hover:border-primary/50 hover:text-foreground"

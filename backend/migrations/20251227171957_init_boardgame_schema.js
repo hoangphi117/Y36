@@ -112,6 +112,56 @@ exports.up = async function (knex) {
     // (Tránh spam insert cùng 1 thành tựu cho 1 user)
     table.unique(["user_id", "game_id", "code"]);
   });
+
+  // 7. BẢNG COMMENTS
+  await knex.schema.createTable('comments', (table) => {
+    table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
+    
+    table.uuid('user_id').references('id').inTable('users').onDelete('CASCADE');
+    table.integer('game_id').references('id').inTable('games').onDelete('CASCADE');
+    
+    table.text('content').notNullable();
+    
+    table.timestamps(true, true);
+  });
+
+  // 8. BẢNG ĐÁNH GIÁ GAME (GAME_RATINGS)
+  await knex.schema.createTable("game_ratings", (table) => {
+    table.uuid("id").primary().defaultTo(knex.raw("gen_random_uuid()"));
+    
+    // Khóa ngoại
+    table.uuid("user_id").references("id").inTable("users").onDelete("CASCADE");
+    table.integer("game_id").references("id").inTable("games").onDelete("CASCADE");
+    
+    // Rating từ 1-5 sao
+    table.float("rating").notNullable().checkBetween([1, 5]);
+    
+    table.timestamps(true, true);
+
+    // Mỗi user chỉ đánh giá 1 game 1 lần duy nhất
+    table.unique(["user_id", "game_id"]);
+  });
+
+  // 9. BẢNG THỐNG KÊ TRÒ CHƠI THEO NGƯỜI DÙNG (USER_GAME_STATS)
+  await knex.schema.createTable("user_game_stats", (table) => {
+    table.uuid("user_id").references("id").inTable("users").onDelete("CASCADE");
+    table.integer("game_id").references("id").inTable("games").onDelete("CASCADE");
+
+    // Dành cho Snake (Lưu kỷ lục cao nhất)
+    table.integer("high_score").defaultTo(0);
+
+    // Dành cho Caro/TicTacToe (Lưu điểm tích lũy +1/-1)
+    // Mặc định là 0. Nếu thua nhiều có thể âm.
+    table.integer("rank_points").defaultTo(0);
+
+    // Thống kê phụ
+    table.integer("total_matches").defaultTo(0);
+    table.integer("total_wins").defaultTo(0);
+    
+    table.timestamp("last_updated_at").defaultTo(knex.fn.now());
+
+    table.primary(["user_id", "game_id"]);
+  });
 };
 
 /**
@@ -120,6 +170,9 @@ exports.up = async function (knex) {
  */
 exports.down = async function (knex) {
   // Xóa bảng theo thứ tự ngược lại để tránh lỗi khóa ngoại
+  await knex.schema.dropTableIfExists("user_game_stats");
+  await knex.schema.dropTableIfExists("game_ratings");
+  await knex.schema.dropTableIfExists("comments");
   await knex.schema.dropTableIfExists("achievements");
   await knex.schema.dropTableIfExists("messages");
   await knex.schema.dropTableIfExists("friendships");

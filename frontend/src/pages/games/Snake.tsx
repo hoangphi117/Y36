@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { RoundButton } from "@/components/ui/round-button";
 import {
   Frown,
@@ -9,42 +9,177 @@ import {
   ChevronRight,
   Play,
   Pause,
-  RefreshCcw,
+  Loader2,
+  Upload,
+  Download,
+  Clock,
+  LogOut,
+  Trophy,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { useGameSound } from "@/hooks/useGameSound";
 
 import { GameHeader } from "@/components/games/GameHeader";
 import useDocumentTitle from "@/hooks/useDocumentTitle";
+import { useGameSession } from "@/hooks/useGameSession";
+import { LoadGameDialog } from "./LoadGameDialog";
+import {
+  GameSettingsDialog,
+  type Difficulty,
+} from "@/components/dialogs/GameSettingsDialog";
+import {
+  getBoardSizeOptions,
+  getSpeedOptions,
+  getIncrementOptions,
+} from "@/config/gameConfigs";
 
-// --- CẤU HÌNH GAME ---
-const GRID_SIZE = 20;
+import formatTime from "@/utils/formatTime";
+
+const GAME_ID = 3;
+const DEFAULT_CONFIG = {
+  cols: 20,
+  initial_speed: 200,
+  speed_increment: 10,
+};
 const INITIAL_SNAKE = [
   { x: 10, y: 10 },
   { x: 10, y: 11 },
   { x: 10, y: 12 },
 ];
-const INITIAL_DIRECTION = { x: 0, y: -1 }; // Đi lên
+const INITIAL_DIRECTION = { x: 0, y: -1 };
 
 export default function SnakeGame() {
   useDocumentTitle("Trò Rắn Săn Mồi");
+
+  const [gridSize, setGridSize] = useState(DEFAULT_CONFIG.cols);
+  const [currentSpeed, setCurrentSpeed] = useState(
+    DEFAULT_CONFIG.initial_speed
+  );
+  const [speedIncrement, setSpeedIncrement] = useState(
+    DEFAULT_CONFIG.speed_increment
+  );
+
+  const ignoreConfigSyncRef = useRef(false);
+
   const [snake, setSnake] = useState(INITIAL_SNAKE);
   const [food, setFood] = useState({ x: 5, y: 5 });
   const [direction, setDirection] = useState(INITIAL_DIRECTION);
   const [isGameOver, setIsGameOver] = useState(false);
   const [score, setScore] = useState(0);
-  const [highScore, setHighScore] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
-  const { playSound } = useGameSound(true);
-  const gameLoopRef = useRef<number | null>(null);
+  const snakeRef = useRef(snake);
+  const foodRef = useRef(food);
+  const directionRef = useRef(direction);
+  const scoreRef = useRef(score);
+  const speedRef = useRef(currentSpeed);
+  const gameOverRef = useRef(isGameOver);
 
-  // --- TẠO MỒI NGẪU NHIÊN ---
+  useEffect(() => {
+    snakeRef.current = snake;
+    foodRef.current = food;
+    directionRef.current = direction;
+    scoreRef.current = score;
+    speedRef.current = currentSpeed;
+    gameOverRef.current = isGameOver;
+  }, [snake, food, direction, score, currentSpeed, isGameOver]);
+
+  const { playSound: originalPlaySound } = useGameSound(true);
+  const playSound = useCallback(
+    (type: string) => {
+      if (soundEnabled) originalPlaySound(type as any);
+    },
+    [soundEnabled, originalPlaySound]
+  );
+
+  const gameLoopRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const boardSizeOptions = getBoardSizeOptions(GAME_ID);
+  const speedOptions = getSpeedOptions(GAME_ID);
+  const incrementOptions = getIncrementOptions(GAME_ID);
+
+  const getBoardState = useCallback(
+    () => ({
+      snake: snakeRef.current,
+      food: foodRef.current,
+      direction: directionRef.current,
+      score: scoreRef.current,
+      speed: speedRef.current,
+      isGameOver: gameOverRef.current,
+      gridSize,
+    }),
+    [gridSize]
+  );
+
+  const {
+    session,
+    currentPlayTime,
+    savedSessions,
+    isLoading,
+    isSaving,
+    showLoadDialog,
+    setShowLoadDialog,
+    startGame,
+    loadGame,
+    saveGame,
+    completeGame,
+    quitGame,
+    fetchSavedSessions,
+  } = useGameSession({ gameId: GAME_ID, getBoardState, isPaused: isPaused });
+
+  useEffect(() => {
+    if (session) {
+      if (session.session_config) {
+        if (!ignoreConfigSyncRef.current) {
+          const config = session.session_config;
+          if (config.cols) setGridSize(Number(config.cols));
+          if (config.speed_increment)
+            setSpeedIncrement(Number(config.speed_increment));
+
+          if (!session.board_state && config.initial_speed) {
+            setCurrentSpeed(Number(config.initial_speed));
+          }
+        }
+      }
+
+      if (session.board_state) {
+        const state = session.board_state as any;
+        if (state.gridSize) setGridSize(state.gridSize);
+        if (state.snake) setSnake(state.snake);
+        if (state.food) setFood(state.food);
+        if (state.direction) setDirection(state.direction);
+        if (state.score !== undefined) setScore(state.score);
+        if (state.speed) setCurrentSpeed(state.speed);
+
+        setIsGameOver(false);
+        setIsPaused(true);
+      } else {
+        const center = Math.floor(gridSize / 2);
+        setSnake([
+          { x: center, y: center },
+          { x: center, y: center + 1 },
+          { x: center, y: center + 2 },
+        ]);
+        setDirection(INITIAL_DIRECTION);
+        setScore(0);
+        setIsGameOver(false);
+        setIsPaused(false);
+        setFood({
+          x: Math.floor(Math.random() * gridSize),
+          y: Math.floor(Math.random() * gridSize),
+        });
+      }
+    }
+  }, [session]);
+
   const generateFood = useCallback(() => {
-    let newFood: { x: number; y: number }; // Khai báo kiểu dữ liệu rõ ràng ở đây
+    let newFood: { x: number; y: number };
     while (true) {
       newFood = {
-        x: Math.floor(Math.random() * GRID_SIZE),
-        y: Math.floor(Math.random() * GRID_SIZE),
+        x: Math.floor(Math.random() * gridSize),
+        y: Math.floor(Math.random() * gridSize),
       };
       const isOnSnake = snake.some(
         (seg) => seg.x === newFood.x && seg.y === newFood.y
@@ -52,11 +187,19 @@ export default function SnakeGame() {
       if (!isOnSnake) break;
     }
     return newFood;
-  }, [snake]);
+  }, [snake, gridSize]);
 
-  // --- LOGIC DI CHUYỂN ---
+  const handleGameOver = useCallback(() => {
+    setIsGameOver(true);
+    playSound("lose");
+    if (session?.status === "playing") {
+      completeGame(scoreRef.current);
+    }
+  }, [session?.status, completeGame, playSound]);
+
   const moveSnake = useCallback(() => {
-    if (isGameOver || isPaused) return;
+    if (isGameOver || isPaused || !session || session.status !== "playing")
+      return;
 
     setSnake((prevSnake) => {
       const head = {
@@ -64,56 +207,98 @@ export default function SnakeGame() {
         y: prevSnake[0].y + direction.y,
       };
 
-      // 1. Va chạm tường
       if (
         head.x < 0 ||
-        head.x >= GRID_SIZE ||
+        head.x >= gridSize ||
         head.y < 0 ||
-        head.y >= GRID_SIZE
+        head.y >= gridSize
       ) {
-        setIsGameOver(true);
-        playSound("lose");
+        handleGameOver();
         return prevSnake;
       }
 
-      // 2. Tự cắn mình
-      if (prevSnake.some((seg) => seg.x === head.x && seg.y === head.y)) {
-        setIsGameOver(true);
-        playSound("lose");
+      if (prevSnake.some((seg) => seg.x === head.x && head.y === seg.y)) {
+        handleGameOver();
         return prevSnake;
       }
 
       const newSnake = [head, ...prevSnake];
 
-      // 3. Ăn mồi
       if (head.x === food.x && head.y === food.y) {
         setScore((s) => s + 10);
         setFood(generateFood());
         playSound("pop");
-      } else {
-        newSnake.pop(); // Không ăn mồi thì bỏ đuôi
-      }
 
+        if (speedIncrement > 0) {
+          setCurrentSpeed((prev) => Math.max(50, prev - speedIncrement));
+        }
+      } else {
+        newSnake.pop();
+      }
       return newSnake;
     });
-  }, [direction, food, generateFood, isGameOver, playSound]);
+  }, [
+    direction,
+    food,
+    generateFood,
+    isGameOver,
+    isPaused,
+    gridSize,
+    session,
+    handleGameOver,
+    playSound,
+    speedIncrement,
+  ]);
 
-  // --- GAME LOOP ---
   useEffect(() => {
-    gameLoopRef.current = setInterval(moveSnake, 150); // Tốc độ rắn
+    if (session?.status === "playing" && !isGameOver && !isPaused) {
+      gameLoopRef.current = setInterval(moveSnake, currentSpeed);
+    }
     return () => {
       if (gameLoopRef.current) clearInterval(gameLoopRef.current);
     };
-  }, [moveSnake]);
+  }, [moveSnake, currentSpeed, isPaused, isGameOver, session?.status]);
 
-  // --- ĐIỀU KHIỂN BÀN PHÍM ---
+  const handleRestart = async () => {
+    ignoreConfigSyncRef.current = true;
+    await startGame();
+  };
+
+  const handleStandardNewGame = async () => {
+    ignoreConfigSyncRef.current = false;
+    await startGame();
+  };
+
+  const handleSaveSettings = (
+    _diff: Difficulty,
+    _time: number,
+    _turn: number,
+    newBoardSize: number,
+    newSpeed: number,
+    newIncrement: number
+  ) => {
+    setGridSize(newBoardSize);
+    setCurrentSpeed(newSpeed);
+    setSpeedIncrement(newIncrement);
+
+    ignoreConfigSyncRef.current = true;
+    handleRestart();
+  };
+
+  const handleManualSave = () => saveGame(true);
+  const handleOpenSavedGames = async () => {
+    await fetchSavedSessions();
+    setShowLoadDialog(true);
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === " ") {
+        e.preventDefault();
         setIsPaused((prev) => !prev);
         return;
       }
-      if (isPaused) return;
+      if (isPaused || isGameOver) return;
       switch (e.key) {
         case "ArrowUp":
           if (direction.y === 0) setDirection({ x: 0, y: -1 });
@@ -131,40 +316,81 @@ export default function SnakeGame() {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [direction]);
+  }, [direction, isPaused, isGameOver]);
 
-  const resetGame = () => {
-    playSound("button");
-    setSnake(INITIAL_SNAKE);
-    setDirection(INITIAL_DIRECTION);
-    setFood(generateFood());
-    setScore(0);
-    setIsGameOver(false);
-    setIsPaused(false);
-  };
-
-  const togglePause = () => {
-    playSound("button1");
-    setIsPaused(!isPaused);
-  };
+  if (isLoading)
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <Loader2 className="animate-spin" />
+      </div>
+    );
 
   return (
     <>
       <GameHeader />
       <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background">
-        <div className="flex gap-6 mb-6">
-          <div className="text-center bg-white dark:bg-zinc-900 px-6 py-2 rounded-2xl shadow-sm border">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase">
-              Score
-            </p>
-            <p className="text-xl font-black text-primary">{score}</p>
+        {/* Info Header */}
+        <div className="flex justify-between items-center w-full max-w-md px-4 py-2 mb-6 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border">
+          <div className="flex items-center gap-2">
+            <Trophy className="w-5 h-5 text-yellow-500" />
+            <span className="font-bold text-xl">{score}</span>
           </div>
+          <div className="flex items-center gap-2 text-primary font-mono bg-primary/10 px-3 py-1 rounded-full">
+            <Clock className="w-4 h-4" /> {formatTime(currentPlayTime)}
+          </div>
+        </div>
 
-          {/* Nút Tạm dừng / Chơi tiếp */}
+        {/* Controls */}
+        <div className="flex flex-wrap gap-4 mb-6 justify-center items-center">
+          <RoundButton
+            onClick={handleManualSave}
+            disabled={isSaving || isGameOver || session?.status !== "playing"}
+            variant="primary"
+            className="flex items-center gap-2 px-4"
+          >
+            {isSaving ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Upload className="w-4 h-4" />
+            )}{" "}
+            Lưu
+          </RoundButton>
+
+          <LoadGameDialog
+            open={showLoadDialog}
+            onOpenChange={setShowLoadDialog}
+            sessions={savedSessions}
+            currentSessionId={session?.id}
+            onLoadSession={loadGame}
+            onNewGame={handleStandardNewGame}
+          >
+            <RoundButton
+              variant="neutral"
+              className="flex items-center gap-2 px-4"
+              onClick={handleOpenSavedGames}
+            >
+              <Download className="w-4 h-4" /> Tải
+            </RoundButton>
+          </LoadGameDialog>
+
+          {/* Settings Button [MỚI] */}
+          {!isGameOver && (
+            <GameSettingsDialog
+              currentBoardSize={gridSize}
+              currentSpeed={currentSpeed}
+              currentIncrement={speedIncrement}
+              boardSizeOptions={boardSizeOptions}
+              speedOptions={speedOptions}
+              incrementOptions={incrementOptions}
+              onSave={handleSaveSettings}
+              disabled={session?.status !== "playing"}
+            />
+          )}
+
           <RoundButton
             size="small"
             variant={isPaused ? "accent" : "neutral"}
-            onClick={togglePause}
+            onClick={() => setIsPaused(!isPaused)}
             disabled={isGameOver}
           >
             {isPaused ? (
@@ -173,32 +399,42 @@ export default function SnakeGame() {
               <Pause className="w-5 h-5" />
             )}
           </RoundButton>
-
-          <RoundButton size="small" variant="neutral" onClick={resetGame}>
-            <RefreshCcw className="w-5 h-5" />
+          <RoundButton
+            size="small"
+            variant="neutral"
+            onClick={() => setSoundEnabled(!soundEnabled)}
+          >
+            {soundEnabled ? (
+              <Volume2 className="w-4 h-4" />
+            ) : (
+              <VolumeX className="w-4 h-4" />
+            )}
+          </RoundButton>
+          <RoundButton size="small" variant="neutral" onClick={quitGame}>
+            <LogOut className="w-4 h-4" />
           </RoundButton>
         </div>
 
-        <div className="relative p-2 bg-zinc-800 rounded-[2rem] shadow-xl border-8 border-zinc-700">
+        {/* Board */}
+        <div className="relative p-2 bg-zinc-800 rounded-[1.5rem] shadow-xl border-8 border-zinc-700">
           <div
-            className="grid bg-[var(--snake-bg)] rounded-2xl relative"
+            className="grid bg-[var(--snake-bg)] rounded-xl relative overflow-hidden"
             style={{
-              gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
-              width: "min(85vw, 400px)",
-              height: "min(85vw, 400px)",
+              gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
+              width: "min(90vw, 400px)",
+              height: "min(90vw, 400px)",
             }}
           >
-            {Array.from({ length: GRID_SIZE * GRID_SIZE }).map((_, i) => {
-              const x = i % GRID_SIZE;
-              const y = Math.floor(i / GRID_SIZE);
+            {Array.from({ length: gridSize * gridSize }).map((_, i) => {
+              const x = i % gridSize;
+              const y = Math.floor(i / gridSize);
               const isSnake = snake.some((seg) => seg.x === x && seg.y === y);
               const isHead = snake[0].x === x && snake[0].y === y;
               const isFood = food.x === x && food.y === y;
-
               return (
                 <div
                   key={i}
-                  className="border-[0.5px] border-[var(--snake-grid)]"
+                  className="border-[0.5px] border-[var(--snake-grid)]/10"
                   style={{
                     backgroundColor: isHead
                       ? "var(--snake-head)"
@@ -207,97 +443,75 @@ export default function SnakeGame() {
                       : isFood
                       ? "var(--snake-food)"
                       : "transparent",
+                    borderRadius: isSnake ? "4px" : "0",
                   }}
                 />
               );
             })}
 
-            {/* Hiển thị chữ PAUSED đè lên board khi tạm dừng */}
+            {/* Overlays (Pause, Game Over) giống cũ */}
             <AnimatePresence>
               {isPaused && !isGameOver && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="absolute inset-0 z-20 flex items-center justify-center bg-black/20 backdrop-blur-[2px] rounded-2xl"
-                >
-                  <div className="bg-white dark:bg-zinc-900 px-6 py-2 rounded-full shadow-xl border-2 border-primary">
-                    <p className="font-black text-primary tracking-widest uppercase">
-                      Tạm dừng
-                    </p>
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[1px]">
+                  <div className="bg-secondary px-4 py-1 rounded font-bold">
+                    PAUSED
                   </div>
-                </motion.div>
+                </div>
+              )}
+              {isGameOver && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm rounded-[1rem]">
+                  <Frown className="w-16 h-16 text-destructive mb-4" />
+                  <h2 className="text-white text-2xl font-bold mb-4">
+                    THUA RỒI!
+                  </h2>
+                  <RoundButton variant="primary" onClick={handleRestart}>
+                    Chơi lại
+                  </RoundButton>
+                </div>
               )}
             </AnimatePresence>
           </div>
-
-          <AnimatePresence>
-            {isGameOver && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm rounded-[1.5rem]"
-              >
-                <motion.div
-                  initial={{ scale: 0.5 }}
-                  animate={{ scale: 1 }}
-                  className="bg-white dark:bg-zinc-900 p-8 rounded-[3rem] text-center shadow-2xl border-4 border-primary"
-                >
-                  <Frown className="w-16 h-16 text-red-500 mx-auto mb-4" />
-                  <h2 className="text-3xl font-black text-primary mb-6">
-                    ÔI TRỜI!
-                  </h2>
-                  <RoundButton
-                    size="medium"
-                    variant="primary"
-                    onClick={resetGame}
-                  >
-                    Chơi lại
-                  </RoundButton>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
 
+        {/* MOBILE CONTROLS */}
         <div className="mt-8 grid grid-cols-3 gap-2 md:hidden">
           <div />
           <RoundButton
-            size="small"
+            size="medium"
             variant="neutral"
             onClick={() =>
               !isPaused && direction.y === 0 && setDirection({ x: 0, y: -1 })
             }
           >
-            <ChevronUp />
+            <ChevronUp className="w-6 h-6" />
           </RoundButton>
           <div />
           <RoundButton
-            size="small"
+            size="medium"
             variant="neutral"
             onClick={() =>
               !isPaused && direction.x === 0 && setDirection({ x: -1, y: 0 })
             }
           >
-            <ChevronLeft />
+            <ChevronLeft className="w-6 h-6" />
           </RoundButton>
           <RoundButton
-            size="small"
+            size="medium"
             variant="neutral"
             onClick={() =>
               !isPaused && direction.y === 0 && setDirection({ x: 0, y: 1 })
             }
           >
-            <ChevronDown />
+            <ChevronDown className="w-6 h-6" />
           </RoundButton>
           <RoundButton
-            size="small"
+            size="medium"
             variant="neutral"
             onClick={() =>
               !isPaused && direction.x === 0 && setDirection({ x: 1, y: 0 })
             }
           >
-            <ChevronRight />
+            <ChevronRight className="w-6 h-6" />
           </RoundButton>
         </div>
       </div>
