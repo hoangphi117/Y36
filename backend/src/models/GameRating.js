@@ -27,11 +27,11 @@ class GameRating {
   }
 
   static async findByUserAndGame(user_id, game_id) {
-    return db(this.tableName).where({ user_id, game_id }).first();
+    return db("game_rating").where({ user_id, game_id }).first();
   }
 
   static async getAverageByGame(game_id) {
-    const result = await db(this.tableName)
+    const result = await db("game_rating")
       .where({ game_id })
       .avg("rating as average")
       .count("id as total")
