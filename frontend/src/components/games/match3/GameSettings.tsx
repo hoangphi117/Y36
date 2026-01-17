@@ -91,7 +91,7 @@ const GameBoardConfig = ({numCandyTypes, setNumCandyTypes, boardSize, setBoardSi
                         key={n}
                         onClick={() => setNumCandyTypes(n)}
                         className={cn(
-                        "w-9 h-9 rounded-xl font-black text-sm transition-all border-b-2",
+                        "w-10 h-10 rounded-md font-black text-sm transition-all border-b-2",
                         numCandyTypes === n 
                             ? "bg-primary text-primary-foreground border-primary-700 shadow-md" 
                             : "bg-background text-muted-foreground border-2"
@@ -113,9 +113,9 @@ const GameBoardConfig = ({numCandyTypes, setNumCandyTypes, boardSize, setBoardSi
                         key={s}
                         onClick={() => setBoardSize(s)}
                         className={cn(
-                        "flex-1 h-12 rounded-2xl font-black transition-all border-b-4 relative overflow-hidden",
+                        "flex-1 h-12 rounded-md font-black transition-all border-b-4 relative overflow-hidden",
                         boardSize === s 
-                            ? "bg-primary text-primary-foreground border-primary-700 shadow-lg" 
+                            ? "bg-primary text-primary-foreground border-primary-700" 
                             : "bg-background text-muted-foreground border-2 hover:border-primary/30"
                         )}
                     >
@@ -152,18 +152,18 @@ const TimeAndRoundsConfig = ({
     defaultTimeLimit,
     defaultTargetMatches
 } : TimeAndRoundsConfigProps) => {
-    // Tạo mảng thời gian bao gồm giá trị mặc định và giá trị hiện tại
+    // Tạo mảng thời gian bao gồm giá trị mặc định và giá trị hiện tại (lọc bỏ giá trị 0)
     const allTimeOptions = [...new Set([
         ...defaultTimeOptions, 
-        ...(defaultTimeLimit ? [defaultTimeLimit] : []),
-        timeLimit
+        ...(defaultTimeLimit && defaultTimeLimit > 0 ? [defaultTimeLimit] : []),
+        ...(timeLimit > 0 ? [timeLimit] : [])
     ])].sort((a, b) => a - b);
     
-    // Tạo mảng rounds bao gồm giá trị mặc định và giá trị hiện tại
+    // Tạo mảng rounds bao gồm giá trị mặc định và giá trị hiện tại (lọc bỏ giá trị 0)
     const allRoundOptions = [...new Set([
         ...defaultRoundOptions,
-        ...(defaultTargetMatches ? [defaultTargetMatches] : []),
-        targetMatches
+        ...(defaultTargetMatches && defaultTargetMatches > 0 ? [defaultTargetMatches] : []),
+        ...(targetMatches > 0 ? [targetMatches] : [])
     ])].sort((a, b) => a - b);
     
     const formatTime = (seconds: number) => {
