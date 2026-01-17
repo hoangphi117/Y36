@@ -10,7 +10,7 @@ class GameRating {
   }
 
   static async upsert({ user_id, game_id, rating }) {
-    const [result] = await db("game_rating")
+    const [result] = await db("game_ratings")
       .insert({
         user_id,
         game_id,
@@ -27,11 +27,11 @@ class GameRating {
   }
 
   static async findByUserAndGame(user_id, game_id) {
-    return db("game_rating").where({ user_id, game_id }).first();
+    return db("game_ratings").where({ user_id, game_id }).first();
   }
 
   static async getAverageByGame(game_id) {
-    const result = await db("game_rating")
+    const result = await db("game_ratings")
       .where({ game_id })
       .avg("rating as average")
       .count("id as total")
@@ -44,7 +44,7 @@ class GameRating {
   }
 
   static async delete(user_id, game_id) {
-    return db("game_rating").where({ user_id, game_id }).del();
+    return db("game_ratings").where({ user_id, game_id }).del();
   }
 }
 
