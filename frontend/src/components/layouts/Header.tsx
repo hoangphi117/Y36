@@ -83,6 +83,20 @@ export const Header = () => {
             <Trophy className="w-5 h-5 group-hover:text-yellow-500 transition-all" />
             <span>Xếp hạng</span>
           </Link>
+          <Link
+            to="/messages"
+            className="flex items-center gap-2 font-bold text-muted-foreground hover:text-primary transition-all"
+          >
+            <MessageSquare className="w-5 h-5 group-hover:text-yellow-500 transition-all" />
+            <span>Tin nhắn</span>
+          </Link>
+          <Link
+            to="/profile?tab=friends"
+            className="flex items-center gap-2 font-bold text-muted-foreground hover:text-primary transition-all"
+          >
+            <Users className="w-5 h-5 group-hover:text-yellow-500 transition-all" />
+            <span>Bạn bè</span>
+          </Link>
         </nav>
 
         <div className="flex items-center gap-4">

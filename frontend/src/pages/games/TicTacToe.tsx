@@ -13,6 +13,7 @@ import {
   Bot,
   User,
   RefreshCcw,
+  AlertTriangle,
 } from "lucide-react";
 import { RoundButton } from "@/components/ui/round-button";
 import { cn } from "@/lib/utils";
@@ -21,6 +22,16 @@ import { GameHeader } from "@/components/games/GameHeader";
 import useDocumentTitle from "@/hooks/useDocumentTitle";
 import { useGameSession } from "@/hooks/useGameSession";
 import { LoadGameDialog } from "./LoadGameDialog";
+
+import { getEasyMove, getMediumMove, getHardMove } from "@/lib/AI/tictactoeAI";
+import {
+  GameSettingsDialog,
+  type Difficulty,
+} from "@/components/dialogs/GameSettingsDialog";
+
+import { getTimeOptions } from "@/config/gameConfigs";
+
+import formatTime from "@/utils/formatTime";
 
 const GAME_ID = 4;
 const WIN_LINES = [
@@ -44,6 +55,11 @@ export default function TicTacToe() {
   const [xIsNext, setXIsNext] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [userSymbol, setUserSymbol] = useState<PlayerSymbol>("X");
+
+  const [difficulty, setDifficulty] = useState<Difficulty>("medium");
+  const [timeLimit, setTimeLimit] = useState<number>(0);
+  const [isTimeOut, setIsTimeOut] = useState(false);
+  const ignoreConfigSyncRef = useRef(false);
 
   const squaresRef = useRef(squares);
   const xIsNextRef = useRef(xIsNext);
@@ -76,58 +92,96 @@ export default function TicTacToe() {
     resetTimer,
   } = useGameSession({ gameId: GAME_ID, getBoardState });
 
-  console.log("Session:", session);
+  const timeOptions = getTimeOptions(GAME_ID);
 
   const { playSound: originalPlaySound } = useGameSound();
   const playSound = (type: string) =>
     soundEnabled && originalPlaySound(type as any);
 
   useEffect(() => {
-    if (session?.board_state) {
-      const { squares: s, xIsNext: x } = session.board_state as any;
-      if (s) setSquares(s);
-      if (x !== undefined) setXIsNext(x);
-    } else if (session && !session.board_state) {
-      setSquares(Array(9).fill(null));
-      setXIsNext(true);
+    if (session) {
+      if (session.board_state) {
+        const { squares: s, xIsNext: x } = session.board_state as any;
+        if (s) setSquares(s);
+        if (x !== undefined) setXIsNext(x);
+      } else {
+        setSquares(Array(9).fill(null));
+        setXIsNext(true);
+      }
+
+      if (session.session_config?.time_limit) {
+        if (ignoreConfigSyncRef.current) {
+          ignoreConfigSyncRef.current = false;
+        } else {
+          setTimeLimit(Number(session.session_config.time_limit));
+        }
+      }
     }
   }, [session]);
 
   const winner = calculateWinner(squares);
   const isDraw = !winner && squares.every((square) => square !== null);
 
-  const formatTime = (totalSeconds: number) => {
-    const mins = Math.floor(totalSeconds / 60);
-    const secs = totalSeconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs
-      .toString()
-      .padStart(2, "0")}`;
-  };
+  useEffect(() => {
+    if (
+      timeLimit > 0 &&
+      session?.status === "playing" &&
+      currentPlayTime >= timeLimit &&
+      !winner &&
+      !isDraw &&
+      !isTimeOut
+    ) {
+      setIsTimeOut(true);
+      playSound("lose");
+      completeGame(-1);
+    }
+  }, [currentPlayTime, timeLimit, session?.status, winner, isDraw, isTimeOut]);
 
   useEffect(() => {
-    if (!session || session.status !== "playing" || winner || isDraw) return;
+    if (
+      !session ||
+      session.status !== "playing" ||
+      winner ||
+      isDraw ||
+      isTimeOut
+    )
+      return;
 
     const isBotTurn =
       (xIsNext && userSymbol === "O") || (!xIsNext && userSymbol === "X");
 
     if (isBotTurn) {
       const timer = setTimeout(() => {
-        const emptyIndices = squares
-          .map((val, idx) => (val === null ? idx : null))
-          .filter((val) => val !== null) as number[];
+        let moveIndex = -1;
+        const botSymbol = userSymbol === "X" ? "O" : "X";
 
-        if (emptyIndices.length > 0) {
-          const randomIdx =
-            emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
-          handleMove(randomIdx);
+        if (difficulty === "easy") {
+          moveIndex = getEasyMove(squares);
+        } else if (difficulty === "medium") {
+          moveIndex = getMediumMove(squares, botSymbol);
+        } else {
+          moveIndex = getHardMove(squares, botSymbol);
         }
-      }, 500);
+
+        if (moveIndex !== -1) {
+          handleMove(moveIndex);
+        }
+      }, 600);
       return () => clearTimeout(timer);
     }
-  }, [xIsNext, userSymbol, squares, session, winner, isDraw]);
+  }, [
+    xIsNext,
+    userSymbol,
+    squares,
+    session,
+    winner,
+    isDraw,
+    isTimeOut,
+    difficulty,
+  ]);
 
   useEffect(() => {
-    if (session?.status === "playing") {
+    if (session?.status === "playing" && !isTimeOut) {
       if (winner) {
         if (winner === userSymbol) {
           playSound("win");
@@ -141,10 +195,17 @@ export default function TicTacToe() {
         completeGame(0);
       }
     }
-  }, [winner, isDraw, session?.status, userSymbol]);
+  }, [winner, isDraw, session?.status, userSymbol, isTimeOut]);
 
   const handleMove = (i: number) => {
-    if (squares[i] || winner || isDraw || session?.status !== "playing") return;
+    if (
+      squares[i] ||
+      winner ||
+      isDraw ||
+      isTimeOut ||
+      session?.status !== "playing"
+    )
+      return;
 
     const nextSquares = squares.slice();
     nextSquares[i] = xIsNext ? "X" : "O";
@@ -163,20 +224,11 @@ export default function TicTacToe() {
 
   const handleSwitchSide = (symbol: PlayerSymbol) => {
     setUserSymbol(symbol);
-
     setSquares(Array(9).fill(null));
-
     setXIsNext(true);
-
     resetTimer();
+    setIsTimeOut(false);
   };
-
-  const movesCount = squares.filter((s) => s !== null).length;
-  const canSwitchSide =
-    session?.status === "playing" &&
-    !winner &&
-    !isDraw &&
-    (movesCount === 0 || (movesCount === 1 && userSymbol === "O"));
 
   const handleManualSave = () => saveGame(true);
   const handleOpenSavedGames = async () => {
@@ -186,14 +238,29 @@ export default function TicTacToe() {
 
   const handleRestart = async () => {
     setSquares(Array(9).fill(null));
-
     setXIsNext(true);
-
     setUserSymbol("X");
-
+    setIsTimeOut(false);
     resetTimer();
 
+    ignoreConfigSyncRef.current = true;
+
     await startGame();
+  };
+
+  const handleStandardNewGame = async () => {
+    ignoreConfigSyncRef.current = false;
+    await startGame();
+  };
+
+  const handleSaveSettings = (
+    newDifficulty: Difficulty,
+    newTimeLimit: number
+  ) => {
+    setDifficulty(newDifficulty);
+    setTimeLimit(newTimeLimit);
+
+    handleRestart();
   };
 
   function calculateWinner(squares: SquareValue[]) {
@@ -204,6 +271,14 @@ export default function TicTacToe() {
     }
     return null;
   }
+
+  const movesCount = squares.filter((s) => s !== null).length;
+  const canSwitchSide =
+    session?.status === "playing" &&
+    !winner &&
+    !isDraw &&
+    !isTimeOut &&
+    (movesCount === 0 || (movesCount === 1 && userSymbol === "O"));
 
   if (isLoading) {
     return (
@@ -220,12 +295,16 @@ export default function TicTacToe() {
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] p-4">
       <GameHeader />
 
-      {/* Control Bar */}
-      <div className="flex flex-wrap justify-center gap-4 mb-6">
+      {/* Control Bar (Save/Load) */}
+      <div className="flex flex-wrap justify-center gap-4 mb-4">
         <RoundButton
           onClick={handleManualSave}
           disabled={
-            isSaving || !!winner || !!isDraw || session?.status !== "playing"
+            isSaving ||
+            !!winner ||
+            !!isDraw ||
+            isTimeOut ||
+            session?.status !== "playing"
           }
           variant="primary"
           className="flex items-center gap-2 px-6"
@@ -243,7 +322,7 @@ export default function TicTacToe() {
           sessions={savedSessions}
           currentSessionId={session?.id}
           onLoadSession={loadGame}
-          onNewGame={startGame}
+          onNewGame={handleStandardNewGame}
         >
           <RoundButton
             variant="neutral"
@@ -255,13 +334,38 @@ export default function TicTacToe() {
         </LoadGameDialog>
       </div>
 
-      {/* Info & Switch Side */}
-      <div className="flex items-center gap-6 mb-4">
-        <div className="font-mono text-lg font-bold text-primary flex items-center gap-2 bg-primary/10 px-4 py-1.5 rounded-full border border-primary/20">
-          <Clock className="w-4 h-4" /> {formatTime(currentPlayTime)}
+      {/* Info & Switch Side & Settings */}
+      <div className="flex items-center gap-4 mb-4">
+        {/* Đồng hồ */}
+        <div
+          className={cn(
+            "font-mono text-lg font-bold flex items-center gap-2 px-4 py-1.5 rounded-full border transition-colors",
+            timeLimit > 0 && currentPlayTime > timeLimit * 0.8
+              ? "bg-red-100 text-red-600 border-red-300 animate-pulse"
+              : "bg-primary/10 text-primary border-primary/20"
+          )}
+        >
+          <Clock className="w-4 h-4" />
+          {formatTime(currentPlayTime)}
+          {timeLimit > 0 && (
+            <span className="text-xs opacity-70">
+              / {formatTime(timeLimit)}
+            </span>
+          )}
         </div>
 
-        {/* Nút đổi quân: Hiện nếu game chưa kết thúc và (bàn cờ trống hoặc chỉ có Bot vừa đi) */}
+        {/* Nút Setting (Chỉ hiện khi chưa hết giờ/thắng thua) */}
+        {!winner && !isDraw && !isTimeOut && (
+          <GameSettingsDialog
+            currentDifficulty={difficulty}
+            currentTimeLimit={timeLimit}
+            onSave={handleSaveSettings}
+            timeOptions={timeOptions}
+            disabled={session?.status !== "playing"}
+          />
+        )}
+
+        {/* Nút đổi quân */}
         {canSwitchSide && (
           <div className="flex items-center bg-muted rounded-full p-1 border border-border">
             <button
@@ -273,7 +377,7 @@ export default function TicTacToe() {
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <User className="w-3 h-3" /> Cầm X
+              <User className="w-3 h-3" />
             </button>
             <button
               onClick={() => handleSwitchSide("O")}
@@ -284,17 +388,17 @@ export default function TicTacToe() {
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <Bot className="w-3 h-3" /> Cầm O
+              <Bot className="w-3 h-3" />
             </button>
           </div>
         )}
       </div>
 
-      {!winner && !isDraw && (
+      {!winner && !isDraw && !isTimeOut && (
         <div className="mb-2 text-sm text-muted-foreground animate-pulse">
           {(xIsNext && userSymbol === "X") || (!xIsNext && userSymbol === "O")
             ? "Lượt của bạn..."
-            : "Máy đang suy nghĩ..."}
+            : `Máy (${difficulty}) đang nghĩ...`}
         </div>
       )}
 
@@ -311,6 +415,7 @@ export default function TicTacToe() {
                 !!square ||
                 !!winner ||
                 !!isDraw ||
+                isTimeOut ||
                 session?.status !== "playing"
               }
               className={cn(
@@ -318,7 +423,10 @@ export default function TicTacToe() {
                 square === "X" && "text-red-500 bg-red-50 dark:bg-red-950/20",
                 square === "O" &&
                   "text-blue-500 bg-blue-50 dark:bg-blue-950/20",
-                !square && !winner && "hover:bg-accent/10 cursor-pointer"
+                !square &&
+                  !winner &&
+                  !isTimeOut &&
+                  "hover:bg-accent/10 cursor-pointer"
               )}
             >
               <AnimatePresence>
@@ -339,7 +447,7 @@ export default function TicTacToe() {
 
         {/* End Game Overlay */}
         <AnimatePresence>
-          {(winner || isDraw) && (
+          {(winner || isDraw || isTimeOut) && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -351,7 +459,13 @@ export default function TicTacToe() {
                 animate={{ scale: 1, y: 0 }}
                 className="bg-card border-2 border-primary/20 p-6 rounded-2xl shadow-2xl text-center space-y-4 w-[90%]"
               >
-                {winner ? (
+                {isTimeOut ? (
+                  <>
+                    <AlertTriangle className="w-16 h-16 text-destructive mx-auto animate-bounce" />
+                    <h2 className="text-2xl font-bold">Hết giờ!</h2>
+                    <p className="text-sm text-muted-foreground">-1 Điểm</p>
+                  </>
+                ) : winner ? (
                   <>
                     <Trophy className="w-16 h-16 text-yellow-500 mx-auto animate-bounce" />
                     <h2 className="text-2xl font-bold">

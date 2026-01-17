@@ -26,6 +26,7 @@ export interface GameSession {
   play_time_seconds: number;
   board_state: any;
   session_config: any;
+  started_at: string;
   updated_at: string;
 }
 

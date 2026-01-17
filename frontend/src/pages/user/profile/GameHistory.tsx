@@ -49,7 +49,6 @@ export function GameHistory() {
       <div className="text-center text-red-500 p-8">Lỗi tải lịch sử đấu.</div>
     );
 
-  // Hiển thị trạng thái trống nếu sau khi lọc không còn ván nào
   if (data?.data.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-xl border border-dashed">
@@ -85,7 +84,6 @@ export function GameHistory() {
                 <div className="flex flex-wrap gap-3 text-sm text-muted-foreground mt-1">
                   <span className="flex items-center gap-1">
                     <Calendar className="w-3 h-3" />
-                    {/* Sử dụng started_at từ dữ liệu bạn cung cấp */}
                     {format(new Date(session.started_at), "dd/MM/yyyy HH:mm", {
                       locale: vi,
                     })}
