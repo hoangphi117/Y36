@@ -105,4 +105,4 @@ class CommentController {
   }
 }
 
-module.exports = CommentController;
+module.exports = new CommentController();
