@@ -14,14 +14,9 @@ export const useAdminLogin = () => {
       // Lưu token và user info
       localStorage.setItem('authToken', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
-      
-      // Success toast
       showToast.success(`Chào mừng trở lại, ${data.user.name}!`, 2000);
-
-      // Redirect sau 500ms để user thấy toast
-      setTimeout(() => {
-        navigate('/admin');
-      }, 500);
+      navigate('/admin');
+;
     },
 
     onError: (error: any) => {
