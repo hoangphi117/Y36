@@ -1921,7 +1921,7 @@ paths:
 
               
 
-  /api/rating/{gameId}:
+  /rating/{gameId}:
     post:
       tags:
         - Game Ratings
@@ -1987,7 +1987,7 @@ paths:
         404:
           description: Rating not found
 
-  /api/rating/{gameId}/me:
+  /rating/{gameId}/me:
     get:
       tags:
         - Game Ratings
@@ -2014,7 +2014,7 @@ paths:
         404:
           description: Rating not found
 
-  /api/rating/{gameId}/average:
+  /rating/{gameId}/average:
     get:
       tags:
         - Game Ratings
