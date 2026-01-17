@@ -1,4 +1,5 @@
 const Game = require('../../models/Game');
+const GameRating = require('../../models/GameRating');
 
 // Lấy danh sách game
 const getGames = async (req, res) => {
@@ -6,6 +7,10 @@ const getGames = async (req, res) => {
     const queryString = req.query;
     const games = await Game.getAll(queryString);
     const totalGames = await Game.countAll(queryString);
+    // Lấy rating trung bình cho mỗi game
+    for (const game of games) {
+      game.rating = await GameRating.getRating(game.id);
+    }
     const paginate = {
       page: queryString.page ? parseInt(queryString.page) : 1,
       limit: queryString.limit ? parseInt(queryString.limit) : games.length,
