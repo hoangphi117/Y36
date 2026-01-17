@@ -14,6 +14,23 @@ export const convertBoard = (board: string[], boardSize: number): number[][] => 
   return matrix;
 }
 
+// Chuyển đổi matrix thành board array
+export const restoreBoard = (matrix: number[][] | undefined): string[] => {
+  if (!matrix || !Array.isArray(matrix) || matrix.length === 0) {
+    return [];
+  }
+  
+  const board: string[] = [];
+  
+  for (let r = 0; r < matrix.length; r++) {
+    for (let c = 0; c < matrix[r].length; c++) {
+      board.push(matrix[r][c].toString());
+    }
+  }
+  
+  return board;
+}
+
 export const createSessionSave = ({
     matrix,
     totalScore,

@@ -1,13 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  RefreshCcw, 
   Trophy,
   Pause,
   PlayCircle,
   Clock,
   Target,
-  Settings,
   Download,
   ChevronLeft,
 } from "lucide-react";
@@ -31,9 +29,10 @@ import { GameOverOverlay, GamePauseOverlay, GameStartOverlay } from "@/component
 import match3Api from "@/services/match3Api";
 import { PauseMenu } from "@/components/games/memory/PauseMenu";
 import type { Match3SessionSave } from "@/types/match3Game";
-import { convertBoard, createSessionSave } from "@/utils/match3SessionHelper";
+import { convertBoard, createSessionSave, restoreBoard } from "@/utils/match3SessionHelper";
 import { useGameSession } from "@/hooks/useGameSession";
 import { LoadGameDialog } from "@/components/dialogs/LoadGameDialog";
+import type { board_state } from "@/types/match3Game";
 
 
 const BOARD_SIZE = 6;
@@ -121,7 +120,61 @@ export default function Match3Game() {
 
   const activeCandies = useMemo(() => CANDY_TYPES.slice(0, numCandyTypes), [numCandyTypes]);
 
-  // load default config from API
+  // useEffect để restore board khi session thay đổi (sau khi load game)
+  useEffect(() => {
+    if (session && session.board_state) {
+      console.log("Session loaded:", session);
+      console.log("Board state:", session.board_state);
+      
+      // Backend trả về nested structure: session.board_state chứa cả score và board_state
+      const sessionData = session.board_state as any;
+      const boardState = sessionData.board_state as board_state;
+      
+      // Kiểm tra matrix có tồn tại không
+      if (!boardState || !boardState.matrix || !Array.isArray(boardState.matrix) || boardState.matrix.length === 0) {
+        console.error("Invalid board state: matrix is missing or empty", boardState);
+        return;
+      }
+      
+      console.log("Matrix found:", boardState.matrix);
+      
+      // Restore board từ matrix
+      const restoredBoard = restoreBoard(boardState.matrix);
+      if (restoredBoard.length === 0) {
+        console.error("Failed to restore board from matrix");
+        return;
+      }
+      
+      setBoard(restoredBoard);
+      
+      // Restore score từ nested structure
+      setScore(sessionData.score || 0);
+      
+      // Restore game state
+      setIsGameActive(true);
+      setIsPaused(false);
+      setShowGameOver(false);
+      
+      // Restore board size từ matrix
+      const newBoardSize = boardState.matrix.length;
+      setBoardSize(newBoardSize);
+      
+      // Restore game mode và các thông số
+      if (boardState.time_remaining !== undefined) {
+        setGameMode("time");
+        setTimeRemaining(boardState.time_remaining);
+      } else if (boardState.moves_remaining !== undefined) {
+        setGameMode("rounds");
+        const movesUsed = targetMatches - boardState.moves_remaining;
+        setMatchesCount(movesUsed);
+      }
+      
+      // Đóng dialog sau khi load xong
+      setShowLoadDialog(false);
+    }
+  }, [session, targetMatches, setShowLoadDialog]);
+
+  // load default config from API (chỉ chạy 1 lần khi mount)
   useEffect(() => {
     const fetchGameConfig = async () => {
       try {
@@ -132,8 +185,6 @@ export default function Match3Game() {
         setNumCandyTypes(config.candy_types);
         setTimeLimit(config.time_limit);
         setTargetScore(config.target_score);
-
-        console.log("check show dialog: ", showLoadDialog);
 
         if(config.moves_limit > 0) {
           setGameMode("rounds");
@@ -150,7 +201,8 @@ export default function Match3Game() {
       }
     };
     fetchGameConfig();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Chỉ chạy 1 lần khi mount
 
   // create board
   const initializeBoard = useCallback(() => {
@@ -197,21 +249,10 @@ export default function Match3Game() {
     initializeBoard(); // Khởi tạo bàn chơi
   }, [startSessionGame, initializeBoard]);
 
-  // Hàm load game từ session đã lưu
-  const handleLoadGame = useCallback(async (sessionId: string) => {
-    await loadGame(sessionId);
-    console.log("check load game: ", session);
-    // TODO: Load board state from session.board_state
-    // const savedState = session?.board_state as Match3SessionSave;
-    // if (savedState) {
-    //   // Restore board, score, etc. from savedState
-    // }
-    initializeBoard(); // Tạm thời init mới, sau này sẽ restore từ savedState
-  }, [loadGame, initializeBoard]);
-
   // open saved games dialog
   const handleOpenSavedGames = async () => {
     await fetchSavedSessions();
+    console.log("check save sessions: ", savedSessions);
     setShowLoadDialog(true);
   };
 
