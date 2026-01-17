@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, use } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   RefreshCcw, 
@@ -8,6 +8,8 @@ import {
   Clock,
   Target,
   Settings,
+  Download,
+  ChevronLeft,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -30,6 +32,8 @@ import match3Api from "@/services/match3Api";
 import { PauseMenu } from "@/components/games/memory/PauseMenu";
 import type { Match3SessionSave } from "@/types/match3Game";
 import { convertBoard, createSessionSave } from "@/utils/match3SessionHelper";
+import { useGameSession } from "@/hooks/useGameSession";
+import { LoadGameDialog } from "@/components/dialogs/LoadGameDialog";
 
 
 const BOARD_SIZE = 6;
@@ -64,11 +68,56 @@ export default function Match3Game() {
   const [showGameOver, setShowGameOver] = useState(false);
 
   const [targetScore, setTargetScore] = useState(500);
-
-  // session 
-  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
-  const [shouldCompleteSession, setShouldCompleteSession] = useState(false);
   const [isConfigLoaded, setIsConfigLoaded] = useState(false);
+
+  // Hàm lấy trạng thái bàn chơi cho hook
+  const getBoardState = useCallback((): Match3SessionSave => {
+    const matrix = convertBoard(board, boardSize);
+    
+    const commonData = {
+      matrix,
+      totalScore: score,
+      current_combo: 0, 
+    };
+
+    if (gameMode === "rounds") {
+      return createSessionSave({
+        ...commonData,
+        moves_remaining: targetMatches - matchesCount
+      });
+    } 
+    else if(gameMode === "time") {
+      return createSessionSave({
+        ...commonData,
+        time_remaining: timeRemaining
+      });
+    }
+    else {
+      return createSessionSave({
+        ...commonData,
+      });
+    }
+  }, [board, boardSize, score, gameMode, targetMatches, matchesCount, timeRemaining]);
+
+  // Sử dụng hook useGameSession
+  const {
+    session,
+    currentPlayTime,
+    savedSessions,
+    isLoading: isSessionLoading,
+    isSaving,
+    showLoadDialog,
+    setShowLoadDialog,
+    startGame: startSessionGame,
+    loadGame,
+    saveGame: saveSessionGame,
+    fetchSavedSessions,
+    completeGame: completeSessionGame,
+    quitGame,
+  } = useGameSession({ 
+    gameId: 5, // Match3 game ID
+    getBoardState 
+  });
 
   const activeCandies = useMemo(() => CANDY_TYPES.slice(0, numCandyTypes), [numCandyTypes]);
 
@@ -83,6 +132,8 @@ export default function Match3Game() {
         setNumCandyTypes(config.candy_types);
         setTimeLimit(config.time_limit);
         setTargetScore(config.target_score);
+
+        console.log("check show dialog: ", showLoadDialog);
 
         if(config.moves_limit > 0) {
           setGameMode("rounds");
@@ -102,15 +153,7 @@ export default function Match3Game() {
   }, []);
 
   // create board
-  const startGame = useCallback(() => {
-
-    // create new game session 
-    const createGameSession = async () => {
-      const res = await match3Api.startSession(5); 
-      setCurrentSessionId(res.session.id);
-    }
-    createGameSession();
-
+  const initializeBoard = useCallback(() => {
     const randomBoard: string[] = [];
     for (let i = 0; i < boardSize * boardSize; i++) {
       const row = Math.floor(i / boardSize);
@@ -146,9 +189,31 @@ export default function Match3Game() {
     else {
       setTargetScore(0);
     }
-
-    // playSound("button1");
   }, [boardSize, activeCandies, timeLimit, gameMode, numCandyTypes, targetMatches]);
+
+  // Hàm start game kết hợp với session
+  const startGame = useCallback(async () => {
+    await startSessionGame(); // Tạo session mới
+    initializeBoard(); // Khởi tạo bàn chơi
+  }, [startSessionGame, initializeBoard]);
+
+  // Hàm load game từ session đã lưu
+  const handleLoadGame = useCallback(async (sessionId: string) => {
+    await loadGame(sessionId);
+    console.log("check load game: ", session);
+    // TODO: Load board state from session.board_state
+    // const savedState = session?.board_state as Match3SessionSave;
+    // if (savedState) {
+    //   // Restore board, score, etc. from savedState
+    // }
+    initializeBoard(); // Tạm thời init mới, sau này sẽ restore từ savedState
+  }, [loadGame, initializeBoard]);
+
+  // open saved games dialog
+  const handleOpenSavedGames = async () => {
+    await fetchSavedSessions();
+    setShowLoadDialog(true);
+  };
 
   const resetToSetup = () => {
     setIsGameActive(false);
@@ -246,9 +311,10 @@ export default function Match3Game() {
         if (newTime <= 0) {
           clearInterval(timer);
           setShowGameOver(true);
-          // Delay để đảm bảo tất cả match cuối được xử lý trước khi gửi điểm
+          setIsGameActive(false);
+          // Gọi completeGame từ hook
           setTimeout(() => {
-            setShouldCompleteSession(true);
+            completeSessionGame(score);
           }, 500);
           return 0;
         }
@@ -257,32 +323,19 @@ export default function Match3Game() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isGameActive, isPaused, gameMode, showGameOver]);
+  }, [isGameActive, isPaused, gameMode, showGameOver, completeSessionGame, score]);
 
   // Check for target matches
   useEffect(() => {
     if (gameMode === "rounds" && matchesCount >= targetMatches && isGameActive) {
-      // setIsGameActive(false);
       setShowGameOver(true);
-      // Delay để đảm bảo tất cả match cuối được xử lý trước khi gửi điểm
+      setIsGameActive(false);
+      // Gọi completeGame từ hook
       setTimeout(() => {
-        setShouldCompleteSession(true);
+        completeSessionGame(score);
       }, 500);
     }
-  }, [matchesCount, targetMatches, gameMode, isGameActive]);
-
-  // Complete session when game ends 
-  useEffect(() => {
-    if (shouldCompleteSession && currentSessionId) {
-      const completeSession = async () => {
-        const play_time_seconds = gameMode === "time" ? timeLimit - timeRemaining : 0;
-        const res = await match3Api.completeSession(currentSessionId, score, play_time_seconds);
-        console.log("check complete res: ", res);
-      };
-      completeSession();
-      setShouldCompleteSession(false);
-    }
-  }, [shouldCompleteSession, currentSessionId, score, gameMode, timeLimit, timeRemaining]);
+  }, [matchesCount, targetMatches, gameMode, isGameActive, completeSessionGame, score]);
 
   // handle swap
   const handleSquareClick = (idx: number) => {
@@ -308,48 +361,10 @@ export default function Match3Game() {
     }
   };
 
-  const getCurrentSessionState = (): Match3SessionSave => {
-    const matrix = convertBoard(board, boardSize);
-    
-    const commonData = {
-      matrix,
-      totalScore: score,
-      current_combo: 0, 
-    };
-
-    if (gameMode === "rounds") {
-      return createSessionSave({
-        ...commonData,
-        moves_remaining: targetMatches - matchesCount
-      });
-    } 
-    else if(gameMode === "time") {
-      return createSessionSave({
-        ...commonData,
-        time_remaining: timeRemaining
-      });
-    }
-    else {
-      return createSessionSave({
-        ...commonData,
-      });
-    }
-  };
-
-  // Save game
-  const saveGameSession = async () => {
-    const sessionSaveData = getCurrentSessionState();
-
-    if(!currentSessionId) return;
-
-    await match3Api.saveSession(currentSessionId, sessionSaveData);
-    return sessionSaveData;
-  };
-
+  // Save game sử dụng hook
   const handleSaveAndExit = async () => {
     try {
-      // Save game session
-      await saveGameSession();
+      await saveSessionGame(true); // manual = true
       setIsGameActive(false);
       setIsPaused(false);
     } catch (error) {
@@ -363,8 +378,8 @@ export default function Match3Game() {
     startGame();
   };
 
-  // Hiển thị loading trong khi chờ config
-  if (!isConfigLoaded) {
+  // Hiển thị loading trong khi chờ config hoặc session
+  if (!isConfigLoaded || isSessionLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-background text-foreground">
         <div className="text-center space-y-4">
@@ -420,8 +435,9 @@ export default function Match3Game() {
         {/* Game Active Controls */}
         {isGameActive && (
           <div className="flex gap-2 justify-center mb-4 flex-wrap">
-            <RoundButton size="small" variant="primary" onClick={startGame}>
-              <RefreshCcw className="w-4 h-4 mr-2" /> MỚI
+            <RoundButton size="small" variant="danger" onClick={resetToSetup}>
+              <ChevronLeft />
+              <span className="hidden min-[375px]:inline ml-1">Thoát</span>
             </RoundButton>
             <RoundButton 
               size="small" 
@@ -437,9 +453,6 @@ export default function Match3Game() {
                   <Pause className="w-4 h-4 mr-2" /> TẠM DỪNG
                 </>
               )}
-            </RoundButton>
-            <RoundButton size="small" variant="danger" onClick={resetToSetup}>
-              <Settings className="w-4 h-4 mr-2" /> CÀI ĐẶT
             </RoundButton>
           </div>
         )}
@@ -476,6 +489,26 @@ export default function Match3Game() {
                 setBoardSize={setBoardSize}
               />
             </div>
+
+            <div className="flex justify-center mt-5">
+              <LoadGameDialog
+                open={showLoadDialog}
+                onOpenChange={setShowLoadDialog}
+                sessions={savedSessions}
+                currentSessionId={session?.id}
+                onLoadSession={loadGame}
+                onNewGame={startGame}
+              >
+                <RoundButton
+                  variant="neutral"
+                  className="flex items-center gap-2 px-4"
+                  onClick={handleOpenSavedGames}
+                >
+                  <Download className="w-4 h-4" /> Tải
+                </RoundButton>
+              </LoadGameDialog>
+            </div>
+            
           </div>
         )}
       </div>
