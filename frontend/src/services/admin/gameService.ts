@@ -8,6 +8,7 @@ export interface Game {
   is_active: boolean;
   default_config: Record<string, any>;
   created_at: string;
+  rating?: number;
 }
 
 export interface GameFilters {

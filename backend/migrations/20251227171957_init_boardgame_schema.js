@@ -124,6 +124,23 @@ exports.up = async function (knex) {
     
     table.timestamps(true, true);
   });
+
+  // 8. BẢNG ĐÁNH GIÁ GAME (GAME_RATINGS)
+  await knex.schema.createTable("game_ratings", (table) => {
+    table.uuid("id").primary().defaultTo(knex.raw("gen_random_uuid()"));
+    
+    // Khóa ngoại
+    table.uuid("user_id").references("id").inTable("users").onDelete("CASCADE");
+    table.integer("game_id").references("id").inTable("games").onDelete("CASCADE");
+    
+    // Rating từ 1-5 sao
+    table.float("rating").notNullable().checkBetween([1, 5]);
+    
+    table.timestamps(true, true);
+
+    // Mỗi user chỉ đánh giá 1 game 1 lần duy nhất
+    table.unique(["user_id", "game_id"]);
+  });
 };
 
 /**
@@ -132,6 +149,7 @@ exports.up = async function (knex) {
  */
 exports.down = async function (knex) {
   // Xóa bảng theo thứ tự ngược lại để tránh lỗi khóa ngoại
+  await knex.schema.dropTableIfExists("game_ratings");
   await knex.schema.dropTableIfExists("comments");
   await knex.schema.dropTableIfExists("achievements");
   await knex.schema.dropTableIfExists("messages");

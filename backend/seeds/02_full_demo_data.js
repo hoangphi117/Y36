@@ -23,6 +23,11 @@ exports.seed = async function (knex) {
   const pick = (arr) => arr[randInt(0, arr.length - 1)];
   const chance = (p) => Math.random() < p;
 
+  const randFloat = (min, max) => {
+    const val = Math.random() * (max - min) + min;
+    return parseFloat(val.toFixed(1));
+  };
+
   // Ma trận 2D
   const matrix2D = (rows, cols, fill = 0) =>
     Array.from({ length: rows }, () =>
@@ -210,6 +215,7 @@ exports.seed = async function (knex) {
 
   const insertedGames = await knex("games").insert(gamesData).returning("*");
   const G = Object.fromEntries(insertedGames.map((g) => [g.code, g]));
+  const listGames = Object.values(G);
   console.log(`Đã add ${insertedGames.length} Games ༼ つ ◕_◕ ༽つ`);
 
   // =========================
@@ -557,6 +563,37 @@ exports.seed = async function (knex) {
 
   await knex("achievements").insert(achievements);
   console.log(`Đã add ${achievements.length} Achievements ༼ つ ◕_◕ ༽つ`);
+
+  // =========================
+  // 9) Game Ratings
+  // =========================
+  const ratings = [];
+
+  for (const user of customers) {
+    // Mỗi user chỉ rate ngẫu nhiên khoảng 2-5 game
+    const ratedGamesCount = randInt(2, 5);
+    
+    // Shuffle game list để lấy ngẫu nhiên không trùng lặp
+    const shuffledGames = [...listGames].sort(() => 0.5 - Math.random());
+    const gamesToRate = shuffledGames.slice(0, ratedGamesCount);
+
+    for (const game of gamesToRate) {
+      // Logic: 70% là rate cao (3-5), 30% là rate thấp (1-2)
+      const isGoodReview = chance(0.7); 
+      const rating = isGoodReview ? randFloat(3.5, 5.0) : randFloat(1.0, 3.0);
+
+      ratings.push({
+        user_id: user.id,
+        game_id: game.id,
+        rating: rating,
+        created_at: daysAgo(randInt(0, MAX_DAYS)),
+        updated_at: knex.fn.now()
+      });
+    }
+  }
+
+  await knex("game_ratings").insert(ratings);
+  console.log(`Đã add ${ratings.length} Game Ratings ༼ つ ◕_◕ ༽つ`);
 
   console.log("Seeding hoàn tất! Dữ liệu được random 90 ngày gần nhất! ☆*: .｡. o(≧▽≦)o .｡.:*☆");
 };

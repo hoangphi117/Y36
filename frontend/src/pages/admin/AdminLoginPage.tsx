@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
 import { useAdminLogin } from '@/hooks/admin/useAdminAuth';
 import { adminAuthService } from '@/services/admin/authService';
 import { useAdminTheme } from '@/hooks/admin/useAdminTheme';
@@ -74,22 +73,7 @@ export const AdminLoginPage = () => {
   };
 
   return (
-    <>
-      <Toaster 
-        position="top-center"
-        containerStyle={{
-          top: 20,
-          zIndex: 9999,
-        }}
-        toastOptions={{
-          style: {
-            background: 'transparent',
-            boxShadow: 'none',
-          },
-        }}
-      />
-      
-      <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
         {/* Animated Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-background via-primary/5 to-accent/10" />
         
@@ -297,6 +281,5 @@ export const AdminLoginPage = () => {
           </div>
         </motion.div>
       </div>
-    </>
   );
 };

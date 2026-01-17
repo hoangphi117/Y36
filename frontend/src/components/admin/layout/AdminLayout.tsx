@@ -1,4 +1,5 @@
 import { Outlet } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { AdminSidebar } from './AdminSidebar';
 import { AdminHeader } from './AdminHeader';
 import { useAdminTheme } from '@/hooks/admin/useAdminTheme';
@@ -36,6 +37,25 @@ export const AdminLayout = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Toast Container - Global cho toàn bộ Admin */}
+      <Toaster 
+        position="top-center"
+        reverseOrder={false}
+        gutter={8}
+        containerStyle={{
+          top: 20,
+          zIndex: 9999,
+        }}
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: 'transparent',
+            boxShadow: 'none',
+            padding: 0,
+          },
+        }}
+      />
+
       <AdminSidebar 
         collapsed={sidebarCollapsed} 
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
