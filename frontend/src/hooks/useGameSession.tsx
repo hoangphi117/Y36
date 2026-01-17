@@ -157,8 +157,14 @@ export function useGameSession({
 
         const res = await axiosClient.put(
           `/sessions/${sessionRef.current.id}/save`,
-          payload
+          payload,
         );
+
+        const updatedSession = res.data.session;
+
+        if (manual) {
+          updatedSession.status = "playing";
+        }
 
         setSession(res.data.session);
 
@@ -175,7 +181,7 @@ export function useGameSession({
         if (manual) setIsSaving(false);
       }
     },
-    [getBoardState, fetchSavedSessions, isPaused] // Thêm isPaused
+    [getBoardState, fetchSavedSessions, isPaused], // Thêm isPaused
   );
 
   const completeGame = useCallback(
@@ -192,7 +198,7 @@ export function useGameSession({
         console.error("Complete error", error);
       }
     },
-    [isPaused]
+    [isPaused],
   );
 
   useEffect(() => {

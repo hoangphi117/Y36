@@ -8,7 +8,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { RoundButton } from "@/components/ui/round-button";
-import { Calendar, Clock, Play, Plus, LogOut } from "lucide-react";
+import { Calendar, Clock, Play, Plus, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { type GameSession } from "@/types/game";
 import { useNavigate } from "react-router-dom";
@@ -72,7 +72,7 @@ export function LoadGameDialog({
                   variant="outline"
                   className={cn(
                     "flex justify-between items-center h-auto py-3 px-4",
-                    currentSessionId === s.id && "border-primary bg-primary/5"
+                    currentSessionId === s.id && "border-primary bg-primary/5",
                   )}
                   onClick={() => onLoadSession(s.id)}
                 >
@@ -102,7 +102,7 @@ export function LoadGameDialog({
             onClick={() => navigate("/")}
             className="flex-1 sm:flex-none gap-2"
           >
-            <LogOut className="w-4 h-4" /> Quay về Trang Chủ
+            <ArrowLeft className="w-4 h-4" /> Quay về Trang Chủ
           </RoundButton>
           <RoundButton
             size="small"

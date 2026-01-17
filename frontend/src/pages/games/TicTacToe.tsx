@@ -14,13 +14,15 @@ import {
   User,
   RefreshCcw,
   AlertTriangle,
+  HelpCircle,
+  X,
 } from "lucide-react";
 import { RoundButton } from "@/components/ui/round-button";
 import { cn } from "@/lib/utils";
 import { useGameSound } from "@/hooks/useGameSound";
 import { GameHeader } from "@/components/games/GameHeader";
 import useDocumentTitle from "@/hooks/useDocumentTitle";
-import { useGameSession } from "@/hooks/useGameSession";
+import { useGameSession } from "@/hooks/useGameSession"; // Hook đã có logic pause
 import { LoadGameDialog } from "./LoadGameDialog";
 
 import { getEasyMove, getMediumMove, getHardMove } from "@/lib/AI/tictactoeAI";
@@ -30,8 +32,11 @@ import {
 } from "@/components/dialogs/GameSettingsDialog";
 
 import { getTimeOptions } from "@/config/gameConfigs";
-
 import formatTime from "@/utils/formatTime";
+import { GameComments } from "@/components/comments/GameComments";
+import { GameRating } from "@/components/ratings/GameRating";
+
+import { GamePauseControl } from "@/components/games/GamePauseControl";
 
 const GAME_ID = 4;
 const WIN_LINES = [
@@ -59,8 +64,15 @@ export default function TicTacToe() {
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
   const [timeLimit, setTimeLimit] = useState<number>(0);
   const [isTimeOut, setIsTimeOut] = useState(false);
-  const ignoreConfigSyncRef = useRef(false);
 
+  const [isManualPaused, setIsManualPaused] = useState(false);
+
+  // State hiển thị hướng dẫn
+  const [showInstructions, setShowInstructions] = useState(false);
+
+  const isGamePaused = isManualPaused || showInstructions;
+
+  const ignoreConfigSyncRef = useRef(false);
   const squaresRef = useRef(squares);
   const xIsNextRef = useRef(xIsNext);
 
@@ -75,9 +87,11 @@ export default function TicTacToe() {
     winner: calculateWinner(squaresRef.current),
   });
 
+  // [QUAN TRỌNG] Truyền showInstructions vào prop isPaused
+  // Hook sẽ tự động dừng đồng hồ và xử lý bù giờ khi tắt hướng dẫn
   const {
     session,
-    currentPlayTime,
+    currentPlayTime, // Giá trị này sẽ tự động đứng yên khi isPaused = true
     savedSessions,
     isLoading,
     isSaving,
@@ -90,14 +104,18 @@ export default function TicTacToe() {
     quitGame,
     fetchSavedSessions,
     resetTimer,
-  } = useGameSession({ gameId: GAME_ID, getBoardState });
+  } = useGameSession({
+    gameId: GAME_ID,
+    getBoardState,
+    isPaused: showInstructions || isManualPaused, // <--- KẾT NỐI VÀO ĐÂY
+  });
 
   const timeOptions = getTimeOptions(GAME_ID);
-
   const { playSound: originalPlaySound } = useGameSound();
   const playSound = (type: string) =>
     soundEnabled && originalPlaySound(type as any);
 
+  // Load Session Logic
   useEffect(() => {
     if (session) {
       if (session.board_state) {
@@ -122,7 +140,9 @@ export default function TicTacToe() {
   const winner = calculateWinner(squares);
   const isDraw = !winner && squares.every((square) => square !== null);
 
+  // Check Time Out
   useEffect(() => {
+    // Không cần check showInstructions ở đây nữa vì currentPlayTime đã tự dừng
     if (
       timeLimit > 0 &&
       session?.status === "playing" &&
@@ -135,15 +155,25 @@ export default function TicTacToe() {
       playSound("lose");
       completeGame(-1);
     }
-  }, [currentPlayTime, timeLimit, session?.status, winner, isDraw, isTimeOut]);
+  }, [
+    currentPlayTime,
+    timeLimit,
+    session?.status,
+    winner,
+    isDraw,
+    isTimeOut,
+    // showInstructions (Không cần thiết phải có trong dependency vì hook đã lo)
+  ]);
 
+  // Logic Bot
   useEffect(() => {
     if (
       !session ||
       session.status !== "playing" ||
       winner ||
       isDraw ||
-      isTimeOut
+      isTimeOut ||
+      isGamePaused // Vẫn giữ check này để Bot không tính toán ngầm
     )
       return;
 
@@ -178,10 +208,12 @@ export default function TicTacToe() {
     isDraw,
     isTimeOut,
     difficulty,
+    showInstructions, // Khi tắt hướng dẫn, effect chạy lại -> Bot tính toán lại -> OK
   ]);
 
+  // Xử lý kết thúc game
   useEffect(() => {
-    if (session?.status === "playing" && !isTimeOut) {
+    if (session?.status === "playing" && !isTimeOut && !showInstructions) {
       if (winner) {
         if (winner === userSymbol) {
           playSound("win");
@@ -195,7 +227,14 @@ export default function TicTacToe() {
         completeGame(0);
       }
     }
-  }, [winner, isDraw, session?.status, userSymbol, isTimeOut]);
+  }, [
+    winner,
+    isDraw,
+    session?.status,
+    userSymbol,
+    isTimeOut,
+    showInstructions,
+  ]);
 
   const handleMove = (i: number) => {
     if (
@@ -203,7 +242,8 @@ export default function TicTacToe() {
       winner ||
       isDraw ||
       isTimeOut ||
-      session?.status !== "playing"
+      session?.status !== "playing" ||
+      showInstructions // Chặn đánh cờ khi đang xem hướng dẫn
     )
       return;
 
@@ -216,6 +256,9 @@ export default function TicTacToe() {
   };
 
   const handleUserClick = (i: number) => {
+    if (isGamePaused || winner || isDraw || isTimeOut) return;
+    if (showInstructions) return;
+
     const isBotTurn =
       (xIsNext && userSymbol === "O") || (!xIsNext && userSymbol === "X");
     if (isBotTurn) return;
@@ -241,10 +284,9 @@ export default function TicTacToe() {
     setXIsNext(true);
     setUserSymbol("X");
     setIsTimeOut(false);
+    setShowInstructions(false);
     resetTimer();
-
     ignoreConfigSyncRef.current = true;
-
     await startGame();
   };
 
@@ -255,11 +297,10 @@ export default function TicTacToe() {
 
   const handleSaveSettings = (
     newDifficulty: Difficulty,
-    newTimeLimit: number
+    newTimeLimit: number,
   ) => {
     setDifficulty(newDifficulty);
     setTimeLimit(newTimeLimit);
-
     handleRestart();
   };
 
@@ -292,232 +333,322 @@ export default function TicTacToe() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] p-4">
-      <GameHeader />
+    <>
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] p-4 relative">
+        <GameHeader />
 
-      {/* Control Bar (Save/Load) */}
-      <div className="flex flex-wrap justify-center gap-4 mb-4">
-        <RoundButton
-          onClick={handleManualSave}
-          disabled={
-            isSaving ||
-            !!winner ||
-            !!isDraw ||
-            isTimeOut ||
-            session?.status !== "playing"
-          }
-          variant="primary"
-          className="flex items-center gap-2 px-6"
-        >
-          {isSaving ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Upload className="w-4 h-4" />
-          )}
-          Lưu Game
-        </RoundButton>
-        <LoadGameDialog
-          open={showLoadDialog}
-          onOpenChange={setShowLoadDialog}
-          sessions={savedSessions}
-          currentSessionId={session?.id}
-          onLoadSession={loadGame}
-          onNewGame={handleStandardNewGame}
-        >
+        {/* Control Bar */}
+        <div className="flex flex-wrap justify-center gap-4 mb-4 z-20">
           <RoundButton
-            variant="neutral"
-            className="flex items-center gap-2 px-4"
-            onClick={handleOpenSavedGames}
+            onClick={handleManualSave}
+            disabled={
+              isSaving ||
+              !!winner ||
+              !!isDraw ||
+              isTimeOut ||
+              session?.status !== "playing" ||
+              showInstructions
+            }
+            variant="primary"
+            className="flex items-center gap-2 px-6"
           >
-            <Download className="w-4 h-4" /> Tải
+            {isSaving ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Upload className="w-4 h-4" />
+            )}
+            Lưu Game
           </RoundButton>
-        </LoadGameDialog>
-      </div>
+          <LoadGameDialog
+            open={showLoadDialog}
+            onOpenChange={setShowLoadDialog}
+            sessions={savedSessions}
+            currentSessionId={session?.id}
+            onLoadSession={loadGame}
+            onNewGame={handleStandardNewGame}
+          >
+            <RoundButton
+              variant="neutral"
+              className="flex items-center gap-2 px-4"
+              onClick={handleOpenSavedGames}
+              disabled={showInstructions}
+            >
+              <Download className="w-4 h-4" /> Tải
+            </RoundButton>
+          </LoadGameDialog>
+        </div>
 
-      {/* Info & Switch Side & Settings */}
-      <div className="flex items-center gap-4 mb-4">
-        {/* Đồng hồ */}
-        <div
-          className={cn(
-            "font-mono text-lg font-bold flex items-center gap-2 px-4 py-1.5 rounded-full border transition-colors",
-            timeLimit > 0 && currentPlayTime > timeLimit * 0.8
-              ? "bg-red-100 text-red-600 border-red-300 animate-pulse"
-              : "bg-primary/10 text-primary border-primary/20"
+        {/* Info & Settings & Help */}
+        <div className="flex items-center gap-4 mb-4 z-20">
+          <div
+            className={cn(
+              "font-mono text-lg font-bold flex items-center gap-2 px-4 py-1.5 rounded-full border transition-colors",
+              timeLimit > 0 && currentPlayTime > timeLimit * 0.8
+                ? "bg-red-100 text-red-600 border-red-300 animate-pulse"
+                : "bg-primary/10 text-primary border-primary/20",
+            )}
+          >
+            {/* Sử dụng trực tiếp currentPlayTime vì nó đã tự động pause */}
+            <Clock className="w-4 h-4" />
+            {formatTime(currentPlayTime)}
+            {timeLimit > 0 && (
+              <span className="text-xs opacity-70">
+                / {formatTime(timeLimit)}
+              </span>
+            )}
+          </div>
+
+          {!winner && !isDraw && !isTimeOut && (
+            <GameSettingsDialog
+              currentDifficulty={difficulty}
+              currentTimeLimit={timeLimit}
+              onSave={handleSaveSettings}
+              timeOptions={timeOptions}
+              disabled={session?.status !== "playing" || showInstructions}
+            />
           )}
-        >
-          <Clock className="w-4 h-4" />
-          {formatTime(currentPlayTime)}
-          {timeLimit > 0 && (
-            <span className="text-xs opacity-70">
-              / {formatTime(timeLimit)}
-            </span>
+
+          <div className="flex justify-center my-6">
+            <GamePauseControl
+              isPaused={isManualPaused}
+              onTogglePause={() => setIsManualPaused(!isManualPaused)}
+              onQuit={quitGame}
+              gameName="Tic Tac Toe"
+            />
+          </div>
+
+          {/* Nút Hướng Dẫn */}
+          <RoundButton
+            size="small"
+            variant="neutral"
+            onClick={() => setShowInstructions(true)}
+            title="Hướng dẫn"
+            disabled={!!winner || !!isDraw || isTimeOut}
+          >
+            <HelpCircle className="w-5 h-5" />
+          </RoundButton>
+
+          {canSwitchSide && !showInstructions && (
+            <div className="flex items-center bg-muted rounded-full p-1 border border-border">
+              <button
+                onClick={() => handleSwitchSide("X")}
+                className={cn(
+                  "flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold transition-all",
+                  userSymbol === "X"
+                    ? "bg-white text-primary shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <User className="w-3 h-3" />
+              </button>
+              <button
+                onClick={() => handleSwitchSide("O")}
+                className={cn(
+                  "flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold transition-all",
+                  userSymbol === "O"
+                    ? "bg-white text-primary shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <Bot className="w-3 h-3" />
+              </button>
+            </div>
           )}
         </div>
 
-        {/* Nút Setting (Chỉ hiện khi chưa hết giờ/thắng thua) */}
-        {!winner && !isDraw && !isTimeOut && (
-          <GameSettingsDialog
-            currentDifficulty={difficulty}
-            currentTimeLimit={timeLimit}
-            onSave={handleSaveSettings}
-            timeOptions={timeOptions}
-            disabled={session?.status !== "playing"}
-          />
-        )}
-
-        {/* Nút đổi quân */}
-        {canSwitchSide && (
-          <div className="flex items-center bg-muted rounded-full p-1 border border-border">
-            <button
-              onClick={() => handleSwitchSide("X")}
-              className={cn(
-                "flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold transition-all",
-                userSymbol === "X"
-                  ? "bg-white text-primary shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <User className="w-3 h-3" />
-            </button>
-            <button
-              onClick={() => handleSwitchSide("O")}
-              className={cn(
-                "flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold transition-all",
-                userSymbol === "O"
-                  ? "bg-white text-primary shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <Bot className="w-3 h-3" />
-            </button>
+        {!winner && !isDraw && !isTimeOut && !showInstructions && (
+          <div className="mb-2 text-sm text-muted-foreground animate-pulse">
+            {(xIsNext && userSymbol === "X") || (!xIsNext && userSymbol === "O")
+              ? "Lượt của bạn..."
+              : `Máy (${difficulty}) đang nghĩ...`}
           </div>
         )}
-      </div>
 
-      {!winner && !isDraw && !isTimeOut && (
-        <div className="mb-2 text-sm text-muted-foreground animate-pulse">
-          {(xIsNext && userSymbol === "X") || (!xIsNext && userSymbol === "O")
-            ? "Lượt của bạn..."
-            : `Máy (${difficulty}) đang nghĩ...`}
-        </div>
-      )}
-
-      {/* Board Area */}
-      <div className="relative">
-        <div className="grid grid-cols-3 gap-2 bg-muted p-3 rounded-2xl shadow-inner border-2 border-border/50">
-          {squares.map((square, i) => (
-            <motion.button
-              key={i}
-              whileHover={{ scale: 0.98 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => handleUserClick(i)}
-              disabled={
-                !!square ||
-                !!winner ||
-                !!isDraw ||
-                isTimeOut ||
-                session?.status !== "playing"
-              }
-              className={cn(
-                "w-20 h-20 md:w-24 md:h-24 bg-surface rounded-xl text-5xl font-extrabold flex items-center justify-center shadow-sm border border-border/20 transition-colors",
-                square === "X" && "text-red-500 bg-red-50 dark:bg-red-950/20",
-                square === "O" &&
-                  "text-blue-500 bg-blue-50 dark:bg-blue-950/20",
-                !square &&
-                  !winner &&
-                  !isTimeOut &&
-                  "hover:bg-accent/10 cursor-pointer"
-              )}
-            >
-              <AnimatePresence>
-                {square === "X" && (
-                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
-                    X
-                  </motion.div>
+        {/* Board Area */}
+        <div className="relative z-10">
+          <div className="grid grid-cols-3 gap-2 bg-muted p-3 rounded-2xl shadow-inner border-2 border-border/50">
+            {squares.map((square, i) => (
+              <motion.button
+                key={i}
+                whileHover={{ scale: 0.98 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => handleUserClick(i)}
+                disabled={
+                  !!square ||
+                  !!winner ||
+                  !!isDraw ||
+                  isTimeOut ||
+                  session?.status !== "playing" ||
+                  showInstructions
+                }
+                className={cn(
+                  "w-20 h-20 md:w-24 md:h-24 bg-surface rounded-xl text-5xl font-extrabold flex items-center justify-center shadow-sm border border-border/20 transition-colors",
+                  square === "X" && "text-red-500 bg-red-50 dark:bg-red-950/20",
+                  square === "O" &&
+                    "text-blue-500 bg-blue-50 dark:bg-blue-950/20",
+                  !square &&
+                    !winner &&
+                    !isTimeOut &&
+                    !showInstructions &&
+                    "hover:bg-accent/10 cursor-pointer",
                 )}
-                {square === "O" && (
-                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
-                    O
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.button>
-          ))}
-        </div>
-
-        {/* End Game Overlay */}
-        <AnimatePresence>
-          {(winner || isDraw || isTimeOut) && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 z-10 flex items-center justify-center bg-background/60 backdrop-blur-sm rounded-2xl"
-            >
-              <motion.div
-                initial={{ scale: 0.8, y: 20 }}
-                animate={{ scale: 1, y: 0 }}
-                className="bg-card border-2 border-primary/20 p-6 rounded-2xl shadow-2xl text-center space-y-4 w-[90%]"
               >
-                {isTimeOut ? (
-                  <>
-                    <AlertTriangle className="w-16 h-16 text-destructive mx-auto animate-bounce" />
-                    <h2 className="text-2xl font-bold">Hết giờ!</h2>
-                    <p className="text-sm text-muted-foreground">-1 Điểm</p>
-                  </>
-                ) : winner ? (
-                  <>
-                    <Trophy className="w-16 h-16 text-yellow-500 mx-auto animate-bounce" />
-                    <h2 className="text-2xl font-bold">
-                      {winner === userSymbol ? "Bạn Thắng!" : "Bạn Thua!"}
-                    </h2>
-                    <p className="text-sm text-muted-foreground">
-                      {winner === userSymbol ? "+1 Điểm" : "-1 Điểm"}
+                <AnimatePresence>
+                  {square === "X" && (
+                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                      X
+                    </motion.div>
+                  )}
+                  {square === "O" && (
+                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                      O
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.button>
+            ))}
+          </div>
+
+          {/* Modal Hướng Dẫn */}
+          <AnimatePresence>
+            {showInstructions && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm rounded-2xl p-4"
+              >
+                <motion.div
+                  initial={{ scale: 0.8, y: 10 }}
+                  animate={{ scale: 1, y: 0 }}
+                  exit={{ scale: 0.8, opacity: 0 }}
+                  className="bg-card border-2 border-primary/20 p-6 rounded-2xl shadow-2xl w-full max-w-[320px] relative"
+                >
+                  <button
+                    onClick={() => setShowInstructions(false)}
+                    className="absolute top-2 right-2 p-1 rounded-full hover:bg-muted transition-colors"
+                  >
+                    <X className="w-5 h-5 text-muted-foreground" />
+                  </button>
+
+                  <div className="text-center mb-4">
+                    <h3 className="text-xl font-bold text-primary flex items-center justify-center gap-2">
+                      <HelpCircle className="w-6 h-6" /> Hướng dẫn
+                    </h3>
+                  </div>
+
+                  <div className="space-y-3 text-sm text-left text-foreground/90">
+                    <p>
+                      <span className="font-bold text-primary">Mục tiêu:</span>{" "}
+                      Tạo ra một hàng gồm 3 ký hiệu của bạn (Ngang, Dọc, hoặc
+                      Chéo).
                     </p>
-                  </>
-                ) : (
-                  <>
-                    <Minus className="w-16 h-16 text-muted-foreground mx-auto" />
-                    <h2 className="text-2xl font-bold">Hòa!</h2>
-                    <p className="text-sm text-muted-foreground">+0 Điểm</p>
-                  </>
-                )}
+                    <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                      <li>Bạn và Máy sẽ lần lượt đánh vào các ô trống.</li>
+                      <li>Người đi trước thường là X.</li>
+                      <li>
+                        Trò chơi kết thúc khi có người thắng hoặc bàn cờ đầy
+                        (Hòa).
+                      </li>
+                    </ul>
+                    <div className="p-2 bg-muted/50 rounded-lg text-xs italic text-center mt-2 border border-border">
+                      Game đang tạm dừng...
+                    </div>
+                  </div>
 
-                <div className="flex gap-2 justify-center pt-2">
-                  <RoundButton variant="neutral" onClick={quitGame}>
-                    Thoát
-                  </RoundButton>
-                  <RoundButton variant="primary" onClick={handleRestart}>
-                    <RefreshCcw className="w-4 h-4 mr-1" /> Chơi lại
-                  </RoundButton>
-                </div>
+                  <div className="mt-6 flex justify-center">
+                    <RoundButton
+                      onClick={() => setShowInstructions(false)}
+                      variant="primary"
+                      className="w-full"
+                    >
+                      Đã hiểu & Tiếp tục
+                    </RoundButton>
+                  </div>
+                </motion.div>
               </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            )}
+          </AnimatePresence>
+
+          {/* End Game Overlay */}
+          <AnimatePresence>
+            {(winner || isDraw || isTimeOut) && !showInstructions && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 z-10 flex items-center justify-center bg-background/60 backdrop-blur-sm rounded-2xl"
+              >
+                <motion.div
+                  initial={{ scale: 0.8, y: 20 }}
+                  animate={{ scale: 1, y: 0 }}
+                  className="bg-card border-2 border-primary/20 p-6 rounded-2xl shadow-2xl text-center space-y-4 w-[90%]"
+                >
+                  {isTimeOut ? (
+                    <>
+                      <AlertTriangle className="w-16 h-16 text-destructive mx-auto animate-bounce" />
+                      <h2 className="text-2xl font-bold">Hết giờ!</h2>
+                      <p className="text-sm text-muted-foreground">-1 Điểm</p>
+                    </>
+                  ) : winner ? (
+                    <>
+                      <Trophy className="w-16 h-16 text-yellow-500 mx-auto animate-bounce" />
+                      <h2 className="text-2xl font-bold">
+                        {winner === userSymbol ? "Bạn Thắng!" : "Bạn Thua!"}
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        {winner === userSymbol ? "+1 Điểm" : "-1 Điểm"}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <Minus className="w-16 h-16 text-muted-foreground mx-auto" />
+                      <h2 className="text-2xl font-bold">Hòa!</h2>
+                      <p className="text-sm text-muted-foreground">+0 Điểm</p>
+                    </>
+                  )}
+
+                  <div className="flex gap-2 justify-center pt-2">
+                    <RoundButton variant="neutral" onClick={quitGame}>
+                      Thoát
+                    </RoundButton>
+                    <RoundButton variant="primary" onClick={handleRestart}>
+                      <RefreshCcw className="w-4 h-4 mr-1" /> Chơi lại
+                    </RoundButton>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        <div className="flex gap-4 mt-8 z-20">
+          <RoundButton
+            size="small"
+            variant="neutral"
+            onClick={() => setSoundEnabled(!soundEnabled)}
+          >
+            {soundEnabled ? (
+              <Volume2 className="w-5 h-5" />
+            ) : (
+              <VolumeX className="w-5 h-5" />
+            )}
+          </RoundButton>
+          <RoundButton
+            size="small"
+            variant="neutral"
+            onClick={quitGame}
+            title="Thoát Game"
+          >
+            <LogOut className="w-5 h-5" />
+          </RoundButton>
+        </div>
       </div>
 
-      <div className="flex gap-4 mt-8">
-        <RoundButton
-          size="small"
-          variant="neutral"
-          onClick={() => setSoundEnabled(!soundEnabled)}
-        >
-          {soundEnabled ? (
-            <Volume2 className="w-5 h-5" />
-          ) : (
-            <VolumeX className="w-5 h-5" />
-          )}
-        </RoundButton>
-        <RoundButton
-          size="small"
-          variant="neutral"
-          onClick={quitGame}
-          title="Thoát Game"
-        >
-          <LogOut className="w-5 h-5" />
-        </RoundButton>
+      <div className="flex flex-col items-center justify-center">
+        <GameRating gameId={GAME_ID} />
+        <GameComments gameId={GAME_ID} />
       </div>
-    </div>
+    </>
   );
 }
