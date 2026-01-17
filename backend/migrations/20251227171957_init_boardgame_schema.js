@@ -112,6 +112,18 @@ exports.up = async function (knex) {
     // (Tránh spam insert cùng 1 thành tựu cho 1 user)
     table.unique(["user_id", "game_id", "code"]);
   });
+
+  // 7. BẢNG COMMENTS
+  await knex.schema.createTable('comments', (table) => {
+    table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
+    
+    table.uuid('user_id').references('id').inTable('users').onDelete('CASCADE');
+    table.integer('game_id').references('id').inTable('games').onDelete('CASCADE');
+    
+    table.text('content').notNullable();
+    
+    table.timestamps(true, true);
+  });
 };
 
 /**
@@ -120,6 +132,7 @@ exports.up = async function (knex) {
  */
 exports.down = async function (knex) {
   // Xóa bảng theo thứ tự ngược lại để tránh lỗi khóa ngoại
+  await knex.schema.dropTableIfExists("comments");
   await knex.schema.dropTableIfExists("achievements");
   await knex.schema.dropTableIfExists("messages");
   await knex.schema.dropTableIfExists("friendships");

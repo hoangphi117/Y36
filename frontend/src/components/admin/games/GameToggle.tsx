@@ -13,7 +13,7 @@ export const GameToggle = ({ isActive, onToggle, disabled }: GameToggleProps) =>
       onClick={onToggle}
       disabled={disabled}
       className={cn(
-        'relative inline-flex h-7 w-14 items-center rounded-full transition-all duration-300',
+        'relative inline-flex h-7 w-14 items-center rounded-full transition-all duration-300 cursor-pointer',
         'focus:outline-none focus:ring-2 focus:ring-offset-2',
         'disabled:opacity-50 disabled:cursor-not-allowed',
         isActive

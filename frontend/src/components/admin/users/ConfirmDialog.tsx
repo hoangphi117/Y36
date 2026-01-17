@@ -84,7 +84,7 @@ export const ConfirmDialog = ({ isOpen, title, message, type, onConfirm, onCance
                     whileTap={{ scale: 0.9 }}
                     onClick={onCancel}
                     disabled={isLoading}
-                    className="p-2 rounded-lg transition-all duration-200 hover:bg-muted/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="p-2 rounded-lg transition-all duration-200 hover:bg-muted/50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   >
                     <X className="w-5 h-5 text-muted-foreground" />
                   </motion.button>
@@ -107,7 +107,7 @@ export const ConfirmDialog = ({ isOpen, title, message, type, onConfirm, onCance
                     whileTap={{ scale: 0.98 }}
                     onClick={onCancel}
                     disabled={isLoading}
-                    className="px-5 py-2.5 text-sm font-bold rounded-xl border border-border hover:bg-muted transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-5 py-2.5 text-sm font-bold rounded-xl border border-border hover:bg-muted transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   >
                     Hủy
                   </motion.button>
@@ -121,7 +121,7 @@ export const ConfirmDialog = ({ isOpen, title, message, type, onConfirm, onCance
                         ? 'bg-destructive hover:bg-destructive/90' 
                         : 'bg-accent hover:bg-accent/90'
                       }
-                      ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}
+                      ${isLoading ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}
                     `}
                   >
                     {/* Loading spinner */}
