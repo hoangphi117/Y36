@@ -5,7 +5,7 @@ class GameSessionController {
   async startSession(req, res) {
     try {
       const userId = req.user.id;
-      const { gameId,session_config } = req.body;
+      const { gameId, session_config } = req.body;
 
       if (!gameId) {
         return res.status(400).json({ message: "Game ID is required" });
@@ -18,7 +18,7 @@ class GameSessionController {
 
       const existingSession = await GameSession.findActiveSession(
         userId,
-        game.id
+        game.id,
       );
       if (existingSession) {
         return res.status(200).json({
@@ -27,11 +27,16 @@ class GameSessionController {
         });
       }
 
+      const finalSessionConfig =
+        session_config !== undefined
+          ? session_config
+          : (game.default_config ?? null);
+
       const [session] = await GameSession.createSession({
         user_id: userId,
         game_id: game.id,
         board_state: null,
-        session_config: session_config || game.default_config,
+        session_config: finalSessionConfig,
         status: "playing",
       });
 
@@ -211,7 +216,7 @@ class GameSessionController {
       const countResult = await GameSession.countHistoryByUser(
         userId,
         gameId,
-        status
+        status,
       );
       const total = countResult?.total || 0;
 
