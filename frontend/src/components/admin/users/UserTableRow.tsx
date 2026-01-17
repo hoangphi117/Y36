@@ -86,10 +86,10 @@ export const UserTableRow = ({ user, index, onUpdateStatus, onDelete, isProcessi
               onBlur={() => setTimeout(() => setShowMenu(false), 200)}
               className={cn(
                 'p-2 rounded-lg transition-all duration-200',
-                'hover:bg-primary/10 hover:shadow-[0_0_15px_rgba(6,182,212,0.3)]'
+                'hover:bg-primary/10 hover:shadow-[0_0_15px_rgba(6,182,212,0.3)] cursor-pointer'
               )}
             >
-              <MoreVertical className="w-4 h-4 text-muted-foreground group-hover:text-cyan-400" />
+              <MoreVertical className="w-4 h-4 text-muted-foreground group-hover:text-cyan-400 cursor-pointer" />
             </motion.button>
 
             {showMenu && (
@@ -104,10 +104,10 @@ export const UserTableRow = ({ user, index, onUpdateStatus, onDelete, isProcessi
                     className={cn(
                       'w-full flex items-center gap-3 px-4 py-3 text-sm font-mono',
                       'text-red-400 hover:bg-red-500/20 hover:text-red-300',
-                      'transition-all duration-150'
+                      'transition-all duration-150 cursor-pointer'
                     )}
                   >
-                    <Ban className="w-4 h-4" />
+                    <Ban className="w-4 h-4 cursor-pointer" />
                     Khóa tài khoản
                   </button>
                 ) : (
@@ -116,10 +116,10 @@ export const UserTableRow = ({ user, index, onUpdateStatus, onDelete, isProcessi
                     className={cn(
                       'w-full flex items-center gap-3 px-4 py-3 text-sm font-mono',
                       'text-green-400 hover:bg-green-500/20 hover:text-green-300',
-                      'transition-all duration-150'
+                      'transition-all duration-150 cursor-pointer'
                     )}
                   >
-                    <CheckCircle className="w-4 h-4" />
+                    <CheckCircle className="w-4 h-4 cursor-pointer" />
                     Mở khóa tài khoản
                   </button>
                 )}
@@ -129,10 +129,10 @@ export const UserTableRow = ({ user, index, onUpdateStatus, onDelete, isProcessi
                   className={cn(
                     'w-full flex items-center gap-3 px-4 py-3 text-sm font-mono',
                     'text-red-400 hover:bg-red-500/20 hover:text-red-300',
-                    'border-t border-border/30 transition-all duration-150'
+                    'border-t border-border/30 transition-all duration-150 cursor-pointer'
                   )}
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4 cursor-pointer" />
                   Xóa vĩnh viễn
                 </button>
               </motion.div>

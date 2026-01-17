@@ -181,7 +181,7 @@ export const GameConfigForm = ({ game, onSubmit, onCancel }: GameConfigFormProps
           whileTap={{ scale: 0.98 }}
           type="button"
           onClick={onCancel}
-          className="admin-btn-secondary flex-1"
+          className="admin-btn-secondary flex-1 cursor-pointer"
         >
           Hủy bỏ
         </motion.button>
@@ -189,7 +189,7 @@ export const GameConfigForm = ({ game, onSubmit, onCancel }: GameConfigFormProps
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           type="submit"
-          className="admin-btn-primary flex-1"
+          className="admin-btn-primary flex-1 cursor-pointer"
         >
           Lưu thay đổi
         </motion.button>

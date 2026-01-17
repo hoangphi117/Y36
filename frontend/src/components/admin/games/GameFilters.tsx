@@ -71,7 +71,7 @@ export const GameFilters = ({ filters, onChange }: GameFiltersProps) => {
             onChange('is_active', undefined);
             onChange('sort', '-created_at');
           }}
-          className="admin-btn-secondary"
+          className="admin-btn-secondary bg-destructive/40 text-destructive hover:bg-destructive/60 cursor-pointer"
         >
           Xóa bộ lọc
         </motion.button>

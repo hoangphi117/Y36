@@ -55,7 +55,7 @@ export const ExportButton = ({ onExportCSV, onExportJSON, disabled }: ExportButt
         onClick={handleToggle}
         disabled={disabled}
         className={cn(
-          'flex items-center gap-2 px-4 py-2.5 rounded-lg font-mono text-sm transition-all',
+          'flex items-center gap-2 px-4 py-2.5 rounded-lg font-mono text-sm transition-all cursor-pointer',
           'bg-accent/20 border border-accent/40 text-accent',
           'hover:bg-accent/30 hover:border-accent/60',
           'disabled:opacity-50 disabled:cursor-not-allowed'
@@ -84,7 +84,7 @@ export const ExportButton = ({ onExportCSV, onExportJSON, disabled }: ExportButt
           <button
             onClick={() => handleExport(onExportCSV)}
             className={cn(
-              'w-full flex items-center gap-3 px-4 py-2.5',
+              'w-full flex items-center gap-3 px-4 py-2.5 cursor-pointer',
               'text-left font-mono text-sm text-foreground',
               'hover:bg-muted transition-colors duration-150'
             )}
@@ -96,7 +96,7 @@ export const ExportButton = ({ onExportCSV, onExportJSON, disabled }: ExportButt
           <button
             onClick={() => handleExport(onExportJSON)}
             className={cn(
-              'w-full flex items-center gap-3 px-4 py-2.5',
+              'w-full flex items-center gap-3 px-4 py-2.5 cursor-pointer',
               'text-left font-mono text-sm text-foreground',
               'hover:bg-muted transition-colors duration-150'
             )}

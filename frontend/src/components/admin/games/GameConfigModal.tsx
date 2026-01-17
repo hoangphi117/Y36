@@ -74,7 +74,7 @@ export const GameConfigModal = ({ game, isOpen, onClose, onSubmit }: GameConfigM
                   }}
                   whileTap={{ scale: 0.9 }}
                   onClick={onClose}
-                  className="relative p-2.5 rounded-xl transition-all duration-200 border border-border/50 hover:border-destructive/50 group"
+                  className="relative p-2.5 rounded-xl transition-all duration-200 border border-border/50 hover:border-destructive/50 group cursor-pointer"
                 >
                   <X className="w-5 h-5 text-muted-foreground group-hover:text-destructive transition-colors" />
 

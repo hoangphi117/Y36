@@ -107,7 +107,7 @@ export const GameCard = ({ game, onToggle, onEdit, isUpdating }: GameCardProps) 
             'hover:bg-primary/10'
           )}
         >
-          <Settings className="w-5 h-5 text-muted-foreground hover:text-primary transition-colors" />
+          <Settings className="w-5 h-5 text-muted-foreground hover:text-primary transition-colors cursor-pointer" />
         </motion.button>
       </div>
     </motion.div>
