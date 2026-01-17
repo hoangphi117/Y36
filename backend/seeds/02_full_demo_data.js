@@ -166,7 +166,9 @@ exports.seed = async function (knex) {
   // =========================
   // 1) Xóa dữ liệu cũ
   // =========================
-  await knex("comments").del(); // Xóa bảng comments
+  await knex("user_game_stats").del();
+  await knex("game_ratings").del();
+  await knex("comments").del();
   await knex("achievements").del();
   await knex("messages").del();
   await knex("friendships").del();
@@ -594,6 +596,73 @@ exports.seed = async function (knex) {
 
   await knex("game_ratings").insert(ratings);
   console.log(`Đã add ${ratings.length} Game Ratings ༼ つ ◕_◕ ༽つ`);
+
+  // =========================
+  // 10) USER GAME STATS
+  // =========================
+  // Tính toán thống kê dựa trên lịch sử sessions vừa tạo để dữ liệu khớp nhau
+  const statsMap = new Map(); // Key: "user_id|game_id"
+
+  for (const s of sessions) {
+    // Chỉ thống kê các ván đã hoàn thành
+    if (s.status !== 'completed') continue;
+
+    const key = `${s.user_id}|${s.game_id}`;
+
+    if (!statsMap.has(key)) {
+      statsMap.set(key, {
+        user_id: s.user_id,
+        game_id: s.game_id,
+        high_score: 0,
+        rank_points: 0, // Mặc định 0
+        total_matches: 0,
+        total_wins: 0,
+        last_updated_at: s.started_at // Lấy tạm ngày bắt đầu của ván đầu tiên tìm thấy
+      });
+    }
+
+    const stat = statsMap.get(key);
+
+    // Tăng tổng số trận
+    stat.total_matches += 1;
+
+    // Cập nhật High Score (Logic cho mọi game)
+    if (s.score > stat.high_score) {
+      stat.high_score = s.score;
+    }
+
+    // Cập nhật ngày chơi gần nhất
+    const sessionTime = new Date(s.started_at).getTime();
+    const statTime = new Date(stat.last_updated_at).getTime();
+    if (sessionTime > statTime) {
+      stat.last_updated_at = s.started_at;
+    }
+
+    // Giả lập Thắng/Thua và Rank Points
+    // Game đối kháng (Caro, TTT) thì quan trọng Rank Points
+    // Game điểm số (Snake, Match3) thì quan trọng High Score
+    
+    const isWin = chance(0.55); // Giả sử tỷ lệ thắng trung bình là 55%
+    
+    if (isWin) {
+      stat.total_wins += 1;
+      stat.rank_points += randInt(15, 30); // Thắng cộng điểm
+    } else {
+      // Thua trừ điểm
+      stat.rank_points -= randInt(5, 15);
+    }
+  }
+
+  // Chuyển Map thành Mảng để insert
+  const statsList = Array.from(statsMap.values());
+
+  // Insert theo batch để an toàn
+  const statsChunkSize = 100;
+  for (let i = 0; i < statsList.length; i += statsChunkSize) {
+    await knex("user_game_stats").insert(statsList.slice(i, i + statsChunkSize));
+  }
+
+  console.log(`Đã tính toán và add ${statsList.length} User Stats từ lịch sử đấu ༼ つ ◕_◕ ༽つ`);
 
   console.log("Seeding hoàn tất! Dữ liệu được random 90 ngày gần nhất! ☆*: .｡. o(≧▽≦)o .｡.:*☆");
 };
