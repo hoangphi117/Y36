@@ -93,7 +93,7 @@ export default function Match3Game() {
   }, [board, boardSize, score, gameMode, targetMatches, matchesCount, timeRemaining]);
 
   // Tích hợp useGameSession (chỉ dùng để load saved sessions, không auto-start)
-  const gameSession = useGameSession({ gameId: 5, getBoardState });
+  const gameSession = useGameSession({ gameId: 5, getBoardState,  });
 
   // Hàm tạo random board (đảm bảo không có matches ban đầu)
   const createRandomBoard = useCallback((size: number, candyTypes: number): string[] => {

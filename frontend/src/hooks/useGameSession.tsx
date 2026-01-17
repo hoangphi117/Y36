@@ -102,10 +102,17 @@ export function useGameSession({
     }
   }, [gameId]);
 
-  const startGame = useCallback(async () => {
+  const startGame = useCallback(async (sessionConfig?: any) => {
     try {
       setIsLoading(true);
-      const res = await axiosClient.post("/sessions/start", { gameId });
+      const payload: any = { gameId };
+      
+      // Nếu có sessionConfig truyền vào, thêm vào payload
+      if (sessionConfig) {
+        payload.session_config = sessionConfig;
+      }
+      
+      const res = await axiosClient.post("/sessions/start", payload);
       const newSession = res.data.session;
 
       setSession(newSession);
