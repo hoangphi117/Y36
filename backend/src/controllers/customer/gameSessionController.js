@@ -5,7 +5,7 @@ class GameSessionController {
   async startSession(req, res) {
     try {
       const userId = req.user.id;
-      const { gameId } = req.body;
+      const { gameId,session_config } = req.body;
 
       if (!gameId) {
         return res.status(400).json({ message: "Game ID is required" });
@@ -31,7 +31,7 @@ class GameSessionController {
         user_id: userId,
         game_id: game.id,
         board_state: null,
-        session_config: game.default_config,
+        session_config: session_config || game.default_config,
         status: "playing",
       });
 
