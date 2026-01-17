@@ -7,45 +7,72 @@ import {
 } from "@/components/ui/dialog";
 import { RoundButton } from "@/components/ui/round-button";
 import { GameBoardConfig, GameMode, TimeAndRoundsConfig } from "./GameSettings";
+import { useState, useEffect } from "react";
+import { Loader2 } from "lucide-react";
 
 interface SettingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   gameMode: "time" | "rounds" | "endless";
-  setGameMode: (mode: "time" | "rounds" | "endless") => void;
   timeLimit: number;
-  setTimeLimit: (time: number) => void;
   targetMatches: number;
-  setTargetMatches: (matches: number) => void;
   numCandyTypes: number;
-  setNumCandyTypes: (types: number) => void;
   boardSize: number;
-  setBoardSize: (size: number) => void;
-  onApply: () => void;
+  onApply: (settings: {
+    gameMode: "time" | "rounds" | "endless";
+    timeLimit: number;
+    targetMatches: number;
+    numCandyTypes: number;
+    boardSize: number;
+  }) => Promise<void>;
 }
 
 export function SettingsDialog({
   open,
   onOpenChange,
-  gameMode,
-  setGameMode,
-  timeLimit,
-  setTimeLimit,
-  targetMatches,
-  setTargetMatches,
-  numCandyTypes, 
-  setNumCandyTypes,
-  boardSize,
-  setBoardSize,
+  gameMode: initialGameMode,
+  timeLimit: initialTimeLimit,
+  targetMatches: initialTargetMatches,
+  numCandyTypes: initialNumCandyTypes,
+  boardSize: initialBoardSize,
   onApply,
 }: SettingsDialogProps) {
-  const handleApply = () => {
-    // Đóng dialog trước để các state updates được flush
-    onOpenChange(false);
-    // Chờ một chút để đảm bảo state đã được update
-    setTimeout(() => {
-      onApply();
-    }, 50);
+  // Local states để lưu giá trị tạm
+  const [localGameMode, setLocalGameMode] = useState(initialGameMode);
+  const [localTimeLimit, setLocalTimeLimit] = useState(initialTimeLimit);
+  const [localTargetMatches, setLocalTargetMatches] = useState(initialTargetMatches);
+  const [localNumCandyTypes, setLocalNumCandyTypes] = useState(initialNumCandyTypes);
+  const [localBoardSize, setLocalBoardSize] = useState(initialBoardSize);
+  const [isApplying, setIsApplying] = useState(false);
+
+  // Reset local states khi dialog mở hoặc props thay đổi
+  useEffect(() => {
+    if (open) {
+      setLocalGameMode(initialGameMode);
+      setLocalTimeLimit(initialTimeLimit);
+      setLocalTargetMatches(initialTargetMatches);
+      setLocalNumCandyTypes(initialNumCandyTypes);
+      setLocalBoardSize(initialBoardSize);
+      setIsApplying(false);
+    }
+  }, [open, initialGameMode, initialTimeLimit, initialTargetMatches, initialNumCandyTypes, initialBoardSize]);
+
+  const handleApply = async () => {
+    setIsApplying(true);
+    try {
+      await onApply({
+        gameMode: localGameMode,
+        timeLimit: localTimeLimit,
+        targetMatches: localTargetMatches,
+        numCandyTypes: localNumCandyTypes,
+        boardSize: localBoardSize,
+      });
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Error applying settings:", error);
+    } finally {
+      setIsApplying(false);
+    }
   };
 
   return (
@@ -58,28 +85,24 @@ export function SettingsDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Game Mode Selection */}
-          <GameMode gameMode={gameMode} setGameMode={setGameMode} />
+          <GameMode gameMode={localGameMode} setGameMode={setLocalGameMode} />
 
-          {/* Time and Rounds Settings - Side by Side */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Time Settings */}
             <TimeAndRoundsConfig
-              gameMode={gameMode}
-              setTimeLimit={setTimeLimit}
-              setTargetMatches={setTargetMatches}
-              timeLimit={timeLimit}
-              targetMatches={targetMatches}
+              gameMode={localGameMode}
+              setTimeLimit={setLocalTimeLimit}
+              setTargetMatches={setLocalTargetMatches}
+              timeLimit={localTimeLimit}
+              targetMatches={localTargetMatches}
               defaultTimeLimit={30}
               defaultTargetMatches={10}
             />
 
-            {/* Board Settings */}
             <GameBoardConfig
-              numCandyTypes={numCandyTypes}
-              setNumCandyTypes={setNumCandyTypes}
-              boardSize={boardSize}
-              setBoardSize={setBoardSize}
+              numCandyTypes={localNumCandyTypes}
+              setNumCandyTypes={setLocalNumCandyTypes}
+              boardSize={localBoardSize}
+              setBoardSize={setLocalBoardSize}
             />
           </div>
         </div>
@@ -88,11 +111,23 @@ export function SettingsDialog({
           <RoundButton
             variant="neutral"
             onClick={() => onOpenChange(false)}
+            disabled={isApplying}
           >
             Hủy
           </RoundButton>
-          <RoundButton variant="primary" onClick={handleApply}>
-            Áp dụng & Chơi mới
+          <RoundButton 
+            variant="primary" 
+            onClick={handleApply}
+            disabled={isApplying}
+          >
+            {isApplying ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Đang khởi tạo...
+              </>
+            ) : (
+              "Áp dụng & Chơi mới"
+            )}
           </RoundButton>
         </DialogFooter>
       </DialogContent>

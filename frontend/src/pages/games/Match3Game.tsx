@@ -207,7 +207,13 @@ export default function Match3Game() {
   }, [gameSession.session, createRandomBoard]);
 
   // Hàm restart game với settings mới
-  const restartGameWithSettings = useCallback(async () => {
+  const restartGameWithSettings = useCallback(async (newSettings?: {
+    gameMode: "time" | "rounds" | "endless";
+    timeLimit: number;
+    targetMatches: number;
+    numCandyTypes: number;
+    boardSize: number;
+  }) => {
     try {
       // Reset game over state ngay lập tức
       setShowGameOver(false);
@@ -215,41 +221,45 @@ export default function Match3Game() {
       
       // Complete session cũ nếu có
       if (currentSessionId) {
-        //   gameMode === "time" ? timeLimit - timeRemaining : 0);
         await gameSession.saveGame(true);
         setCurrentSessionId(null);
       }
       
-      // Tính target score dựa trên settings hiện tại
+      // Sử dụng settings mới nếu có, nếu không dùng giá trị hiện tại
+      const settings = newSettings || { gameMode, timeLimit, targetMatches, numCandyTypes, boardSize };
+      
+      // Tính target score dựa trên settings
       let target = 500;
-      if(gameMode === "time") {
-        target = calcTargetScore(gameMode, boardSize, numCandyTypes, timeLimit);
+      if(settings.gameMode === "time") {
+        target = calcTargetScore(settings.gameMode, settings.boardSize, settings.numCandyTypes, settings.timeLimit);
       }
-      else if(gameMode === "rounds") {
-        target = calcTargetScore(gameMode, boardSize, numCandyTypes, targetMatches);
+      else if(settings.gameMode === "rounds") {
+        target = calcTargetScore(settings.gameMode, settings.boardSize, settings.numCandyTypes, settings.targetMatches);
       }
       
-      // Tạo sessionConfig từ settings hiện tại
+      // Tạo sessionConfig từ settings
       const sessionConfig = {
         mode: "vs_ai",
         ai_level: "easy",
         seed_version: "v3_heavy",
         default_config: {
-          cols: boardSize,
-          rows: boardSize,
-          time_limit: gameMode === "time" ? timeLimit : 0,
-          candy_types: numCandyTypes,
-          moves_limit: gameMode === "rounds" ? targetMatches : 0,
+          cols: settings.boardSize,
+          rows: settings.boardSize,
+          time_limit: settings.gameMode === "time" ? settings.timeLimit : 0,
+          candy_types: settings.numCandyTypes,
+          moves_limit: settings.gameMode === "rounds" ? settings.targetMatches : 0,
           target_score: target,
         }
       };
+
+      console.log("check session config: ", sessionConfig);
 
       // Tạo session mới với custom config
       await gameSession.startGame(sessionConfig);
     } catch (error) {
       console.error("Error restarting game:", error);
     }
-  }, [currentSessionId, score, gameMode, timeLimit, timeRemaining, boardSize, numCandyTypes, targetMatches, gameSession]);
+  }, [currentSessionId, gameMode, timeLimit, boardSize, numCandyTypes, targetMatches, gameSession]);
 
   // Hàm restart game nhanh (không thay đổi settings, không tạo session mới)
   const quickRestart = useCallback(() => {
@@ -447,16 +457,18 @@ export default function Match3Game() {
         open={showSettingsDialog}
         onOpenChange={setShowSettingsDialog}
         gameMode={gameMode}
-        setGameMode={setGameMode}
         timeLimit={timeLimit}
-        setTimeLimit={setTimeLimit}
         targetMatches={targetMatches}
-        setTargetMatches={setTargetMatches}
         numCandyTypes={numCandyTypes}
-        setNumCandyTypes={setNumCandyTypes}
         boardSize={boardSize}
-        setBoardSize={setBoardSize}
-        onApply={restartGameWithSettings}
+        onApply={async (settings) => {
+          await restartGameWithSettings(settings);
+          setGameMode(settings.gameMode);
+          setTimeLimit(settings.timeLimit);
+          setTargetMatches(settings.targetMatches);
+          setNumCandyTypes(settings.numCandyTypes);
+          setBoardSize(settings.boardSize);
+        }}
       />
 
       <div className="z-20">
