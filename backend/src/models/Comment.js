@@ -1,6 +1,7 @@
 const db = require("../config/db");
 
 class Comment {
+  static tableName = "comments";
   static async create({ user_id, game_id, content }) {
     const [comment] = await db(this.tableName)
       .insert({
@@ -27,15 +28,13 @@ class Comment {
           "comments.updated_at",
           "users.id as user_id",
           "users.username",
-          "users.avatar_url"
+          "users.avatar_url",
         )
         .orderBy("comments.created_at", "desc")
         .limit(limit)
         .offset(offset),
 
-      db(this.tableName)
-        .where({ game_id })
-        .count("id as count"),
+      db(this.tableName).where({ game_id }).count("id as count"),
     ]);
 
     return {
@@ -48,29 +47,23 @@ class Comment {
   }
 
   static async findById(id) {
-    return db(this.tableName)
-      .where({ id })
-      .first();
+    return db(this.tableName).where({ id }).first();
   }
 
   static async updateById(id, content) {
-    const [comment] = await db(this.tableName)
-      .where({ id })
-      .update(
-        {
-          content,
-          updated_at: db.fn.now(),
-        },
-        "*"
-      );
+    const [comment] = await db(this.tableName).where({ id }).update(
+      {
+        content,
+        updated_at: db.fn.now(),
+      },
+      "*",
+    );
 
     return comment;
   }
 
   static async deleteById(id) {
-    return db(this.tableName)
-      .where({ id })
-      .del();
+    return db(this.tableName).where({ id }).del();
   }
 }
 
