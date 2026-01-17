@@ -106,22 +106,25 @@ export const Header = () => {
                   </Avatar>
                 </div>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 rounded-xl p-2">
+              <DropdownMenuContent
+                align="end"
+                className="w-56 bg-background rounded-xl p-2"
+              >
                 <DropdownMenuLabel className="font-bold text-muted-foreground text-xs uppercase tracking-wider">
                   Tài khoản
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer font-medium rounded-lg focus:bg-primary/10 focus:text-primary">
+                <DropdownMenuItem className="cursor-pointer font-medium rounded-lg text-card-foreground focus:bg-primary/10 focus:text-primary">
                   <UserIcon className="mr-2 h-4 w-4" />
                   <Link to="/profile">Hồ sơ của tôi</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer font-medium rounded-lg focus:bg-primary/10 focus:text-primary">
+                <DropdownMenuItem className="cursor-pointer font-medium rounded-lg text-card-foreground focus:bg-primary/10 focus:text-primary">
                   <Users className="mr-2 h-4 w-4" />
                   <Link to="/profile?tab=friends">Bạn bè</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer font-medium rounded-lg focus:bg-primary/10 focus:text-primary">
+                <DropdownMenuItem className="cursor-pointer font-medium rounded-lg text-card-foreground focus:bg-primary/10 focus:text-primary">
                   <MessageSquare className="mr-2 h-4 w-4" />
                   <Link to="/messages">Tin nhắn</Link>
                 </DropdownMenuItem>
