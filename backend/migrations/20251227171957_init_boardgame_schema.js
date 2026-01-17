@@ -141,6 +141,27 @@ exports.up = async function (knex) {
     // Mỗi user chỉ đánh giá 1 game 1 lần duy nhất
     table.unique(["user_id", "game_id"]);
   });
+
+  // 9. BẢNG THỐNG KÊ TRÒ CHƠI THEO NGƯỜI DÙNG (USER_GAME_STATS)
+  await knex.schema.createTable("user_game_stats", (table) => {
+    table.uuid("user_id").references("id").inTable("users").onDelete("CASCADE");
+    table.integer("game_id").references("id").inTable("games").onDelete("CASCADE");
+
+    // Dành cho Snake (Lưu kỷ lục cao nhất)
+    table.integer("high_score").defaultTo(0);
+
+    // Dành cho Caro/TicTacToe (Lưu điểm tích lũy +1/-1)
+    // Mặc định là 0. Nếu thua nhiều có thể âm.
+    table.integer("rank_points").defaultTo(0);
+
+    // Thống kê phụ
+    table.integer("total_matches").defaultTo(0);
+    table.integer("total_wins").defaultTo(0);
+    
+    table.timestamp("last_updated_at").defaultTo(knex.fn.now());
+
+    table.primary(["user_id", "game_id"]);
+  });
 };
 
 /**
@@ -149,6 +170,7 @@ exports.up = async function (knex) {
  */
 exports.down = async function (knex) {
   // Xóa bảng theo thứ tự ngược lại để tránh lỗi khóa ngoại
+  await knex.schema.dropTableIfExists("user_game_stats");
   await knex.schema.dropTableIfExists("game_ratings");
   await knex.schema.dropTableIfExists("comments");
   await knex.schema.dropTableIfExists("achievements");
