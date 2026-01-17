@@ -115,8 +115,6 @@ export function useGameSession({
       const res = await axiosClient.post("/sessions/start", payload);
       const newSession = res.data.session;
 
-      console.log("check start session res: ", newSession);
-
       setSession(newSession);
       setShowLoadDialog(false);
       // Reset pause state khi start game mới
