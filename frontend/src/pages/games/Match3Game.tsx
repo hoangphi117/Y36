@@ -414,6 +414,11 @@ export default function Match3Game() {
     }
   };
 
+  // load saved game
+  const handleLoadGame = async (sessionId: string) => {
+    gameSession.loadGame(sessionId);
+  }
+
   // Hiển thị loading
   if (isInitializing) {
     return (
@@ -491,15 +496,8 @@ export default function Match3Game() {
             open={gameSession.showLoadDialog}
             onOpenChange={gameSession.setShowLoadDialog}
             sessions={gameSession.savedSessions}
-            onLoadSession={(sessionId) => {
-              // Navigate sang route với sessionId để load
-              navigate(`/games/match3/${sessionId}`);
-            }}
-            onNewGame={async () => {
-              // Restart game hiện tại
-              gameSession.setShowLoadDialog(false);
-              await quickRestart();
-            }}
+            onLoadSession={handleLoadGame}
+            onNewGame={gameSession.startGame}  
           >
             <RoundButton 
               size="small" 
