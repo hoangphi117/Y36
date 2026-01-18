@@ -107,7 +107,6 @@ export function useGameSession({
       setIsLoading(true);
       const payload: any = { gameId };
       
-      // Nếu có sessionConfig truyền vào, thêm vào payload
       if (sessionConfig) {
         payload.session_config = sessionConfig;
       }

@@ -441,6 +441,13 @@ export default function Match3Game() {
     await restartGameWithSettings();
   }
 
+  // handle save currrent session before loading another session
+  const handleSaveCurrentSession = async () => {
+    if (currentSessionId) {
+      await gameSession.saveGame(true);
+    }
+  }
+
   // Hiển thị loading
   if (isInitializing) {
     return (
@@ -520,6 +527,8 @@ export default function Match3Game() {
             open={gameSession.showLoadDialog}
             onOpenChange={gameSession.setShowLoadDialog}
             sessions={gameSession.savedSessions}
+            currentSessionId={currentSessionId ?? undefined}
+            onSaveSession={handleSaveCurrentSession}
             onLoadSession={handleLoadGame}
             onNewGame={gameSession.startGame}  
             onDeleteSession={handleDeleteGame}

@@ -6,11 +6,12 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Calendar, Clock, Trophy, Trash2 } from "lucide-react";
+import { Calendar, Clock, Trophy, Trash2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { type GameSession } from "@/types/game";
 import { RoundButton } from "../ui/round-button";
 import { DialogDescription } from "@radix-ui/react-dialog";
+import { useState } from "react";
 
 interface LoadGameDialogProps {
   open: boolean;
@@ -20,6 +21,7 @@ interface LoadGameDialogProps {
   onLoadSession: (sessionId: string) => void;
   onDeleteSession?: (sessionId: string) => void;
   onNewGame: () => void;
+  onSaveSession?: () => void;
   children: React.ReactNode;
 }
 
@@ -31,8 +33,11 @@ export function LoadGameDialog({
   onLoadSession,
   onDeleteSession,
   onNewGame,
+  onSaveSession,
   children,
 }: LoadGameDialogProps) {
+  const [isLoading, setIsLoading] = useState(false);
+
   const formatTime = (totalSeconds: number) => {
     const mins = Math.floor(totalSeconds / 60);
     const secs = totalSeconds % 60;
@@ -51,6 +56,20 @@ export function LoadGameDialog({
       minute: "2-digit",
     });
   };
+
+
+  const handleLoadSession = async (sessionId: string) => {
+    try {
+      setIsLoading(true);
+      if (onSaveSession) {
+        await onSaveSession();
+      }
+      onLoadSession(sessionId);
+      onOpenChange(false);
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   return (
     <>
@@ -81,8 +100,9 @@ export function LoadGameDialog({
                   >
                     <div className="flex items-center justify-between gap-3">
                       <button
-                        onClick={() => onLoadSession(session.id)}
-                        className="flex-1 text-left"
+                        onClick={() => handleLoadSession(session.id)}
+                        disabled={isLoading}
+                        className="flex-1 text-left disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
@@ -90,6 +110,9 @@ export function LoadGameDialog({
                             <span className="font-semibold">
                               Điểm: {session.score || 0}
                             </span>
+                            {isLoading && (
+                              <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                            )}
                           </div>
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <div className="flex items-center gap-1">
@@ -128,6 +151,7 @@ export function LoadGameDialog({
               variant="accent"
               size="small"
               className="rounded-md"
+              disabled={isLoading}
             >
               hủy
             </RoundButton>
@@ -136,6 +160,7 @@ export function LoadGameDialog({
               variant="primary"
               size="small"
               className="rounded-md"
+              disabled={isLoading}
             >
               Bắt đầu mới
             </RoundButton>
