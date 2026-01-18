@@ -64,8 +64,12 @@ export default function RankingPage() {
     setPage(1);
   };
 
-  const getScore = (user: RankingUser) =>
-    rankingType === "rank_points" ? user.rank_points : user.high_score;
+  const getScore = (user?: RankingUser) => {
+    if (!user) return 0;
+    return rankingType === "rank_points"
+      ? (user.rank_points ?? 0)
+      : (user.high_score ?? 0);
+  };
 
   const isFirstPage = page === 1;
   const top3 = isFirstPage ? data.slice(0, 3) : [];
@@ -210,12 +214,11 @@ export default function RankingPage() {
                       <span>🎮 {user.total_matches ?? 0} Trận</span>
                     </p>
                   </div>
-
                   <Badge
                     variant="secondary"
                     className="text-sm sm:text-base px-3 py-1 bg-secondary/50 group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
                   >
-                    {getScore(user)?.toLocaleString()}{" "}
+                    {getScore(user).toLocaleString()}{" "}
                     <span className="text-[10px] ml-1 uppercase opacity-80 font-normal">
                       {rankingType === "rank_points" ? "Elo" : "Pts"}
                     </span>
