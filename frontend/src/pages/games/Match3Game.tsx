@@ -530,7 +530,6 @@ export default function Match3Game() {
             currentSessionId={currentSessionId ?? undefined}
             onSaveSession={handleSaveCurrentSession}
             onLoadSession={handleLoadGame}
-            onNewGame={gameSession.startGame}  
             onDeleteSession={handleDeleteGame}
           >
             <RoundButton 

@@ -26,15 +26,46 @@ export const convertCardsToBoardState = (
   flipped: number[],
   matched: number[]
 ): BoardCard[] => {
-  return cards.map((card) => ({
-    id: card.id,
+  return cards.map((card, index) => ({
+    id: index, // vị trí trong board (0, 1, 2, 3...)
     value: ICONS[card.iconIndex] || `icon${card.iconIndex + 1}`,
-    status: matched.includes(card.id)
+    status: matched.includes(index)
       ? "matched"
-      : flipped.includes(card.id)
+      : flipped.includes(index)
         ? "flipped"
         : "hidden",
   }));
+};
+
+/**
+ * Restore cards from board state when loading saved session
+ * @param boardCards - Array of BoardCard from saved session
+ * @returns Object containing cards, flipped, and matched arrays
+ */
+export const restoreBoardState = (
+  boardCards: BoardCard[]
+): { cards: Card[], flipped: number[], matched: number[] } => {
+  const cards: Card[] = boardCards.map((boardCard) => {
+    // Parse iconIndex từ value (icon1 -> 0, icon2 -> 1, ...)
+    const iconIndex = ICONS.indexOf(boardCard.value);
+    
+    return {
+      id: boardCard.id,
+      iconIndex: iconIndex >= 0 ? iconIndex : 0,
+      isFlipped: boardCard.status === "flipped",
+      isMatched: boardCard.status === "matched",
+    };
+  });
+
+  const flipped = cards
+    .filter(card => card.isFlipped)
+    .map(card => card.id);
+  
+  const matched = cards
+    .filter(card => card.isMatched)
+    .map(card => card.id);
+
+  return { cards, flipped, matched };
 };
 
 /**
@@ -56,12 +87,10 @@ export const createSessionSave = (
   totalScore: number,
 ): MemorySessionSave => {
   return {
-    board_state: {
-      cards: board,
-      moves: moves,
-      level: currentLevel,
-    },
+    cards: board,
+    moves: moves,
+    level: currentLevel,
     score: totalScore,
-    play_time_seconds: timeLeft,
+    time_left: timeLeft,
   };
 };

@@ -14,10 +14,10 @@ import icon13 from "@/assets/memoryIcons/icon13.png";
 import icon14 from "@/assets/memoryIcons/icon14.png";
 import icon15 from "@/assets/memoryIcons/icon15.png";
 import icon16 from "@/assets/memoryIcons/icon16.png";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { GameHeader } from "@/components/games/GameHeader";
-import { AlarmClock, History, Play, Pause } from "lucide-react";
+import { AlarmClock, History, Play, Pause, Download, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BackToSelectionButton } from "@/components/games/memory/SettingButtons";
 import StatCard from "@/components/games/memory/StatCard";
@@ -25,23 +25,41 @@ import { GameStatusOverlay } from "@/components/games/memory/GameBoardOverlay";
 import { useNavigate } from "react-router-dom";
 import calcLevelScore from "@/utils/clacScoreMemoryGame";
 import { RoundButton } from "@/components/ui/round-button";
-import { convertCardsToBoardState, createSessionSave } from "@/utils/memorySessionHelper";
+import { convertCardsToBoardState, createSessionSave, restoreBoardState } from "@/utils/memorySessionHelper";
 import type { MemorySessionSave } from "@/types/memoryGame";
 import memoryApi from "@/services/memoryApi";
 import { PauseMenu } from "@/components/games/memory/PauseMenu";
 import SessionHistoryDialog from "@/components/games/memory/SessionHistoryDialog";
+import { useGameSession } from "@/hooks/useGameSession";
+import { LoadGameDialog } from "@/components/dialogs/LoadGameDialog";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 const ICONS = [icon1, icon2, icon3, icon4, icon5, icon6, icon7, icon8, icon9, icon10, icon11, icon12, icon13, icon14, icon15, icon16];
 
-// Level config: {pairs, timeLimit}
-const LEVEL_CONFIG = [
-  { pairs: 6, timeLimit: 45 },
-  { pairs: 8, timeLimit: 60 },
-  { pairs: 10, timeLimit: 70 },
-  { pairs: 12, timeLimit: 80 },
-  { pairs: 14, timeLimit: 90 },
-  { pairs: 16, timeLimit: 100 },
-];
+interface MemoryLevelConfig {
+  pairs: number;
+  timeLimit: number;
+}
+
+const MAX_PAIRS = 15;
+const MAX_LEVELS = 5;
+
+function generateMemoryLevels(basePairs: number, baseTimeLimit: number): MemoryLevelConfig[] {
+  const levels: MemoryLevelConfig[] = [];
+
+  for (let i = 0; i < MAX_LEVELS; i++) {
+    const pairs = Math.min(basePairs + i * 2, MAX_PAIRS);
+    const timeLimit = baseTimeLimit + i * 15;
+
+    levels.push({ pairs, timeLimit });
+
+    // Stop if reached max pairs
+    if (pairs >= MAX_PAIRS) break;
+  }
+
+  return levels;
+}
+
 
 interface Card {
   id: number;
@@ -66,18 +84,11 @@ export default function MemoryLevelGame() {
   const [isStarted, setIsStarted] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [levelConfigs, setLevelConfigs] = useState<MemoryLevelConfig[]>([]);
+  const [isRestoringSession, setIsRestoringSession] = useState(false);
 
   //session id for saving
-  // const [sessionId, setSessionId] = useState<string | null>(null);
-
-  // Load default game session from API
-  useEffect(() => {
-    const fetchGameSession = async () => {
-      const res = await memoryApi.getDetail("memory");
-      console.log("check res get detail: ", res);
-    };
-    fetchGameSession();
-  }, []);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
 
   // Generate shuffled cards
   const generateCards = (pairs: number): Card[] => {
@@ -94,19 +105,6 @@ export default function MemoryLevelGame() {
     return cardArray.sort(() => Math.random() - 0.5);
   };
 
-  // Initialize level mode game
-  const initializeLevelGame = () => {
-    const levelConfig = LEVEL_CONFIG[currentLevel];
-    const newCards = generateCards(levelConfig.pairs);
-    setCards(newCards);
-    setFlipped([]);
-    setMatched([]);
-    setGameStatus("playing");
-    setTimeLeft(levelConfig.timeLimit);
-    setMoves(0);
-    setIsStarted(true);
-  };
-
   // Get current game session state
   const getCurrentSessionState = (): MemorySessionSave => {
     const board = convertCardsToBoardState(cards, flipped, matched);
@@ -119,15 +117,104 @@ export default function MemoryLevelGame() {
     );
   };
 
-  // Save game
-  const saveGameSession = async () => {
-    const sessionSaveData = getCurrentSessionState();
-    console.log("Game session to save:", sessionSaveData);
+  // useGameSession hook to manage game session
+  const {
+    session, savedSessions,
+    fetchSavedSessions,
+    isLoading: isSessionLoading,
+    isSaving: isSessionSaving,
+    showLoadDialog, setShowLoadDialog,
+    startGame: startGameSession,
+    saveGame: saveGameSession,
+    loadGame: loadGameSession,
+    completeGame: completeGameSession,
+  } = useGameSession({
+    gameId: 6, // memory game id
+    getBoardState: () => getCurrentSessionState(),
+  });
 
-    const newSession = await memoryApi.startSession(6);
-    const res = await memoryApi.saveSession(newSession.session.id, sessionSaveData);
-    console.log("check save res: ", res);
-    return sessionSaveData;
+  // start new game session
+  useEffect(() => {
+    startGameSession();
+  }, []);
+
+  // Xử lý khi session được tạo/load từ useGameSession
+  useEffect(() => {
+    try {
+      if(!session) return;
+
+      setCurrentSessionId(session.id);
+
+      // Lấy config từ session - có thể ở default_config hoặc trực tiếp
+      const rawConfig = session.session_config;
+      const config = rawConfig.default_config || rawConfig;
+      
+      if(!config || !config.cols || !config.rows) {
+        console.error("Invalid session config:", config);
+        return;
+      }
+
+      // Tính số cặp từ cols * rows / 2
+      const basePairs = (config.cols * config.rows) / 2;
+      const baseTimeLimit = config.time_limit || 45;
+
+      // Sinh các level từ config
+      const generatedLevels = generateMemoryLevels(basePairs, baseTimeLimit);
+      setLevelConfigs(generatedLevels);
+
+      // Kiểm tra board_state có dữ liệu không
+      const sessionData = session.board_state as MemorySessionSave | null;
+      const hasBoardState = sessionData && sessionData.cards && sessionData.cards.length > 0;
+
+      if (hasBoardState) {
+        // Restore board từ saved session
+        setIsRestoringSession(true);
+        const { cards: restoredCards, flipped: restoredFlipped, matched: restoredMatched } = restoreBoardState(sessionData!.cards);
+        
+        setCards(restoredCards);
+        setFlipped(restoredFlipped);
+        setMatched(restoredMatched);
+        setMoves(sessionData!.moves || 0);
+        setTotalScore(sessionData!.score || 0);
+        setCurrentLevel(sessionData!.level || 0);
+        setTimeLeft(sessionData!.time_left || generatedLevels[sessionData!.level || 0].timeLimit);
+        setGameStatus("playing");
+        setIsStarted(true);
+        
+        // Reset flag sau khi restore xong
+        setTimeout(() => setIsRestoringSession(false), 0);
+      } else {
+        // Khởi tạo game mới với level 1
+        const level1Config = generatedLevels[0];
+        const newCards = generateCards(level1Config.pairs);
+        setCards(newCards);
+        setTimeLeft(level1Config.timeLimit);
+        setFlipped([]);
+        setMatched([]);
+        setGameStatus("playing");
+        setMoves(0);
+        setTotalScore(0);
+        setCurrentLevel(0);
+        setIsStarted(true); // Bắt đầu game ngay lập tức
+      }
+
+    }catch (error) {
+      console.error("Error loading session:", error);
+    }
+  }, [session]);
+
+  // Initialize level mode game
+  const initializeLevelGame = () => {
+    if (levelConfigs.length === 0) return;
+    const levelConfig = levelConfigs[currentLevel];
+    const newCards = generateCards(levelConfig.pairs);
+    setCards(newCards);
+    setFlipped([]);
+    setMatched([]);
+    setGameStatus("playing");
+    setTimeLeft(levelConfig.timeLimit);
+    setMoves(0);
+    setIsStarted(true);
   };
 
   // Handle card flip
@@ -170,9 +257,9 @@ export default function MemoryLevelGame() {
 
   // Check level completion
   useEffect(() => {
-    if (gameStatus !== "playing" || matched.length === 0) return;
+    if (gameStatus !== "playing" || matched.length === 0 || levelConfigs.length === 0) return;
 
-    const levelConfig = LEVEL_CONFIG[currentLevel];
+    const levelConfig = levelConfigs[currentLevel];
     if (matched.length === levelConfig.pairs * 2) {
 
       // Calculate score
@@ -186,11 +273,20 @@ export default function MemoryLevelGame() {
       setTotalScore(prev => prev + levelScore);
       setGameStatus("completed");
     }
-  }, [matched, currentLevel, gameStatus, timeLeft]);
+  }, [matched, currentLevel, gameStatus, timeLeft, levelConfigs]);
 
-  // Initialize game on mount
+  // Auto complete game when lost or completed
   useEffect(() => {
-    const levelConfig = LEVEL_CONFIG[currentLevel];
+    if (gameStatus === "lost" || (gameStatus === "completed" && currentLevel === levelConfigs.length - 1)) {
+      // Gọi complete game với điểm hiện tại
+      completeGameSession(totalScore);
+    }
+  }, [gameStatus, currentLevel, totalScore, levelConfigs.length]);
+
+  // Initialize game when level changes (chỉ khi chuyển level, không phải khi load session)
+  useEffect(() => {
+    if (levelConfigs.length === 0 || !isStarted || isRestoringSession) return;
+    const levelConfig = levelConfigs[currentLevel];
     const newCards = generateCards(levelConfig.pairs);
     setCards(newCards);
     setFlipped([]);
@@ -202,7 +298,7 @@ export default function MemoryLevelGame() {
 
   // Next level
   const nextLevel = () => {
-    if (currentLevel < LEVEL_CONFIG.length - 1) {
+    if (levelConfigs.length > 0 && currentLevel < levelConfigs.length - 1) {
       setCurrentLevel(currentLevel + 1);
     }
   };
@@ -220,11 +316,24 @@ export default function MemoryLevelGame() {
     setIsPaused(false);
   };
 
+  // Restart current level
+  const restartCurrentLevel = () => {
+    if (levelConfigs.length === 0) return;
+    const levelConfig = levelConfigs[currentLevel];
+    const newCards = generateCards(levelConfig.pairs);
+    setCards(newCards);
+    setFlipped([]);
+    setMatched([]);
+    setGameStatus("playing");
+    setTimeLeft(levelConfig.timeLimit);
+    setMoves(0);
+  };
+
   // Handle pause menu - save game session
   const handleSaveAndExit = async () => {
     try {
       // Save game session
-      await saveGameSession();
+      await saveGameSession(true);
       // Navigate back to selection
       navigate("/memory");
     } catch (error) {
@@ -239,6 +348,66 @@ export default function MemoryLevelGame() {
     setIsPaused(false);
     restartGame();
   };
+
+  // load saved game
+  const handleLoadGame = async (sessionId: string) => {
+    await loadGameSession(sessionId);
+  }
+
+  // delete saved game
+  const handleDeleteGame = async (sessionId: string) => {
+    await memoryApi.deleteSession(sessionId);
+    await fetchSavedSessions();
+  }
+
+  // play again
+  const handlePlayAgain = async () => {
+    startGameSession();
+    setIsPaused(false);
+  }
+
+  // handle save currrent session before loading another session
+  const handleSaveCurrentSession = async () => {
+    if (currentSessionId) {
+      await saveGameSession(true);
+    }
+  }
+
+  // Auto-save khi rời khỏi trang
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (session && session.status === "playing" && isStarted) {
+        // Auto-save session với board state hiện tại
+        const currentBoard = getCurrentSessionState();
+        const url = `${import.meta.env.VITE_API_BASE_URL}/sessions/${session.id}/save`;
+        
+        const token = useAuthStore.getState().token;
+        const apiKey = import.meta.env.VITE_API_KEY;
+
+        fetch(url, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+            "x-api-key": apiKey,
+          },
+          body: JSON.stringify({
+            board_state: currentBoard,
+            status: "saved",
+          }),
+          keepalive: true,
+        }).catch((err) => console.error("Auto-save failed:", err));
+      }
+    };
+
+    window.addEventListener("pagehide", handleBeforeUnload);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("pagehide", handleBeforeUnload);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [session, isStarted, cards, flipped, matched, currentLevel, moves, totalScore, timeLeft]);
 
   // Calculate responsive columns based on screen width and card count
   const getResponsiveColumns = (totalCards: number): number => {
@@ -284,7 +453,18 @@ export default function MemoryLevelGame() {
     </motion.button>
   );
 
-  const levelConfig = LEVEL_CONFIG[currentLevel];
+  if (levelConfigs.length === 0) {
+    return (
+      <>
+        <GameHeader />
+        <div className="min-h-screen flex items-center justify-center">
+          <p>Đang tải...</p>
+        </div>
+      </>
+    );
+  }
+
+  const levelConfig = levelConfigs[currentLevel];
 
   return (
     <>
@@ -298,7 +478,7 @@ export default function MemoryLevelGame() {
           {/* Game header */}
           <div className="text-center mb-4 sm:mb-8">
             <h1 className="text-2xl sm:text-4xl font-black text-primary mb-1 sm:mb-2">CỜ TRÍ NHỚ</h1>
-            <p className="text-muted-foreground text-sm sm:text-lg">Level {currentLevel + 1} / {LEVEL_CONFIG.length}</p>
+            <p className="text-muted-foreground text-sm sm:text-lg">Level {currentLevel + 1} / {levelConfigs.length}</p>
           </div>
 
           {/* Game info cards */}
@@ -326,21 +506,43 @@ export default function MemoryLevelGame() {
           <div className="flex flex-row gap-2 mb-4 items-center justify-center">
             <BackToSelectionButton backToSelection={backToSelection} />
             {isStarted && gameStatus === "playing" && (
-              <RoundButton size="small" onClick={() => setIsPaused(true)} className="hover:bg-primary/90 text-[0.8rem] sm:py-2 rounded-md">
-                <Pause className="w-5 h-5" />
-                <span className="hidden min-[375px]:inline ml-1">Tạm dừng</span>
-              </RoundButton>
+              <>
+                <RoundButton size="small" onClick={() => setIsPaused(true)} className="hover:bg-primary/90 text-[0.8rem] sm:py-2 rounded-md">
+                  <Pause className="w-5 h-5" />
+                  <span className="hidden min-[375px]:inline ml-1">Tạm dừng</span>
+                </RoundButton>
+                <RoundButton 
+                  size="small" 
+                  variant="neutral"
+                  onClick={restartCurrentLevel} 
+                  className="text-[0.8rem] sm:py-2 rounded-md"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  <span className="hidden min-[375px]:inline ml-1">Chơi lại</span>
+                </RoundButton>
+              </>
             )}
-            {!isStarted && (
-              <RoundButton
-                size="small"
-                className="hover:bg-primary/90 text-[0.8rem] sm:py-2 rounded-md"
-                onClick={() => setIsHistoryOpen(true)}
-              >
-                <History className="w-5 h-5" />
-                <span className="hidden min-[375px]:inline ml-1">Lịch sử</span>
-              </RoundButton>
-            )}
+            <LoadGameDialog
+              open={showLoadDialog}
+              onOpenChange={setShowLoadDialog}
+              sessions={savedSessions}
+              onLoadSession={handleLoadGame}
+              onDeleteSession={handleDeleteGame}
+              onNewGame={startGameSession}
+              onSaveSession={handleSaveCurrentSession}
+            >
+              <RoundButton 
+                size="small" 
+                variant="neutral" 
+                onClick={() => {
+                  fetchSavedSessions();
+                  setShowLoadDialog(true);
+                }} 
+                className="text-xs py-1.5 px-3 rounded-lg"
+            >
+              <Download className="w-3.5 h-3.5 mr-1.5" /> 
+            </RoundButton>
+            </LoadGameDialog>
           </div>
 
           {/* Game board */}
@@ -369,27 +571,6 @@ export default function MemoryLevelGame() {
               ))}
             </div>
 
-            {/* Configuration Overlay - Before Game Starts */}
-            {!isStarted && (
-            <motion.div
-                className="absolute flex flex-col inset-0 bg-background/40 backdrop-blur-[2px] rounded-2xl items-center justify-center gap-3 cursor-pointer"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-            >
-                <motion.button
-                  onClick={initializeLevelGame}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="group relative flex flex-col items-center"
-                >
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-primary rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(var(--primary),0.5)] mb-2 group-hover:bg-primary/90 transition-colors">
-                        <Play className="w-8 h-8 sm:w-10 sm:h-10 text-primary-foreground ml-1 fill-current" />
-                    </div>
-                    <span className="font-black text-primary text-lg sm:text-xl uppercase italic">Bắt đầu ngay</span>
-                </motion.button>
-              </motion.div>
-            )}
-
             {/* Game Status Overlay */}
             {isStarted && (gameStatus === "completed" || gameStatus === "lost") && (
               <motion.div
@@ -414,7 +595,7 @@ export default function MemoryLevelGame() {
         <PauseMenu
           onContinue={() => setIsPaused(false)}
           onSaveAndExit={handleSaveAndExit}
-          onRestart={handleRestartFromPause}
+          onRestart={handlePlayAgain}
         />
       )}
 

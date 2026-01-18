@@ -51,7 +51,9 @@ export interface IMemoryGame {
 }
 
 export interface MemorySessionSave {
-    board_state: board_state;
+    cards: BoardCard[];
+    moves: number;
+    level: number;
     score: number;
-    play_time_seconds: number;
+    time_left: number;
 }

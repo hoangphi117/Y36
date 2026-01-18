@@ -12,6 +12,10 @@ const memoryApi = {
 
     saveSession(id: string, sessionData: MemorySessionSave) {
         return api.put<MemorySessionResponse>(`/sessions/${id}/save`, sessionData).then(res => res.data);
+    },
+
+    deleteSession(id: string) {
+        return api.delete<void>(`/sessions/${id}`).then(res => res.data);
     }
 }
 

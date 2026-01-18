@@ -32,7 +32,6 @@ export function LoadGameDialog({
   currentSessionId,
   onLoadSession,
   onDeleteSession,
-  onNewGame,
   onSaveSession,
   children,
 }: LoadGameDialogProps) {
@@ -154,15 +153,6 @@ export function LoadGameDialog({
               disabled={isLoading}
             >
               hủy
-            </RoundButton>
-            <RoundButton
-              onClick={onNewGame}
-              variant="primary"
-              size="small"
-              className="rounded-md"
-              disabled={isLoading}
-            >
-              Bắt đầu mới
             </RoundButton>
           </DialogFooter>
         </DialogContent>
