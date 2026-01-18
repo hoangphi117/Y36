@@ -47,8 +47,6 @@ export const Header = () => {
   const displayName = user?.username || "User";
   const firstLetter = displayName.charAt(0).toUpperCase();
 
-  console.log("Rendered Header", user);
-
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto w-[90%] md:w-[80%] h-20 flex items-center justify-between">
