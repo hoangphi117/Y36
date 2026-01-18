@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Star, XCircle } from "lucide-react";
+import { Star, XCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,7 +8,6 @@ import {
   useSubmitRating,
   useDeleteRating,
 } from "@/hooks/useRatings";
-import { Loader2 } from "lucide-react";
 
 import {
   AlertDialog,
@@ -32,16 +31,23 @@ export function GameRating({ gameId }: Props) {
   const deleteMutation = useDeleteRating();
 
   const [hoverRating, setHoverRating] = useState(0);
-
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
+  const userRatingData = (myRating as any)?.data;
+  const isRated = !!userRatingData;
+  const currentRating = userRatingData?.rating || 0;
+
   const handleRate = (rating: number) => {
+    if (isRated) return;
     submitMutation.mutate({ gameId, rating });
   };
 
   const handleConfirmDelete = () => {
     deleteMutation.mutate(gameId, {
-      onSuccess: () => setOpenDeleteDialog(false),
+      onSuccess: () => {
+        setOpenDeleteDialog(false);
+        setHoverRating(0);
+      },
     });
   };
 
@@ -77,7 +83,6 @@ export function GameRating({ gameId }: Props) {
   if (isLoadingAvg)
     return <div className="h-24 bg-muted/20 animate-pulse rounded-xl" />;
 
-  const currentRating = myRating?.rating || 0;
   const average = avgData?.average_rating ? Number(avgData.average_rating) : 0;
   const total = avgData?.total_ratings || 0;
 
@@ -102,27 +107,31 @@ export function GameRating({ gameId }: Props) {
       {/* 2. Phần User đánh giá (Interactive) */}
       <div className="flex flex-col items-center md:items-end gap-2">
         <span className="text-sm font-medium text-muted-foreground">
-          {myRating ? "Đánh giá của bạn" : "Gửi đánh giá của bạn"}
+          {isRated ? "Đánh giá của bạn" : "Gửi đánh giá của bạn"}
         </span>
 
         <div
           className="flex items-center gap-1"
-          onMouseLeave={() => setHoverRating(0)}
+          onMouseLeave={() => !isRated && setHoverRating(0)}
         >
           {[1, 2, 3, 4, 5].map((star) => {
-            const isActive = hoverRating
-              ? star <= hoverRating
-              : star <= currentRating;
+            const isActive = isRated
+              ? star <= currentRating
+              : hoverRating
+                ? star <= hoverRating
+                : false;
 
             return (
               <button
                 key={star}
                 type="button"
-                disabled={submitMutation.isPending}
-                onMouseEnter={() => setHoverRating(star)}
+                disabled={isRated || submitMutation.isPending}
+                onMouseEnter={() => !isRated && setHoverRating(star)}
                 onClick={() => handleRate(star)}
                 className={cn(
-                  "transition-all duration-200 hover:scale-110 focus:outline-none p-1",
+                  "transition-all duration-200 focus:outline-none p-1",
+                  !isRated && "hover:scale-110 cursor-pointer",
+                  isRated && "cursor-default",
                   submitMutation.isPending && "opacity-50 cursor-not-allowed",
                 )}
               >
@@ -139,7 +148,6 @@ export function GameRating({ gameId }: Props) {
           })}
         </div>
 
-        {/* Nút xóa đánh giá (Chỉ hiện khi đã đánh giá) */}
         {myRating && (
           <Button
             variant="ghost"
@@ -157,23 +165,26 @@ export function GameRating({ gameId }: Props) {
           </Button>
         )}
       </div>
+
+      {/* GIỮ NGUYÊN DIALOG XÁC NHẬN */}
       <AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Xóa đánh giá của bạn?</AlertDialogTitle>
             <AlertDialogDescription>
-              Đánh giá này sẽ bị xóa vĩnh viễn và không thể khôi phục.
+              Đánh giá này sẽ bị xóa vĩnh viễn. Bạn có thể thực hiện đánh giá
+              mới sau khi xóa.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
           <AlertDialogFooter>
             <AlertDialogCancel>Hủy</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive text-white hover:bg-destructive/90"
               onClick={handleConfirmDelete}
               disabled={deleteMutation.isPending}
             >
-              {deleteMutation.isPending ? "Đang xóa..." : "Xóa"}
+              {deleteMutation.isPending ? "Đang xóa..." : "Xác nhận xóa"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

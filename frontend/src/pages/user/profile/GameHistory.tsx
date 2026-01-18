@@ -6,13 +6,14 @@ import {
   Loader2,
   Trash2,
   Calendar,
-  Trophy,
   Clock,
+  Trophy,
+  Minus,
   Gamepad2,
-  CheckCircle2,
+  XCircle,
+  Worm,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import {
   AlertDialog,
@@ -27,6 +28,10 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import { PaginationCustom } from "@/components/shared/PaginationCustom";
+import { cn } from "@/lib/utils";
+
+// Danh sách ID game đối kháng (Tính Elo: Thắng/Thua/Hòa)
+const COMPETITIVE_GAMES = [1, 2, 4];
 
 export function GameHistory() {
   const { data, isLoading, isError, setPage, deleteSession } = useGameHistory(
@@ -34,7 +39,7 @@ export function GameHistory() {
     10,
     {
       status: "completed",
-    }
+    },
   );
 
   if (isLoading)
@@ -64,87 +69,163 @@ export function GameHistory() {
     return `${min}p ${sec}s`;
   };
 
+  // Helper function để xác định giao diện dựa trên kết quả game
+  const getGameStatusUI = (gameId: number, score: number) => {
+    const isCompetitive = COMPETITIVE_GAMES.includes(gameId);
+
+    // 1. Game Đối Kháng (Caro, TicTacToe)
+    if (isCompetitive) {
+      if (score > 0) {
+        return {
+          label: "THẮNG",
+          subLabel: "+Elo",
+          color: "text-yellow-600 dark:text-yellow-500",
+          bgColor: "bg-yellow-50 dark:bg-yellow-900/20",
+          borderColor: "border-l-yellow-500",
+          icon: <Trophy className="w-6 h-6" />,
+          badgeVariant: "default" as const, // Dùng type assertion của TS
+        };
+      }
+      if (score < 0) {
+        return {
+          label: "THUA",
+          subLabel: "-Elo",
+          color: "text-red-600 dark:text-red-500",
+          bgColor: "bg-red-50 dark:bg-red-900/20",
+          borderColor: "border-l-red-500",
+          icon: <XCircle className="w-6 h-6" />,
+          badgeVariant: "destructive" as const,
+        };
+      }
+      return {
+        label: "HÒA",
+        subLabel: "+0 Elo",
+        color: "text-slate-600 dark:text-slate-400",
+        bgColor: "bg-slate-50 dark:bg-slate-900/20",
+        borderColor: "border-l-slate-400",
+        icon: <Minus className="w-6 h-6" />,
+        badgeVariant: "secondary" as const,
+      };
+    }
+
+    // 2. Game Điểm Số (Snake)
+    return {
+      label: `${score.toLocaleString()}`,
+      subLabel: "Điểm",
+      color: "text-blue-600 dark:text-blue-400",
+      bgColor: "bg-blue-50 dark:bg-blue-900/20",
+      borderColor: "border-l-blue-500",
+      icon: <Worm className="w-6 h-6" />,
+      badgeVariant: "outline" as const,
+    };
+  };
+
   return (
     <div className="space-y-4">
       <div className="grid gap-3">
-        {data?.data.map((session) => (
-          <Card
-            key={session.id}
-            className="p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 hover:shadow-md transition-shadow border-l-4 border-l-green-500"
-          >
-            {/* Thông tin Game */}
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-green-50 text-green-600 dark:bg-green-950/30 rounded-lg">
-                <CheckCircle2 className="w-6 h-6" />
-              </div>
-              <div>
-                <h4 className="font-bold text-lg">
-                  {GAME_ID_MAP[session.game_id] || `Game #${session.game_id}`}
-                </h4>
-                <div className="flex flex-wrap gap-3 text-sm text-muted-foreground mt-1">
-                  <span className="flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    {format(new Date(session.started_at), "dd/MM/yyyy HH:mm", {
-                      locale: vi,
-                    })}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    {formatDuration(session.play_time_seconds)}
-                  </span>
-                </div>
-              </div>
-            </div>
+        {data?.data.map((session) => {
+          const ui = getGameStatusUI(session.game_id, session.score);
 
-            {/* Điểm số & Hành động */}
-            <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
-              <div className="text-right">
-                <div className="flex items-center gap-1 justify-end font-bold text-green-600 dark:text-green-400 text-lg">
-                  <Trophy className="w-5 h-5" /> {session.score} điểm
-                </div>
-                <Badge
-                  variant="outline"
-                  className="mt-1 bg-green-50 text-green-700 border-green-200"
+          return (
+            <Card
+              key={session.id}
+              className={cn(
+                "p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 hover:shadow-md transition-all border-l-4",
+                ui.borderColor,
+              )}
+            >
+              {/* Thông tin Game */}
+              <div className="flex items-center gap-4 w-full md:w-auto">
+                {/* Icon Box */}
+                <div
+                  className={cn(
+                    "p-3 rounded-xl flex-shrink-0 transition-colors",
+                    ui.bgColor,
+                    ui.color,
+                  )}
                 >
-                  Đã hoàn thành
-                </Badge>
+                  {ui.icon}
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-bold text-lg truncate">
+                      {GAME_ID_MAP[session.game_id] ||
+                        `Game #${session.game_id}`}
+                    </h4>
+                  </div>
+
+                  <div className="flex flex-wrap gap-3 text-sm text-muted-foreground mt-1">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      {format(
+                        new Date(session.started_at),
+                        "dd/MM/yyyy HH:mm",
+                        {
+                          locale: vi,
+                        },
+                      )}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {formatDuration(session.play_time_seconds)}
+                    </span>
+                  </div>
+                </div>
               </div>
 
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-muted-foreground hover:text-red-500 transition-colors"
+              {/* Điểm số & Hành động */}
+              <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end pl-14 md:pl-0">
+                <div className="text-right">
+                  <div
+                    className={cn(
+                      "flex items-center gap-1 justify-end font-black text-xl",
+                      ui.color,
+                    )}
                   >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Xóa lịch sử?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Dữ liệu ván đấu "{GAME_ID_MAP[session.game_id]}" này sẽ bị
-                      xóa vĩnh viễn khỏi hệ thống.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Hủy</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => deleteSession(session.id)}
-                      className="bg-red-500 hover:bg-red-600"
+                    {ui.label}
+                  </div>
+                  <div className="text-xs text-muted-foreground font-medium uppercase tracking-wider text-right">
+                    {ui.subLabel}
+                  </div>
+                </div>
+
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors rounded-full"
                     >
-                      Xóa ngay
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-          </Card>
-        ))}
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Xóa lịch sử?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Dữ liệu ván đấu "{GAME_ID_MAP[session.game_id]}" này sẽ
+                        bị xóa vĩnh viễn khỏi hệ thống.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Hủy</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => deleteSession(session.id)}
+                        className="bg-red-500 hover:bg-red-600"
+                      >
+                        Xóa ngay
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </Card>
+          );
+        })}
       </div>
 
-      {/* Phân trang dựa trên dữ liệu gốc từ API */}
+      {/* Phân trang */}
       {data?.pagination && (
         <PaginationCustom
           page={data.pagination.page}
