@@ -125,7 +125,7 @@ const GameOverOverlay = ({ score, targetScore, onRestart, onExit }: GameOverOver
         initial={{ scale: 0.8, y: 50 }}
         animate={{ scale: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 100, damping: 15 }}
-        className="relative w-11/12 max-w-sm rounded-3xl p-6 sm:p-8 shadow-2xl border-2 overflow-hidden backdrop-blur-md bg-card border-primary/30"
+        className="relative w-11/12 max-w-sm rounded-3xl p-4 sm:p-8 shadow-2xl border-2 overflow-hidden backdrop-blur-md bg-card border-primary/30"
       >
         {/* Background Animated Elements - Card Level */}
         <motion.div
@@ -228,24 +228,19 @@ const GameOverOverlay = ({ score, targetScore, onRestart, onExit }: GameOverOver
           variants={itemVariants}
           className="flex gap-3 justify-center flex-wrap relative z-10"
         >
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+          <RoundButton
             onClick={onRestart}
-            className="flex items-center gap-2 px-6 py-3 bg-linear-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground font-bold rounded-xl transition-all duration-200 shadow-lg hover:shadow-primary/50 active:scale-95 border-b-4 border-primary/60 hover:border-primary/40"
           >
             <RotateCcw className="w-5 h-5" />
             Chơi lại
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+          </RoundButton>
+          <RoundButton
+            variant="danger"
             onClick={onExit}
-            className="flex items-center gap-2 px-6 py-3 bg-linear-to-r from-muted to-muted/80 hover:from-muted/90 hover:to-muted/70 text-foreground font-bold rounded-xl transition-all duration-200 shadow-lg hover:shadow-muted/50 active:scale-95 border-b-4 border-muted/60 hover:border-muted/40"
           >
             <ChevronLeft/>
             về trang chủ
-          </motion.button>
+          </RoundButton>
         </motion.div>
       </motion.div>
     </motion.div>

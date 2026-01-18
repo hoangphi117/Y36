@@ -219,7 +219,6 @@ export default function Match3Game() {
       setShowGameOver(false);
       setIsPaused(false);
       
-      // Complete session cũ nếu có
       if (currentSessionId) {
         await gameSession.saveGame(true);
         setCurrentSessionId(null);
@@ -437,6 +436,11 @@ export default function Match3Game() {
     toast.success("Đã xóa ván chơi!");
   }
 
+  // play again
+  const handlePlayAgain = async () => {
+    await restartGameWithSettings();
+  }
+
   // Hiển thị loading
   if (isInitializing) {
     return (
@@ -606,7 +610,7 @@ export default function Match3Game() {
           <GameOverOverlay 
             score={score} 
             targetScore={targetScore}
-            onRestart={quickRestart}
+            onRestart={handlePlayAgain}
             onExit={() => navigate("/")}
           />
         )}
