@@ -357,7 +357,7 @@ export default function Match3Game() {
           // Complete session
           setTimeout(async () => {
             if (currentSessionId) {
-              await match3Api.completeSession(currentSessionId, score, timeLimit);
+              gameSession.completeGame(score);
             }
           }, 500);
           return 0;
@@ -376,7 +376,7 @@ export default function Match3Game() {
       const completeGame = async () => {
         setShowGameOver(true);
         if (currentSessionId) {
-          await match3Api.completeSession(currentSessionId, score, 0);
+          gameSession.completeGame(score);
         }
       };
       
