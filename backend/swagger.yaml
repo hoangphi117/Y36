@@ -200,6 +200,17 @@ components:
           type: string
           format: date-time
 
+    RankingEntry:
+      type: object
+      properties:
+        user_id: { type: string, format: uuid }
+        username: { type: string }
+        avatar_url: { type: string, nullable: true }
+        high_score: { type: integer }
+        rank_points: { type: integer }
+        total_wins: { type: integer }
+        total_matches: { type: integer }
+
     Error:
       type: object
       properties:
@@ -2047,3 +2058,49 @@ paths:
                   total_ratings:
                     type: integer
                     example: 25
+                    
+  /rankings:
+    get:
+      tags: [Ranking]
+      summary: Lấy bảng xếp hạng (Global hoặc Friends)
+      parameters:
+        - name: gameId
+          in: query
+          required: true
+          schema: { type: integer, enum: [1, 2, 3, 4, 5, 6] }
+        - name: scope
+          in: query
+          schema: { type: string, enum: [global, friends], default: global }
+      responses:
+        200:
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/RankingEntry' } }
+                  type: { type: string, example: "rank_points" }
+
+  /rankings/me:
+    get:
+      tags: [Ranking]
+      summary: Lấy thứ hạng cá nhân trong game cụ thể
+      parameters:
+        - name: gameId
+          in: query
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      rank: { type: integer, example: 5 }
+                      score: { type: integer, example: 1200 }

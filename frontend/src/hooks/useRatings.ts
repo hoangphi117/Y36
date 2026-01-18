@@ -45,7 +45,7 @@ export const useSubmitRating = () => {
       return response.data;
     },
     onSuccess: (_, variables) => {
-      toast.success("Đã gửi đánh giá!");
+      toast.success("Cảm ơn bạn đã đánh giá!");
 
       queryClient.invalidateQueries({
         queryKey: ["rating", "me", variables.gameId],

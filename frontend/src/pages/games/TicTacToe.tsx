@@ -111,8 +111,6 @@ export default function TicTacToe() {
     autoCreate: false,
   });
 
-  console.log("TicTacToe session:", session);
-
   const timeOptions = getTimeOptions(GAME_ID);
   const { playSound: originalPlaySound } = useGameSound();
   const playSound = (type: string) =>
@@ -286,7 +284,7 @@ export default function TicTacToe() {
   };
 
   const handleStandardNewGame = async () => {
-    setIsSettingsOpen;
+    setIsSettingsOpen(true);
   };
 
   const handleSaveSettings = (
