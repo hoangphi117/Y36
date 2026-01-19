@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 import { useGameSound } from "@/hooks/useGameSound";
 import { GameHeader } from "@/components/games/GameHeader";
 import useDocumentTitle from "@/hooks/useDocumentTitle";
-import { useGameSession } from "@/hooks/useGameSession"; // Hook đã có logic pause
+import { useGameSession } from "@/hooks/useGameSession";
 import { LoadGameDialog } from "./LoadGameDialog";
 
 import { getEasyMove, getMediumMove, getHardMove } from "@/lib/AI/tictactoeAI";
@@ -61,16 +61,18 @@ export default function TicTacToe() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [userSymbol, setUserSymbol] = useState<PlayerSymbol>("X");
 
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const isManualStartRef = useRef(false);
+
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
   const [timeLimit, setTimeLimit] = useState<number>(0);
   const [isTimeOut, setIsTimeOut] = useState(false);
 
   const [isManualPaused, setIsManualPaused] = useState(false);
 
-  // State hiển thị hướng dẫn
   const [showInstructions, setShowInstructions] = useState(false);
 
-  const isGamePaused = isManualPaused || showInstructions;
+  const isGamePaused = isManualPaused || showInstructions || isSettingsOpen;
 
   const ignoreConfigSyncRef = useRef(false);
   const squaresRef = useRef(squares);
@@ -87,11 +89,9 @@ export default function TicTacToe() {
     winner: calculateWinner(squaresRef.current),
   });
 
-  // [QUAN TRỌNG] Truyền showInstructions vào prop isPaused
-  // Hook sẽ tự động dừng đồng hồ và xử lý bù giờ khi tắt hướng dẫn
   const {
     session,
-    currentPlayTime, // Giá trị này sẽ tự động đứng yên khi isPaused = true
+    currentPlayTime,
     savedSessions,
     isLoading,
     isSaving,
@@ -107,7 +107,8 @@ export default function TicTacToe() {
   } = useGameSession({
     gameId: GAME_ID,
     getBoardState,
-    isPaused: showInstructions || isManualPaused, // <--- KẾT NỐI VÀO ĐÂY
+    isPaused: showInstructions || isManualPaused || isSettingsOpen,
+    autoCreate: false,
   });
 
   const timeOptions = getTimeOptions(GAME_ID);
@@ -115,7 +116,12 @@ export default function TicTacToe() {
   const playSound = (type: string) =>
     soundEnabled && originalPlaySound(type as any);
 
-  // Load Session Logic
+  useEffect(() => {
+    if (!isLoading && !session && !showLoadDialog) {
+      setIsSettingsOpen(true);
+    }
+  }, [isLoading, session, showLoadDialog]);
+
   useEffect(() => {
     if (session) {
       if (session.board_state) {
@@ -140,9 +146,7 @@ export default function TicTacToe() {
   const winner = calculateWinner(squares);
   const isDraw = !winner && squares.every((square) => square !== null);
 
-  // Check Time Out
   useEffect(() => {
-    // Không cần check showInstructions ở đây nữa vì currentPlayTime đã tự dừng
     if (
       timeLimit > 0 &&
       session?.status === "playing" &&
@@ -155,17 +159,8 @@ export default function TicTacToe() {
       playSound("lose");
       completeGame(-1);
     }
-  }, [
-    currentPlayTime,
-    timeLimit,
-    session?.status,
-    winner,
-    isDraw,
-    isTimeOut,
-    // showInstructions (Không cần thiết phải có trong dependency vì hook đã lo)
-  ]);
+  }, [currentPlayTime, timeLimit, session?.status, winner, isDraw, isTimeOut]);
 
-  // Logic Bot
   useEffect(() => {
     if (
       !session ||
@@ -173,7 +168,7 @@ export default function TicTacToe() {
       winner ||
       isDraw ||
       isTimeOut ||
-      isGamePaused // Vẫn giữ check này để Bot không tính toán ngầm
+      isGamePaused
     )
       return;
 
@@ -208,10 +203,9 @@ export default function TicTacToe() {
     isDraw,
     isTimeOut,
     difficulty,
-    showInstructions, // Khi tắt hướng dẫn, effect chạy lại -> Bot tính toán lại -> OK
+    showInstructions,
   ]);
 
-  // Xử lý kết thúc game
   useEffect(() => {
     if (session?.status === "playing" && !isTimeOut && !showInstructions) {
       if (winner) {
@@ -243,7 +237,7 @@ export default function TicTacToe() {
       isDraw ||
       isTimeOut ||
       session?.status !== "playing" ||
-      showInstructions // Chặn đánh cờ khi đang xem hướng dẫn
+      showInstructions
     )
       return;
 
@@ -286,13 +280,11 @@ export default function TicTacToe() {
     setIsTimeOut(false);
     setShowInstructions(false);
     resetTimer();
-    ignoreConfigSyncRef.current = true;
-    await startGame();
+    setIsSettingsOpen(true);
   };
 
   const handleStandardNewGame = async () => {
-    ignoreConfigSyncRef.current = false;
-    await startGame();
+    setIsSettingsOpen(true);
   };
 
   const handleSaveSettings = (
@@ -301,7 +293,19 @@ export default function TicTacToe() {
   ) => {
     setDifficulty(newDifficulty);
     setTimeLimit(newTimeLimit);
-    handleRestart();
+
+    setSquares(Array(9).fill(null));
+    setXIsNext(true);
+    setIsTimeOut(false);
+    resetTimer();
+
+    ignoreConfigSyncRef.current = true;
+    isManualStartRef.current = true;
+
+    const newConfig = { time_limit: newTimeLimit };
+    startGame(newConfig);
+
+    setIsSettingsOpen(false);
   };
 
   function calculateWinner(squares: SquareValue[]) {
@@ -320,6 +324,10 @@ export default function TicTacToe() {
     !isDraw &&
     !isTimeOut &&
     (movesCount === 0 || (movesCount === 1 && userSymbol === "O"));
+
+  const isInitialSetup =
+    (!session || (session.play_time_seconds === 0 && !session.board_state)) &&
+    isSettingsOpen;
 
   if (isLoading) {
     return (
@@ -400,11 +408,14 @@ export default function TicTacToe() {
 
           {!winner && !isDraw && !isTimeOut && (
             <GameSettingsDialog
+              open={isSettingsOpen}
+              onOpenChange={setIsSettingsOpen}
               currentDifficulty={difficulty}
               currentTimeLimit={timeLimit}
               onSave={handleSaveSettings}
               timeOptions={timeOptions}
               disabled={session?.status !== "playing" || showInstructions}
+              preventClose={isInitialSetup}
             />
           )}
 

@@ -8,12 +8,14 @@ import { useAuthStore } from "@/stores/useAuthStore";
 interface UseGameSessionProps {
   gameId: number;
   getBoardState: () => any;
-  isPaused?: boolean; // [MỚI] Nhận trạng thái pause từ game
+  isPaused?: boolean;
+  autoCreate?: boolean;
 }
 
 export function useGameSession({
   gameId,
   getBoardState,
+  autoCreate = true,
   isPaused,
 }: UseGameSessionProps) {
   const navigate = useNavigate();
@@ -40,14 +42,11 @@ export function useGameSession({
 
   useEffect(() => {
     if (isPaused) {
-      // Bắt đầu pause: ghi lại thời điểm
       pauseStartTimeRef.current = Date.now();
     } else {
-      // Kết thúc pause: tính khoảng thời gian đã nghỉ
       if (pauseStartTimeRef.current) {
         const pauseDuration = Date.now() - pauseStartTimeRef.current;
-        // Dời thời gian bắt đầu về phía sau tương ứng với thời gian nghỉ
-        // Để công thức (now - startTime) vẫn ra kết quả đúng
+
         startTimeRef.current += pauseDuration;
         pauseStartTimeRef.current = null;
       }
@@ -57,7 +56,6 @@ export function useGameSession({
   useEffect(() => {
     let intervalId: number;
 
-    // [SỬA] Chỉ chạy timer khi playing VÀ không bị pause
     if (session?.status === "playing" && !isPaused) {
       intervalId = window.setInterval(() => {
         const now = Date.now();
@@ -74,13 +72,12 @@ export function useGameSession({
   const resetTimer = useCallback(() => {
     startTimeRef.current = Date.now();
     setCurrentPlayTime(0);
-    pauseStartTimeRef.current = null; // Reset cả pause ref
+    pauseStartTimeRef.current = null;
   }, []);
 
   const getCurrentTimeForApi = () => {
     if (!startTimeRef.current) return 0;
 
-    // Nếu đang pause khi save, phải trừ thời gian pause hiện tại ra
     let adjustment = 0;
     if (isPaused && pauseStartTimeRef.current) {
       adjustment = Date.now() - pauseStartTimeRef.current;
@@ -102,28 +99,29 @@ export function useGameSession({
     }
   }, [gameId]);
 
-  const startGame = useCallback(async (sessionConfig?: any) => {
-    try {
-      setIsLoading(true);
-      const payload: any = { gameId };
-      
-      if (sessionConfig) {
-        payload.session_config = sessionConfig;
-      }
-      
-      const res = await axiosClient.post("/sessions/start", payload);
-      const newSession = res.data.session;
+  const startGame = useCallback(
+    async (customConfig?: any) => {
+      try {
+        setIsLoading(true);
 
-      setSession(newSession);
-      setShowLoadDialog(false);
-      // Reset pause state khi start game mới
-      pauseStartTimeRef.current = null;
-    } catch (error: any) {
-      toast.error("Lỗi tạo game: " + error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [gameId]);
+        const payload = customConfig
+          ? { gameId, session_config: customConfig }
+          : { gameId };
+
+        const res = await axiosClient.post("/sessions/start", payload);
+        const newSession = res.data.session;
+
+        setSession(newSession);
+        setShowLoadDialog(false);
+        pauseStartTimeRef.current = null;
+      } catch (error: any) {
+        toast.error("Lỗi tạo game: " + error.message);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [gameId],
+  );
 
   const loadGame = useCallback(async (sessionId: string) => {
     try {
@@ -135,7 +133,7 @@ export function useGameSession({
       setShowLoadDialog(false);
       startTimeRef.current =
         Date.now() - loadedSession.play_time_seconds * 1000;
-      pauseStartTimeRef.current = null; // Reset pause state
+      pauseStartTimeRef.current = null;
       toast.success("Đã tải lại ván game!", { duration: 1500 });
     } catch (error: any) {
       toast.error("Lỗi tải game: " + error.message);
@@ -187,7 +185,7 @@ export function useGameSession({
         if (manual) setIsSaving(false);
       }
     },
-    [getBoardState, fetchSavedSessions, isPaused], // Thêm isPaused
+    [getBoardState, fetchSavedSessions, isPaused],
   );
 
   const completeGame = useCallback(
@@ -266,24 +264,37 @@ export function useGameSession({
   useEffect(() => {
     const init = async () => {
       setIsLoading(true);
+      let savedList = [];
+
       try {
-        const savedList = await fetchSavedSessions();
+        savedList = await fetchSavedSessions();
 
         if (savedList.length > 0) {
           setShowLoadDialog(true);
         } else {
-          await startGame();
+          if (autoCreate) {
+            await startGame();
+          } else {
+            setIsLoading(false);
+          }
         }
       } catch (e) {
         console.error("Init error", e);
-        await startGame();
+
+        if (autoCreate) await startGame();
       } finally {
-        setIsLoading(false);
+        if (!autoCreate && savedList.length === 0) {
+          setIsLoading(false);
+        }
+
+        if (savedList.length > 0) {
+          setIsLoading(false);
+        }
       }
     };
 
     init();
-  }, [gameId]);
+  }, [gameId, autoCreate]);
 
   return {
     session,

@@ -28,6 +28,7 @@ import { GameHistory } from "./GameHistory";
 import { FriendsTab } from "./FriendsTab";
 import useDocumentTitle from "@/hooks/useDocumentTitle";
 import type { UpdateProfileValues } from "@/lib/schemas";
+import { StatsTab } from "./StatsTab";
 
 type ViewMode = "view" | "edit" | "password";
 
@@ -190,11 +191,7 @@ const ProfilePage = () => {
           </TabsContent>
 
           <TabsContent value="stats" className="mt-6">
-            <EmptyState
-              icon={<BarChart3 className="h-10 w-10" />}
-              title="Thống kê"
-              description="Dữ liệu thống kê sẽ hiển thị tại đây."
-            />
+            <StatsTab />
           </TabsContent>
 
           <TabsContent value="friends" className="mt-6">
@@ -212,14 +209,6 @@ const InfoBox = ({ label, value, mono }: any) => (
     <p className={`mt-1 ${mono ? "font-mono text-sm" : "font-medium"}`}>
       {value}
     </p>
-  </div>
-);
-
-const EmptyState = ({ icon, title, description }: any) => (
-  <div className="border-dashed border rounded-xl p-10 text-center text-muted-foreground">
-    <div className="mx-auto mb-4">{icon}</div>
-    <h3 className="font-semibold">{title}</h3>
-    <p className="text-sm">{description}</p>
   </div>
 );
 

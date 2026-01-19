@@ -1,5 +1,6 @@
 const GameSession = require("../../models/GameSession");
 const Game = require("../../models/Game");
+const UserGameStats = require("../../models/UserGameStats");
 
 class GameSessionController {
   async startSession(req, res) {
@@ -106,22 +107,30 @@ class GameSessionController {
         return res.status(404).json({ message: "Session not found" });
       }
 
-      if (session.status === "completed") {
-        return res.status(400).json({
-          message: "Session already completed",
-        });
-      }
-
       const [completedSession] = await GameSession.updateById(id, {
         status: "completed",
         score,
         play_time_seconds,
       });
 
-      return res
-        .status(200)
-        .json({ message: "Session completed", session: completedSession });
+      const gameId = Number(session.game_id);
+      const COMPETITIVE_IDS = [1, 2, 4];
+      const isCompetitive = COMPETITIVE_IDS.includes(gameId);
+
+      const isWin = isCompetitive ? score > 0 : true;
+
+      await UserGameStats.updateStats(userId, gameId, {
+        score: Number(score),
+        isCompetitive,
+        isWin,
+      });
+
+      return res.status(200).json({
+        message: "Session completed",
+        session: completedSession,
+      });
     } catch (error) {
+      console.error("Complete Session Error:", error);
       return res
         .status(500)
         .json({ message: "Server error", error: error.message });

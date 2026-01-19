@@ -54,10 +54,10 @@ export default function SnakeGame() {
 
   const [gridSize, setGridSize] = useState(DEFAULT_CONFIG.cols);
   const [currentSpeed, setCurrentSpeed] = useState(
-    DEFAULT_CONFIG.initial_speed
+    DEFAULT_CONFIG.initial_speed,
   );
   const [speedIncrement, setSpeedIncrement] = useState(
-    DEFAULT_CONFIG.speed_increment
+    DEFAULT_CONFIG.speed_increment,
   );
 
   const ignoreConfigSyncRef = useRef(false);
@@ -69,6 +69,7 @@ export default function SnakeGame() {
   const [score, setScore] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const snakeRef = useRef(snake);
   const foodRef = useRef(food);
@@ -91,7 +92,7 @@ export default function SnakeGame() {
     (type: string) => {
       if (soundEnabled) originalPlaySound(type as any);
     },
-    [soundEnabled, originalPlaySound]
+    [soundEnabled, originalPlaySound],
   );
 
   const gameLoopRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -110,7 +111,7 @@ export default function SnakeGame() {
       isGameOver: gameOverRef.current,
       gridSize,
     }),
-    [gridSize]
+    [gridSize],
   );
 
   const {
@@ -127,7 +128,21 @@ export default function SnakeGame() {
     completeGame,
     quitGame,
     fetchSavedSessions,
-  } = useGameSession({ gameId: GAME_ID, getBoardState, isPaused: isPaused });
+  } = useGameSession({
+    gameId: GAME_ID,
+    getBoardState,
+    isPaused: isPaused || isSettingsOpen,
+    autoCreate: false,
+  });
+
+  console.log("session", session);
+
+  useEffect(() => {
+    if (!isLoading && !session && !showLoadDialog) {
+      setIsSettingsOpen(true);
+      setIsPaused(true);
+    }
+  }, [isLoading, session, showLoadDialog]);
 
   useEffect(() => {
     if (session) {
@@ -137,7 +152,6 @@ export default function SnakeGame() {
           if (config.cols) setGridSize(Number(config.cols));
           if (config.speed_increment)
             setSpeedIncrement(Number(config.speed_increment));
-
           if (!session.board_state && config.initial_speed) {
             setCurrentSpeed(Number(config.initial_speed));
           }
@@ -166,6 +180,7 @@ export default function SnakeGame() {
         setScore(0);
         setIsGameOver(false);
         setIsPaused(false);
+
         setFood({
           x: Math.floor(Math.random() * gridSize),
           y: Math.floor(Math.random() * gridSize),
@@ -182,7 +197,7 @@ export default function SnakeGame() {
         y: Math.floor(Math.random() * gridSize),
       };
       const isOnSnake = snake.some(
-        (seg) => seg.x === newFood.x && seg.y === newFood.y
+        (seg) => seg.x === newFood.x && seg.y === newFood.y,
       );
       if (!isOnSnake) break;
     }
@@ -228,7 +243,6 @@ export default function SnakeGame() {
         setScore((s) => s + 10);
         setFood(generateFood());
         playSound("pop");
-
         if (speedIncrement > 0) {
           setCurrentSpeed((prev) => Math.max(50, prev - speedIncrement));
         }
@@ -251,13 +265,25 @@ export default function SnakeGame() {
   ]);
 
   useEffect(() => {
-    if (session?.status === "playing" && !isGameOver && !isPaused) {
+    if (
+      session?.status === "playing" &&
+      !isGameOver &&
+      !isPaused &&
+      !isSettingsOpen
+    ) {
       gameLoopRef.current = setInterval(moveSnake, currentSpeed);
     }
     return () => {
       if (gameLoopRef.current) clearInterval(gameLoopRef.current);
     };
-  }, [moveSnake, currentSpeed, isPaused, isGameOver, session?.status]);
+  }, [
+    moveSnake,
+    currentSpeed,
+    isPaused,
+    isSettingsOpen,
+    isGameOver,
+    session?.status,
+  ]);
 
   const handleRestart = async () => {
     ignoreConfigSyncRef.current = true;
@@ -265,8 +291,8 @@ export default function SnakeGame() {
   };
 
   const handleStandardNewGame = async () => {
-    ignoreConfigSyncRef.current = false;
-    await startGame();
+    setIsSettingsOpen(true);
+    setIsPaused(true);
   };
 
   const handleSaveSettings = (
@@ -275,14 +301,30 @@ export default function SnakeGame() {
     _turn: number,
     newBoardSize: number,
     newSpeed: number,
-    newIncrement: number
+    newIncrement: number,
   ) => {
     setGridSize(newBoardSize);
     setCurrentSpeed(newSpeed);
     setSpeedIncrement(newIncrement);
 
+    const newConfig = {
+      cols: newBoardSize,
+      rows: newBoardSize,
+      initial_speed: newSpeed,
+      speed_increment: newIncrement,
+    };
+
     ignoreConfigSyncRef.current = true;
-    handleRestart();
+
+    startGame(newConfig);
+
+    setIsSettingsOpen(false);
+    setIsPaused(false);
+
+    setSnake(INITIAL_SNAKE);
+    setDirection(INITIAL_DIRECTION);
+    setScore(0);
+    setIsGameOver(false);
   };
 
   const handleManualSave = () => saveGame(true);
@@ -318,6 +360,10 @@ export default function SnakeGame() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [direction, isPaused, isGameOver]);
 
+  const isInitialSetup =
+    (!session || (session.play_time_seconds === 0 && !session.board_state)) &&
+    isSettingsOpen;
+
   if (isLoading)
     return (
       <div className="h-screen flex items-center justify-center">
@@ -329,7 +375,7 @@ export default function SnakeGame() {
     <>
       <GameHeader />
       <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background">
-        {/* Info Header */}
+        {/* INFO */}
         <div className="flex justify-between items-center w-full max-w-md px-4 py-2 mb-6 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border">
           <div className="flex items-center gap-2">
             <Trophy className="w-5 h-5 text-yellow-500" />
@@ -340,7 +386,7 @@ export default function SnakeGame() {
           </div>
         </div>
 
-        {/* Controls */}
+        {/* CONTROLS */}
         <div className="flex flex-wrap gap-4 mb-6 justify-center items-center">
           <RoundButton
             onClick={handleManualSave}
@@ -373,9 +419,11 @@ export default function SnakeGame() {
             </RoundButton>
           </LoadGameDialog>
 
-          {/* Settings Button [MỚI] */}
+          {/* GAME SETTINGS (CONTROLLED) */}
           {!isGameOver && (
             <GameSettingsDialog
+              open={isSettingsOpen}
+              onOpenChange={setIsSettingsOpen}
               currentBoardSize={gridSize}
               currentSpeed={currentSpeed}
               currentIncrement={speedIncrement}
@@ -384,6 +432,7 @@ export default function SnakeGame() {
               incrementOptions={incrementOptions}
               onSave={handleSaveSettings}
               disabled={session?.status !== "playing"}
+              preventClose={isInitialSetup}
             />
           )}
 
@@ -415,7 +464,7 @@ export default function SnakeGame() {
           </RoundButton>
         </div>
 
-        {/* Board */}
+        {/* BOARD */}
         <div className="relative p-2 bg-zinc-800 rounded-[1.5rem] shadow-xl border-8 border-zinc-700">
           <div
             className="grid bg-[var(--snake-bg)] rounded-xl relative overflow-hidden"
@@ -439,17 +488,16 @@ export default function SnakeGame() {
                     backgroundColor: isHead
                       ? "var(--snake-head)"
                       : isSnake
-                      ? "var(--snake-body)"
-                      : isFood
-                      ? "var(--snake-food)"
-                      : "transparent",
+                        ? "var(--snake-body)"
+                        : isFood
+                          ? "var(--snake-food)"
+                          : "transparent",
                     borderRadius: isSnake ? "4px" : "0",
                   }}
                 />
               );
             })}
 
-            {/* Overlays (Pause, Game Over) giống cũ */}
             <AnimatePresence>
               {isPaused && !isGameOver && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[1px]">

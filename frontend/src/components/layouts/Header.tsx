@@ -75,7 +75,7 @@ export const Header = () => {
             <span>Trang chủ</span>
           </Link>
           <Link
-            to="/rank"
+            to="/ranking"
             className="flex items-center gap-2 font-bold text-muted-foreground group hover:text-primary transition-all"
           >
             <Trophy className="w-5 h-5 group-hover:text-yellow-500 transition-all" />

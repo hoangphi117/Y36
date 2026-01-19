@@ -15,6 +15,7 @@ import LoginPage from "@/pages/auth/LoginPage";
 import RegisterPage from "@/pages/auth/RegisterPage";
 import ProfilePage from "@/pages/user/profile/Profile";
 import ChatPage from "@/pages/user/chat/ChatPage";
+import RankingPage from "@/pages/user/RankingPage";
 
 // ===== ADMIN IMPORTS =====
 import { AdminGuard } from "@/components/admin/auth/AdminGuard";
@@ -51,6 +52,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <ChatPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "ranking",
+        element: (
+          <ProtectedRoute>
+            <RankingPage />
           </ProtectedRoute>
         ),
       },
