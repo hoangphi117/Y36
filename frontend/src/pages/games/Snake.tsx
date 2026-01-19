@@ -135,8 +135,6 @@ export default function SnakeGame() {
     autoCreate: false,
   });
 
-  console.log("session", session);
-
   useEffect(() => {
     if (!isLoading && !session && !showLoadDialog) {
       setIsSettingsOpen(true);
