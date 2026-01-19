@@ -29,6 +29,7 @@ import { FriendsTab } from "./FriendsTab";
 import useDocumentTitle from "@/hooks/useDocumentTitle";
 import type { UpdateProfileValues } from "@/lib/schemas";
 import { StatsTab } from "./StatsTab";
+import { AchievementsTab } from "./AchievementsTab";
 
 type ViewMode = "view" | "edit" | "password";
 
@@ -45,7 +46,9 @@ const ProfilePage = () => {
     const tabFromUrl = searchParams.get("tab");
     if (
       tabFromUrl &&
-      ["overview", "game", "stats", "friends"].includes(tabFromUrl)
+      ["overview", "game", "stats", "friends", "achievements"].includes(
+        tabFromUrl,
+      )
     ) {
       setActiveTab(tabFromUrl);
     }
@@ -123,8 +126,8 @@ const ProfilePage = () => {
             <div className="pt-4">
               <TabsList
                 className="
-                  flex w-full justify-start overflow-x-auto h-auto p-1 gap-2
-                  md:grid md:grid-cols-4 md:max-w-md md:mx-auto
+                  flex w-full gap-2 rounded-2xl bg-muted/60 p-1 shadow-sm h-1/2
+                  md:grid md:grid-cols-5 md:max-w-2xl md:mx-auto
                   [&::-webkit-scrollbar]:h-1
                   [&::-webkit-scrollbar-thumb]:bg-primary/30
                   [&::-webkit-scrollbar-thumb]:rounded-full
@@ -161,6 +164,13 @@ const ProfilePage = () => {
                   <Users className="w-4 h-4 md:w-5 md:h-5 text-secondary-foreground/70" />
                   <span>Bạn bè</span>
                 </TabsTrigger>
+                <TabsTrigger
+                  value="achievements"
+                  className="flex items-center gap-2 px-4 py-2 whitespace-nowrap min-w-fit md:min-w-0"
+                >
+                  <Users className="w-4 h-4 md:w-5 md:h-5 text-secondary-foreground/70" />
+                  <span>Thành tựu</span>
+                </TabsTrigger>
               </TabsList>
             </div>
           </div>
@@ -196,6 +206,9 @@ const ProfilePage = () => {
 
           <TabsContent value="friends" className="mt-6">
             <FriendsTab />
+          </TabsContent>
+          <TabsContent value="achievements" className="mt-6">
+            <AchievementsTab />
           </TabsContent>
         </Tabs>
       </div>

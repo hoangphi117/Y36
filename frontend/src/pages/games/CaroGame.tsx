@@ -16,6 +16,7 @@ import {
   Bot,
   AlertTriangle,
   Zap,
+  Settings,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -40,8 +41,7 @@ import {
 } from "@/lib/AI/caroAI";
 
 import formatTime from "@/utils/formatTime";
-import { GameRating } from "@/components/ratings/GameRating";
-import { GameComments } from "@/components/comments/GameComments";
+import { GameLayout } from "@/components/layouts/GameLayout";
 
 interface CaroGameProps {
   gameId: number;
@@ -419,7 +419,7 @@ export default function CaroGame({ gameId, winCondition }: CaroGameProps) {
   }
 
   return (
-    <>
+    <GameLayout gameId={gameId}>
       <div className="flex flex-col items-center min-h-screen bg-background text-foreground transition-colors duration-300">
         <GameHeader />
         <div className="flex flex-col items-center justify-center py-4 px-4 w-full max-w-4xl">
@@ -520,22 +520,6 @@ export default function CaroGame({ gameId, winCondition }: CaroGameProps) {
               </RoundButton>
             </LoadGameDialog>
 
-            {/* Settings */}
-            {!winner && !isTimeOut && (
-              <GameSettingsDialog
-                open={isSettingsOpen}
-                onOpenChange={setIsSettingsOpen}
-                currentDifficulty={difficulty}
-                currentTimeLimit={timeLimit}
-                currentTurnTime={turnTimeLimit}
-                currentBoardSize={boardSize}
-                timeOptions={timeOptions}
-                boardSizeOptions={boardSizeOptions}
-                onSave={handleSaveSettings}
-                disabled={session?.status !== "playing"}
-                preventClose={isInitialSetup}
-              />
-            )}
 
             {/* Switch Side */}
             {isBoardEmpty && session?.status === "playing" && (
@@ -575,6 +559,15 @@ export default function CaroGame({ gameId, winCondition }: CaroGameProps) {
               ) : (
                 <VolumeX className="w-4 h-4" />
               )}
+            </RoundButton>
+            <RoundButton
+              size="small"
+              variant="neutral"
+              onClick={() => setIsSettingsOpen(true)}
+              title="Cài đặt"
+              disabled={!!winner || isTimeOut}
+            >
+              <Settings className="w-4 h-4" />
             </RoundButton>
             <RoundButton
               size="small"
@@ -688,14 +681,28 @@ export default function CaroGame({ gameId, winCondition }: CaroGameProps) {
                   </motion.div>
                 )}
               </AnimatePresence>
+
+              {/* Settings Dialog (inline mode) */}
+              {!winner && !isTimeOut && (
+                <GameSettingsDialog
+                  open={isSettingsOpen}
+                  onOpenChange={setIsSettingsOpen}
+                  currentDifficulty={difficulty}
+                  currentTimeLimit={timeLimit}
+                  currentTurnTime={turnTimeLimit}
+                  currentBoardSize={boardSize}
+                  timeOptions={timeOptions}
+                  boardSizeOptions={boardSizeOptions}
+                  onSave={handleSaveSettings}
+                  disabled={session?.status !== "playing"}
+                  preventClose={isInitialSetup}
+                  inline
+                />
+              )}
             </div>
           </div>
         </div>
       </div>
-      <div className="flex flex-col items-center justify-center">
-        <GameRating gameId={gameId} />
-        <GameComments gameId={gameId} />
-      </div>
-    </>
+    </GameLayout>
   );
 }

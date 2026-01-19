@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { type GameSession } from "@/types/game";
 import { useAuthStore } from "@/stores/useAuthStore";
+import { triggerWinEffects } from "@/lib/fireworks";
+import { useAchievementStore } from "@/stores/useAchievementStore";
 
 interface UseGameSessionProps {
   gameId: number;
@@ -30,6 +32,8 @@ export function useGameSession({
   const pauseStartTimeRef = useRef<number | null>(null);
 
   const [currentPlayTime, setCurrentPlayTime] = useState(0);
+
+  const addAchievement = useAchievementStore((s) => s.addAchievement);
 
   useEffect(() => {
     sessionRef.current = session;
@@ -193,10 +197,20 @@ export function useGameSession({
       if (!sessionRef.current) return;
       try {
         const playTime = getCurrentTimeForApi();
-        await axiosClient.put(`/sessions/${sessionRef.current.id}/complete`, {
-          score,
-          play_time_seconds: playTime,
-        });
+        const res = await axiosClient.put(
+          `/sessions/${sessionRef.current.id}/complete`,
+          {
+            score,
+            play_time_seconds: playTime,
+          },
+        );
+        const newAchievements = res.data.newAchievements;
+        if (newAchievements && newAchievements.length > 0) {
+          newAchievements.forEach((ach: any) => {
+            addAchievement(ach); // Đẩy vào store thay vì dùng toast
+          });
+          triggerWinEffects();
+        }
         setSession(null);
       } catch (error) {
         console.error("Complete error", error);

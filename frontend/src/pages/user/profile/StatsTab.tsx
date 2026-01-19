@@ -7,8 +7,6 @@ import { useGameStats } from "@/hooks/useGameStats";
 export function StatsTab() {
   const { stats, loading } = useGameStats();
 
-  console.log(stats);
-
   if (loading)
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

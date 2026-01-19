@@ -16,6 +16,7 @@ import {
   AlertTriangle,
   HelpCircle,
   X,
+  Settings,
 } from "lucide-react";
 import { RoundButton } from "@/components/ui/round-button";
 import { cn } from "@/lib/utils";
@@ -33,8 +34,7 @@ import {
 
 import { getTimeOptions } from "@/config/gameConfigs";
 import formatTime from "@/utils/formatTime";
-import { GameComments } from "@/components/comments/GameComments";
-import { GameRating } from "@/components/ratings/GameRating";
+import { GameLayout } from "@/components/layouts/GameLayout";
 
 import { GamePauseControl } from "@/components/games/GamePauseControl";
 
@@ -339,9 +339,8 @@ export default function TicTacToe() {
       </div>
     );
   }
-
   return (
-    <>
+    <GameLayout gameId={GAME_ID}>
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] p-4 relative">
         <GameHeader />
 
@@ -406,18 +405,6 @@ export default function TicTacToe() {
             )}
           </div>
 
-          {!winner && !isDraw && !isTimeOut && (
-            <GameSettingsDialog
-              open={isSettingsOpen}
-              onOpenChange={setIsSettingsOpen}
-              currentDifficulty={difficulty}
-              currentTimeLimit={timeLimit}
-              onSave={handleSaveSettings}
-              timeOptions={timeOptions}
-              disabled={session?.status !== "playing" || showInstructions}
-              preventClose={isInitialSetup}
-            />
-          )}
 
           <div className="flex justify-center my-6">
             <GamePauseControl
@@ -437,6 +424,17 @@ export default function TicTacToe() {
             disabled={!!winner || !!isDraw || isTimeOut}
           >
             <HelpCircle className="w-5 h-5" />
+          </RoundButton>
+
+          {/* Nút Cài Đặt */}
+          <RoundButton
+            size="small"
+            variant="neutral"
+            onClick={() => setIsSettingsOpen(true)}
+            title="Cài đặt"
+            disabled={!!winner || !!isDraw || isTimeOut}
+          >
+            <Settings className="w-5 h-5" />
           </RoundButton>
 
           {canSwitchSide && !showInstructions && (
@@ -631,6 +629,21 @@ export default function TicTacToe() {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Settings Dialog (inline mode) */}
+          {!winner && !isDraw && !isTimeOut && (
+            <GameSettingsDialog
+              open={isSettingsOpen}
+              onOpenChange={setIsSettingsOpen}
+              currentDifficulty={difficulty}
+              currentTimeLimit={timeLimit}
+              onSave={handleSaveSettings}
+              timeOptions={timeOptions}
+              disabled={session?.status !== "playing" || showInstructions}
+              preventClose={isInitialSetup}
+              inline
+            />
+          )}
         </div>
 
         <div className="flex gap-4 mt-8 z-20">
@@ -655,11 +668,6 @@ export default function TicTacToe() {
           </RoundButton>
         </div>
       </div>
-
-      <div className="flex flex-col items-center justify-center">
-        <GameRating gameId={GAME_ID} />
-        <GameComments gameId={GAME_ID} />
-      </div>
-    </>
+    </GameLayout>
   );
 }

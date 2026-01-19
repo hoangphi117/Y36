@@ -1,6 +1,7 @@
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { Outlet } from "react-router-dom";
+import { AchievementPopup } from "../dialogs/AchievementPopup";
 
 export const MainLayout = () => {
   return (
@@ -10,6 +11,7 @@ export const MainLayout = () => {
 
       <main className="flex-1 w-[90%] md:w-[80%] mx-auto py-8">
         <Outlet />
+        <AchievementPopup />
       </main>
 
       <Footer />

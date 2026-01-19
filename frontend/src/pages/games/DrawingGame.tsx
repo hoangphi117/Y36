@@ -10,6 +10,7 @@ import { LoadGameDialog } from "@/components/dialogs/LoadGameDialog";
 import { Slider } from "@/components/ui/slider"
 import axiosClient from "@/lib/axios";
 import { toast } from "react-hot-toast";
+import { GameLayout } from "@/components/layouts/GameLayout";
 
 const GAME_ID = 7; // Drawing game ID
 
@@ -404,7 +405,7 @@ export default function DrawingGame() {
   }
 
   return (
-    <>
+    <GameLayout gameId={7}>
       <GameHeader />
       <div className="min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 pt-16 sm:pt-20 bg-gradient-to-br from-background via-background to-accent/5">
         <motion.div
@@ -628,6 +629,6 @@ export default function DrawingGame() {
           </motion.div>
         </motion.div>
       </div>
-    </>
+    </GameLayout>
   );
 }

@@ -35,6 +35,7 @@ import { useGameSession } from "@/hooks/useGameSession";
 import type { board_state } from "@/types/match3Game";
 import { toast } from "sonner";
 import axiosClient from "@/lib/axios";
+import { GameLayout } from "@/components/layouts/GameLayout";
 
 
 const BOARD_SIZE = 6;
@@ -449,26 +450,8 @@ export default function Match3Game() {
   }
 
   return (
-    <div className="flex flex-col items-center min-h-screen bg-background text-foreground pb-10">
-
-      {/* Settings Dialog */}
-      <SettingsDialog
-        open={showSettingsDialog}
-        onOpenChange={setShowSettingsDialog}
-        gameMode={gameMode}
-        timeLimit={timeLimit}
-        targetMatches={targetMatches}
-        numCandyTypes={numCandyTypes}
-        boardSize={boardSize}
-        onApply={async (settings) => {
-          await restartGameWithSettings(settings);
-          setGameMode(settings.gameMode);
-          setTimeLimit(settings.timeLimit);
-          setTargetMatches(settings.targetMatches);
-          setNumCandyTypes(settings.numCandyTypes);
-          setBoardSize(settings.boardSize);
-        }}
-      />
+    <GameLayout gameId={5}>
+      <div className="flex flex-col items-center min-h-screen bg-background text-foreground pb-10">
 
       <div className="z-20">
         <GameHeader />
@@ -610,6 +593,26 @@ export default function Match3Game() {
             onExit={() => navigate("/")}
           />
         )}
+
+        {/* Settings Dialog (inline mode) */}
+        <SettingsDialog
+          open={showSettingsDialog}
+          onOpenChange={setShowSettingsDialog}
+          gameMode={gameMode}
+          timeLimit={timeLimit}
+          targetMatches={targetMatches}
+          numCandyTypes={numCandyTypes}
+          boardSize={boardSize}
+          onApply={async (settings) => {
+            await restartGameWithSettings(settings);
+            setGameMode(settings.gameMode);
+            setTimeLimit(settings.timeLimit);
+            setTargetMatches(settings.targetMatches);
+            setNumCandyTypes(settings.numCandyTypes);
+            setBoardSize(settings.boardSize);
+          }}
+          inline
+        />
       </div>
         {isPaused && (
           <PauseMenu 
@@ -628,6 +631,7 @@ export default function Match3Game() {
             </p>
           </div>
         </div>
-    </div>
+      </div>
+    </GameLayout>
   );
 }
