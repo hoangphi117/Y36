@@ -123,53 +123,86 @@ const ProfilePage = () => {
               </Button>
             </div>
 
-            {/* ===== TABS (SỬA ĐỔI TẠI ĐÂY) ===== */}
+            {/* ===== TABS - RESPONSIVE DESIGN ===== */}
             <div className="pt-4">
               <TabsList
                 className="
-                  flex w-full gap-2 rounded-2xl bg-muted/60 p-1 shadow-sm h-1/2
-                  md:grid md:grid-cols-5 md:max-w-2xl md:mx-auto
-                  [&::-webkit-scrollbar]:h-1
-                  [&::-webkit-scrollbar-thumb]:bg-primary/30
+                  grid grid-cols-2 gap-2 w-full rounded-xl bg-muted/60 p-1.5 shadow-sm h-auto
+                  sm:flex sm:flex-nowrap sm:overflow-x-auto sm:justify-start
+                  md:grid md:grid-cols-5 md:max-w-3xl md:mx-auto
+                  [&::-webkit-scrollbar]:h-1.5
+                  [&::-webkit-scrollbar-track]:bg-transparent
+                  [&::-webkit-scrollbar-thumb]:bg-primary/20
                   [&::-webkit-scrollbar-thumb]:rounded-full
+                  [&::-webkit-scrollbar-thumb]:hover:bg-primary/30
                 "
               >
                 <TabsTrigger
                   value="overview"
-                  className="flex items-center gap-2 px-4 py-2 whitespace-nowrap min-w-fit md:min-w-0"
+                  className="
+                    flex items-center justify-center gap-1.5 px-3 py-2.5 
+                    text-xs sm:text-sm whitespace-nowrap 
+                    data-[state=active]:bg-background data-[state=active]:shadow-sm
+                    transition-all duration-200
+                  "
                 >
-                  <LayoutDashboard className="w-4 h-4 md:w-5 md:h-5 text-secondary-foreground/70" />
-                  <span>Tổng quan</span>
+                  <LayoutDashboard className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="hidden xs:inline sm:inline">Tổng quan</span>
+                  <span className="xs:hidden sm:hidden">Tổng</span>
                 </TabsTrigger>
 
                 <TabsTrigger
                   value="game"
-                  className="flex items-center gap-2 px-4 py-2 whitespace-nowrap min-w-fit md:min-w-0"
+                  className="
+                    flex items-center justify-center gap-1.5 px-3 py-2.5 
+                    text-xs sm:text-sm whitespace-nowrap 
+                    data-[state=active]:bg-background data-[state=active]:shadow-sm
+                    transition-all duration-200
+                  "
                 >
-                  <Gamepad2 className="w-4 h-4 md:w-5 md:h-5 text-secondary-foreground/70" />
-                  <span>Lịch sử đấu</span>
+                  <Gamepad2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="hidden xs:inline sm:inline">Lịch sử</span>
+                  <span className="xs:hidden sm:hidden">Game</span>
                 </TabsTrigger>
 
                 <TabsTrigger
                   value="stats"
-                  className="flex items-center gap-2 px-4 py-2 whitespace-nowrap min-w-fit md:min-w-0"
+                  className="
+                    flex items-center justify-center gap-1.5 px-3 py-2.5 
+                    text-xs sm:text-sm whitespace-nowrap 
+                    data-[state=active]:bg-background data-[state=active]:shadow-sm
+                    transition-all duration-200
+                  "
                 >
-                  <BarChart3 className="w-4 h-4 md:w-5 md:h-5 text-secondary-foreground/70" />
+                  <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   <span>Stats</span>
                 </TabsTrigger>
 
                 <TabsTrigger
                   value="friends"
-                  className="flex items-center gap-2 px-4 py-2 whitespace-nowrap min-w-fit md:min-w-0"
+                  className="
+                    flex items-center justify-center gap-1.5 px-3 py-2.5 
+                    text-xs sm:text-sm whitespace-nowrap 
+                    data-[state=active]:bg-background data-[state=active]:shadow-sm
+                    transition-all duration-200
+                  "
                 >
-                  <Users className="w-4 h-4 md:w-5 md:h-5 text-secondary-foreground/70" />
-                  <span>Bạn bè</span>
+                  <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="hidden xs:inline sm:inline">Bạn bè</span>
+                  <span className="xs:hidden sm:hidden">Bạn</span>
                 </TabsTrigger>
+
                 <TabsTrigger
                   value="achievements"
-                  className="flex items-center gap-2 px-4 py-2 whitespace-nowrap min-w-fit md:min-w-0"
+                  className="
+                    col-span-2 sm:col-span-1
+                    flex items-center justify-center gap-1.5 px-3 py-2.5 
+                    text-xs sm:text-sm whitespace-nowrap 
+                    data-[state=active]:bg-background data-[state=active]:shadow-sm
+                    transition-all duration-200
+                  "
                 >
-                  <Trophy className="w-4 h-4 md:w-5 md:h-5 text-secondary-foreground/70" />
+                  <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   <span>Thành tựu</span>
                 </TabsTrigger>
               </TabsList>
