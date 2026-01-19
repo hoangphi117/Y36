@@ -33,7 +33,7 @@ export const restoreBoardState = (
   boardCards: BoardCard[]
 ): { cards: Card[], flipped: number[], matched: number[] } => {
   const cards: Card[] = boardCards.map((boardCard) => {
-    // Parse iconIndex từ value (icon1 -> 0, icon2 -> 1, ...)
+    // Parse iconIndex 
     const iconIndex = ICONS.indexOf(boardCard.value);
     
     return {

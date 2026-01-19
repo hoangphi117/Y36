@@ -37,6 +37,7 @@ import type { board_state } from "@/types/match3Game";
 import { toast } from "sonner";
 import axiosClient from "@/lib/axios";
 import { GameLayout } from "@/components/layouts/GameLayout";
+import { triggerWinEffects } from "@/lib/fireworks";
 
 
 const BOARD_SIZE = 6;
@@ -80,8 +81,6 @@ export default function Match3Game() {
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
 
   const activeCandies = useMemo(() => CANDY_TYPES.slice(0, numCandyTypes), [numCandyTypes]);
-
-  
 
   const getBoardState = useCallback(() => {
     const matrix = convertBoard(board, boardSize);
@@ -140,7 +139,6 @@ export default function Match3Game() {
       try {
         const response = await axiosClient.get(`/games/5`);
         const defaultConfig = response.data.data.default_config;
-        console.log(response);
         setBoardSize(defaultConfig.cols);
         setNumCandyTypes(defaultConfig.candy_types);
         setTimeLimit(defaultConfig.time_limit);
@@ -198,17 +196,27 @@ export default function Match3Game() {
           setScore(sessionData.score);
         }
         
-        // Restore game mode and progress
-        if (config.moves_limit && config.moves_limit > 0) {
+        // Restore game mode and progress based on what's in board_state
+        if (boardState.time_remaining !== undefined) {
+          setGameMode("time");
+          setTimeRemaining(boardState.time_remaining);
+          setTimeLimit(config.time_limit || 30);
+        } else if (boardState.moves_remaining !== undefined) {
           setGameMode("rounds");
           setTargetMatches(config.moves_limit);
-          const movesRemaining = boardState.moves_remaining ?? config.moves_limit;
-          setMatchesCount(config.moves_limit - movesRemaining);
+          setMatchesCount(config.moves_limit - boardState.moves_remaining);
           setTimeRemaining(0);
-        } else if (config.time_limit && config.time_limit > 0) {
-          setGameMode("time");
-          const timeRemaining = boardState.time_remaining ?? config.time_limit;
-          setTimeRemaining(timeRemaining);
+        } else {
+          // Fallback to config
+          if (config.moves_limit && config.moves_limit > 0) {
+            setGameMode("rounds");
+            setTargetMatches(config.moves_limit);
+            setMatchesCount(0);
+            setTimeRemaining(0);
+          } else if (config.time_limit && config.time_limit > 0) {
+            setGameMode("time");
+            setTimeRemaining(config.time_limit);
+          }
         }
       } else {
         // Create new board by randomization
@@ -278,8 +286,6 @@ export default function Match3Game() {
           target_score: target,
         }
       };
-
-      console.log("check session config: ", sessionConfig);
 
       // Create new session with custom config
       await gameSession.startGame(sessionConfig);
@@ -387,7 +393,10 @@ export default function Match3Game() {
         if (newTime <= 0) {
           clearInterval(timer);
           setShowGameOver(true);
-          // Complete session
+
+          if(score >= targetScore)
+            triggerWinEffects();
+          
           setTimeout(async () => {
             if (currentSessionId) {
               gameSession.completeGame(score);
@@ -409,6 +418,10 @@ export default function Match3Game() {
       // Complete session
       const completeGame = async () => {
         setShowGameOver(true);
+
+        if(score >= targetScore)
+          triggerWinEffects();
+
         if (currentSessionId) {
           gameSession.completeGame(score);
         }
