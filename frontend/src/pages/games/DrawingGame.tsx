@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { GameHeader } from "@/components/games/GameHeader";
-import { Palette, Download, Trash2, Save, Undo, Redo, History, Pencil, Square, Circle } from "lucide-react";
+import { Palette, Download, Trash2, Save, Undo, Redo, History, Pencil, Square, Circle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RoundButton } from "@/components/ui/round-button";
 import { useGameSession } from "@/hooks/useGameSession";
@@ -95,6 +95,15 @@ export default function DrawingGame() {
     autoCreate: false,
   });
 
+  // Scroll to top and initial loading delay
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    const timer = setTimeout(() => {
+      setIsInitializing(false);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Start new game session
   useEffect(() => {
     startGameSession();
@@ -111,9 +120,6 @@ export default function DrawingGame() {
   // Handle session load/create
   useEffect(() => {
     if (!session) {
-      if (!isLoading) {
-        setIsInitializing(false);
-      }
       return;
     }
 
@@ -137,11 +143,8 @@ export default function DrawingGame() {
         setHistory([boardState.paths]);
         setHistoryIndex(0);
       }
-      
-      setIsInitializing(false);
     } catch (error) {
       console.error("Error loading session:", error);
-      setIsInitializing(false);
     }
   }, [session, isLoading]);
 
@@ -392,15 +395,12 @@ export default function DrawingGame() {
   // Loading screen
   if (isInitializing || isLoading) {
     return (
-      <>
-        <GameHeader />
-        <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-background to-accent/5">
-          <div className="text-center space-y-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="text-lg font-medium text-muted-foreground animate-pulse">Đang khởi tạo canvas...</p>
-          </div>
-        </div>
-      </>
+      <div className="flex h-[80vh] flex-col items-center justify-center gap-4">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="animate-pulse font-medium text-muted-foreground">
+          Đang tải dữ liệu...
+        </p>
+      </div>
     );
   }
 
