@@ -35,6 +35,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { PaginationCustom } from "@/components/shared/PaginationCustom";
 import { EmojiPickerButton } from "./EmojiPickerButton";
 import useDocumentTitle from "@/hooks/useDocumentTitle";
 
@@ -44,10 +45,13 @@ const ChatPage = () => {
   const location = useLocation();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [messageInput, setMessageInput] = useState("");
+  const [page, setPage] = useState(1);
+
+  const [cachedConversation, setCachedConversation] = useState<any>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: conversations, isLoading: loadingList } = useConversations();
+  const { data: conversations, isLoading: loadingList } = useConversations(page, 5); // Limit 5 items
   const { data: messagesData, isLoading: loadingMessages } =
     useChatMessages(selectedUserId);
   const { data: globalUnread } = useUnreadCount();
@@ -79,11 +83,17 @@ const ChatPage = () => {
   const activeConversation = conversations?.data.find(
     (c) => c.id === selectedUserId
   );
-  const currentChatUser =
-    activeConversation ||
-    (selectedUserId === location.state?.selectedUser?.id
-      ? location.state.selectedUser
-      : null);
+
+  useEffect(() => {
+    if (activeConversation) {
+      setCachedConversation(activeConversation);
+    } else if (location.state?.selectedUser && location.state.selectedUser.id === selectedUserId) {
+      // Trường hợp load từ trang khác qua (ví dụ từ profile)
+      setCachedConversation(location.state.selectedUser);
+    }
+  }, [activeConversation, selectedUserId, location.state]);
+
+  const currentChatUser = activeConversation || cachedConversation;
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,10 +110,12 @@ const ChatPage = () => {
       conv.username.toLowerCase().includes(searchTerm.toLowerCase())
     ) || [];
 
+    console.log(conversations);
+
   return (
     <div className="flex h-[calc(100vh-5rem)] bg-background border-t">
       {/* === SIDEBAR === */}
-      <div className="w-full md:w-80 lg:w-96 border-r flex flex-col bg-muted/10">
+      <div className="w-full md:w-80 lg:w-96 border-r flex flex-col bg-muted/10 overflow-hidden">
         <div className="p-4 border-b space-y-4">
           <h2 className="text-xl font-bold flex items-center gap-2">
             <MessageSquare className="w-5 h-5" /> Tin nhắn{" "}
@@ -125,7 +137,7 @@ const ChatPage = () => {
           </div>
         </div>
 
-        <ScrollArea className="flex-1">
+        <ScrollArea className="flex-1 min-h-0">
           <div className="flex flex-col gap-1 p-2">
             {loadingList ? (
               <p className="text-center p-4 text-muted-foreground">
@@ -135,7 +147,10 @@ const ChatPage = () => {
               filteredConversations.map((conv) => (
                 <button
                   key={conv.id}
-                  onClick={() => setSelectedUserId(conv.id)}
+                  onClick={() => {
+                    setSelectedUserId(conv.id);
+                    setCachedConversation(conv);
+                  }}
                   className={cn(
                     "flex items-center gap-3 p-3 rounded-lg transition-colors text-left",
                     selectedUserId === conv.id
@@ -196,6 +211,16 @@ const ChatPage = () => {
             )}
           </div>
         </ScrollArea>
+        {/* Pagination Controls */}
+        {conversations && conversations.totalPages > 1 && (
+          <div className="p-2 border-t mt-auto">
+            <PaginationCustom
+              page={page}
+              totalPages={conversations.totalPages}
+              onPageChange={setPage}
+            />
+          </div>
+        )}
       </div>
 
       {/* === CHAT WINDOW === */}
@@ -208,7 +233,7 @@ const ChatPage = () => {
                 <Avatar className="h-10 w-10 border">
                   <AvatarImage src={currentChatUser?.avatar_url || ""} />
                   <AvatarFallback>
-                    {currentChatUser?.username?.[0] || "?"}
+                    {currentChatUser?.username?.[0].toUpperCase() || "?"}
                   </AvatarFallback>
                 </Avatar>
                 <div>

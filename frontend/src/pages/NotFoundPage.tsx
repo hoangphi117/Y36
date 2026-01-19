@@ -17,6 +17,18 @@ export default function NotFoundPage() {
 
   console.error(error);
 
+  const handleClick = (url: string | number) => {
+    playSound("button1");
+    
+    setTimeout(() => {
+      if (typeof url === 'string') {
+        navigate(url);
+      } else {
+        navigate(url);
+      }
+    }, 200);
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
       {/* Hình ảnh minh họa vui nhộn */}
@@ -37,8 +49,7 @@ export default function NotFoundPage() {
         <BoxButton
           variant="accent"
           onClick={() => {
-            navigate(-1);
-            playSound("button1");
+            handleClick(-1);
           }}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -47,8 +58,7 @@ export default function NotFoundPage() {
 
         <BoxButton
           onClick={() => {
-            navigate("/");
-            playSound("button1");
+            handleClick("/");
           }}
           size="medium"
         >

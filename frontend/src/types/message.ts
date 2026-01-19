@@ -27,5 +27,8 @@ export interface MessagesResponse {
 
 export interface ConversationsResponse {
   total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
   data: Conversation[];
 }

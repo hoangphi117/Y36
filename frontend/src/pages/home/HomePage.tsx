@@ -64,7 +64,15 @@ export default function HomePage() {
   const navigate = useNavigate();
   useDocumentTitle("Trang chủ");
 
-  const { playSound } = useGameSound(true);
+  const { playSound } = useGameSound();
+
+  const handleGameClick = (url: string) => {
+    playSound("button1");
+    
+    setTimeout(() => {
+      navigate(url);
+    }, 300);
+  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 p-8">
@@ -75,8 +83,7 @@ export default function HomePage() {
           image={game.image}
           variant={game.variant}
           onClick={() => {
-            navigate(`${game.url}`);
-            playSound("button2");
+            handleGameClick(game.url);
           }}
         />
       ))}

@@ -71,13 +71,12 @@ class MessageController {
   async getConversations(req, res) {
     try {
       const userId = req.user.id;
+      const { page = 1, limit = 5 } = req.query;
 
-      const conversations = await Message.getConversations(userId);
+      const result = await Message.getConversations(userId, { page, limit });
 
-      return res.status(200).json({
-        total: conversations.length,
-        data: conversations,
-      });
+      // Result already has { data, total, page, ... } structure from model
+      return res.status(200).json(result);
     } catch (error) {
       return res.status(500).json({
         message: "Server error",

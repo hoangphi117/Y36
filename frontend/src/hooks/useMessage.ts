@@ -8,11 +8,13 @@ import {
 } from "@/types/message";
 import { toast } from "sonner";
 
-export const useConversations = () => {
+export const useConversations = (page = 1, limit = 20) => {
   return useQuery({
-    queryKey: ["conversations"],
+    queryKey: ["conversations", page, limit],
     queryFn: async () => {
-      const response = await api.get<ConversationsResponse>("/messages");
+      const response = await api.get<ConversationsResponse>("/messages", {
+        params: { page, limit },
+      });
       return response.data;
     },
     refetchInterval: 10000, // Tự động làm mới mỗi 10s

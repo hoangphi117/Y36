@@ -89,37 +89,64 @@ class Message {
     };
   }
 
-  static async getConversations(userId) {
-    const subQuery = db("messages")
-      .select(
-        db.raw(
-          `
-          CASE
-            WHEN sender_id = ? THEN receiver_id
-            ELSE sender_id
-          END AS other_user_id
-        `,
-          [userId]
-        ),
-        db.raw("MAX(created_at) as last_time")
-      )
-      .where(function () {
-        this.where("sender_id", userId).orWhere("receiver_id", userId);
-      })
-      .groupBy("other_user_id");
+  static async getConversations(userId, { page = 1, limit = 5 } = {}) {
+  const currentPage = Math.max(parseInt(page), 1);
+  const perPage = Math.max(parseInt(limit), 1);
+  const offset = (currentPage - 1) * perPage;
 
-    return db
-      .from(subQuery.as("m"))
-      .join("users as u", "u.id", "m.other_user_id")
-      .leftJoin("messages as msg", function () {
-        this.on("msg.created_at", "=", "m.last_time").andOn(function () {
-          this.on("msg.sender_id", "=", "u.id").orOn(
-            "msg.receiver_id",
-            "=",
-            "u.id"
-          );
-        });
+  try {
+    // 1. Subquery đánh số thứ tự tin nhắn theo từng cặp hội thoại
+    // Sử dụng LEAST/GREATEST để đảm bảo (A,B) và (B,A) là cùng 1 cặp
+    const rankedMessages = db("messages")
+      .select(
+        "messages.id",
+        "messages.sender_id",
+        "messages.receiver_id",
+        "messages.content",
+        "messages.created_at",
+        "messages.is_read",
+        db.raw(`
+          ROW_NUMBER() OVER (
+            PARTITION BY 
+              LEAST(messages.sender_id, messages.receiver_id), 
+              GREATEST(messages.sender_id, messages.receiver_id) 
+            ORDER BY messages.created_at DESC, messages.id DESC
+          ) as rn
+        `)
+      )
+      .where(function() {
+        this.where("messages.sender_id", userId).orWhere("messages.receiver_id", userId);
       })
+      .as("rm");
+
+    // 2. Query cơ sở để đếm tổng số cuộc hội thoại duy nhất
+    const baseQuery = db.from(rankedMessages).where("rm.rn", 1);
+
+    // 3. Đếm tổng số (Phải JOIN với users để tránh đếm user đã bị xóa)
+    const countResult = await db
+      .from(baseQuery.as("unique_convs"))
+      .join("users", "users.id", db.raw(`
+        CASE 
+          WHEN unique_convs.sender_id = ? THEN unique_convs.receiver_id 
+          ELSE unique_convs.sender_id 
+        END
+      `, [userId]))
+      .count("* as total")
+      .first();
+
+    const total = parseInt(countResult?.total || 0);
+
+    // 4. Lấy dữ liệu chi tiết và phân trang
+    const conversations = await db
+      .from(rankedMessages)
+      .where("rm.rn", 1)
+      .join("users as u", "u.id", db.raw(`
+        CASE 
+          WHEN rm.sender_id = ? THEN rm.receiver_id 
+          ELSE rm.sender_id 
+        END
+      `, [userId]))
+      // Join để đếm tin chưa đọc
       .leftJoin(
         db("messages")
           .select("sender_id", db.raw("COUNT(*) as unread"))
@@ -133,13 +160,26 @@ class Message {
         "u.id",
         "u.username",
         "u.avatar_url",
-        "msg.content as last_message",
-        "msg.sender_id as last_sender_id",
-        "msg.created_at as last_time",
+        "rm.content as last_message",
+        "rm.sender_id as last_sender_id",
+        "rm.created_at as last_time",
         db.raw("COALESCE(unread_msgs.unread, 0) as unread_count")
       )
-      .orderBy("m.last_time", "desc");
+      .orderBy("rm.created_at", "desc")
+      .limit(perPage)
+      .offset(offset);
+
+    return {
+      data: conversations,
+      total,
+      page: currentPage,
+      limit: perPage,
+      totalPages: Math.ceil(total / perPage),
+    };
+  } catch (error) {
+    throw error; // Đẩy lỗi ra để Controller bắt được
   }
+}
 
   static async countUnread(userId) {
     const [{ count }] = await db("messages")

@@ -7,6 +7,7 @@ import {
   BarChart3,
   Users,
   Gamepad2,
+  Trophy,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -168,7 +169,7 @@ const ProfilePage = () => {
                   value="achievements"
                   className="flex items-center gap-2 px-4 py-2 whitespace-nowrap min-w-fit md:min-w-0"
                 >
-                  <Users className="w-4 h-4 md:w-5 md:h-5 text-secondary-foreground/70" />
+                  <Trophy className="w-4 h-4 md:w-5 md:h-5 text-secondary-foreground/70" />
                   <span>Thành tựu</span>
                 </TabsTrigger>
               </TabsList>

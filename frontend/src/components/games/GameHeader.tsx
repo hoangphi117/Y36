@@ -7,14 +7,21 @@ export const GameHeader = ({ children }: { children?: React.ReactNode }) => {
   const navigate = useNavigate();
   const { playSound } = useGameSound(true);
 
+  const handleGameClick = (url: string) => {
+    playSound("button1");
+    
+    setTimeout(() => {
+      navigate(url);
+    }, 200);
+  };
+
   return (
     <div className="flex items-center justify-between w-full max-w-2xl fixed left-3 top-3">
       <BoxButton
         size="small"
         variant="accent"
         onClick={() => {
-          navigate("/");
-          playSound("button1");
+          handleGameClick("/");
         }}
         className="gap-2"
       >
