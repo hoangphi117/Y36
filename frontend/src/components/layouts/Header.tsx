@@ -8,6 +8,8 @@ import {
   User as UserIcon,
   Users,
   MessageSquare,
+  Menu,
+  X,
 } from "lucide-react";
 import { RoundButton } from "@/components/ui/round-button";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -21,9 +23,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+
 export const Header = () => {
   const { user: localUser, token, logout, setAuth } = useAuthStore();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const { data: serverUser } = useUserProfile();
 
@@ -66,6 +70,7 @@ export const Header = () => {
           </div>
         </Link>
 
+        {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-10">
           <Link
             to="/"
@@ -98,6 +103,19 @@ export const Header = () => {
         </nav>
 
         <div className="flex items-center gap-4">
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="md:hidden p-2 rounded-lg hover:bg-muted transition-colors"
+            aria-label="Toggle menu"
+          >
+            {isMobileMenuOpen ? (
+              <X className="w-6 h-6 text-primary" />
+            ) : (
+              <Menu className="w-6 h-6 text-primary" />
+            )}
+          </button>
+
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger className="outline-none">
@@ -165,6 +183,46 @@ export const Header = () => {
           )}
         </div>
       </div>
+
+      {/* Mobile Navigation Menu */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden border-t border-border bg-background">
+          <nav className="mx-auto w-[90%] py-4 flex flex-col gap-2">
+            <Link
+              to="/"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center gap-3 p-3 rounded-lg font-bold text-muted-foreground hover:text-primary hover:bg-muted transition-all"
+            >
+              <Home className="w-5 h-5" />
+              <span>Trang chủ</span>
+            </Link>
+            <Link
+              to="/ranking"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center gap-3 p-3 rounded-lg font-bold text-muted-foreground hover:text-primary hover:bg-muted transition-all"
+            >
+              <Trophy className="w-5 h-5" />
+              <span>Xếp hạng</span>
+            </Link>
+            <Link
+              to="/messages"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center gap-3 p-3 rounded-lg font-bold text-muted-foreground hover:text-primary hover:bg-muted transition-all"
+            >
+              <MessageSquare className="w-5 h-5" />
+              <span>Tin nhắn</span>
+            </Link>
+            <Link
+              to="/profile?tab=friends"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center gap-3 p-3 rounded-lg font-bold text-muted-foreground hover:text-primary hover:bg-muted transition-all"
+            >
+              <Users className="w-5 h-5" />
+              <span>Bạn bè</span>
+            </Link>
+          </nav>
+        </div>
+      )}
     </header>
   );
 };
