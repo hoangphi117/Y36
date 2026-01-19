@@ -27,7 +27,6 @@ import iceBorder from "@/assets/candyIcons/iceBorder.png"
 import calcTargetScore from "@/utils/calcScoreMatch3Game";
 import { GameOverOverlay } from "@/components/games/match3/GameBoardOverlay";
 import { SettingsDialog } from "@/components/games/match3/SettingsDialog";
-import match3Api from "@/services/match3Api";
 import { PauseMenu } from "@/components/games/memory/PauseMenu";
 import { convertBoard, restoreBoard } from "@/utils/match3SessionHelper";
 import { useNavigate } from "react-router-dom";
@@ -35,6 +34,7 @@ import { LoadGameDialog } from "@/components/dialogs/LoadGameDialog";
 import { useGameSession } from "@/hooks/useGameSession";
 import type { board_state } from "@/types/match3Game";
 import { toast } from "sonner";
+import axiosClient from "@/lib/axios";
 
 
 const BOARD_SIZE = 6;
@@ -431,7 +431,7 @@ export default function Match3Game() {
 
   // delete saved game
   const handleDeleteGame = async (sessionId: string) => {
-    await match3Api.deleteSession(sessionId);
+    await axiosClient.delete(`/sessions/${sessionId}`);
     await gameSession.fetchSavedSessions();
     toast.success("Đã xóa ván chơi!");
   }

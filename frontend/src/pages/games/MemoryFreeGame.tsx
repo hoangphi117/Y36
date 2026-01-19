@@ -83,27 +83,6 @@ export default function MemoryFreeGame() {
     setIsStarted(true);
   };
 
-  // Get current game session state
-  // const getCurrentSessionState = (): MemorySessionSave => {
-  //   const board = convertCardsToBoardState(cards, flipped, matched);
-  //   return createSessionSave(
-  //     board,
-  //     freeTimeLeft,
-  //     0,
-  //     0,
-  //     totalScore,
-  //   );
-  // };
-
-  // Save game (can be called to send to API)
-  // const saveGameSession = () => {
-  //   const sessionData = getCurrentSessionState();
-  //   console.log("Game session to save:", sessionData);
-  //   // TODO: Send to API with PUT request
-  //   // await api.put('/memory/save', sessionData);
-  //   return sessionData;
-  // };
-
   // Handle card flip
   const handleFreeCardFlip = (cardId: number) => {
     if (!isStarted || freeGameStatus !== "playing" || freeFlipped.length >= 2 || freeFlipped.includes(cardId) || freeMatched.includes(cardId) || isPaused) {
@@ -192,12 +171,6 @@ export default function MemoryFreeGame() {
       navigate("/memory");
     }
   };
-
-  // Handle restart from pause menu
-  // const handleRestartFromPause = () => {
-  //   setIsPaused(false);
-  //   restartFreeGame();
-  // };
 
   // Calculate responsive columns
   const getResponsiveColumns = (totalCards: number): number => {

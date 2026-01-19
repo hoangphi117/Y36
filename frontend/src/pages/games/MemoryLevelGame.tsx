@@ -14,10 +14,10 @@ import icon13 from "@/assets/memoryIcons/icon13.png";
 import icon14 from "@/assets/memoryIcons/icon14.png";
 import icon15 from "@/assets/memoryIcons/icon15.png";
 import icon16 from "@/assets/memoryIcons/icon16.png";
-import React, { useEffect, useState, useCallback, memo } from "react";
+import { useEffect, useState, memo } from "react";
 import { motion } from "framer-motion";
 import { GameHeader } from "@/components/games/GameHeader";
-import { AlarmClock, History, Play, Pause, Download, RotateCcw } from "lucide-react";
+import { AlarmClock, Pause, Download, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BackToSelectionButton } from "@/components/games/memory/SettingButtons";
 import StatCard from "@/components/games/memory/StatCard";
@@ -27,12 +27,12 @@ import calcLevelScore from "@/utils/clacScoreMemoryGame";
 import { RoundButton } from "@/components/ui/round-button";
 import { convertCardsToBoardState, createSessionSave, restoreBoardState } from "@/utils/memorySessionHelper";
 import type { MemorySessionSave } from "@/types/memoryGame";
-import memoryApi from "@/services/memoryApi";
 import { PauseMenu } from "@/components/games/memory/PauseMenu";
 import SessionHistoryDialog from "@/components/games/memory/SessionHistoryDialog";
 import { useGameSession } from "@/hooks/useGameSession";
 import { LoadGameDialog } from "@/components/dialogs/LoadGameDialog";
-import { useAuthStore } from "@/stores/useAuthStore";
+import { toast } from "react-hot-toast";
+import axiosClient from "@/lib/axios";
 
 const ICONS = [icon1, icon2, icon3, icon4, icon5, icon6, icon7, icon8, icon9, icon10, icon11, icon12, icon13, icon14, icon15, icon16];
 
@@ -305,14 +305,6 @@ export default function MemoryLevelGame() {
     navigate("/memory");
   };
 
-  // restart level 1
-  const restartGame = () => {
-    setIsStarted(false);
-    setTotalScore(0);
-    setCurrentLevel(0);
-    setIsPaused(false);
-  };
-
   // Restart current level
   const restartCurrentLevel = () => {
     if (levelConfigs.length === 0) return;
@@ -340,12 +332,6 @@ export default function MemoryLevelGame() {
     }
   };
 
-  // Handle restart from pause menu
-  const handleRestartFromPause = () => {
-    setIsPaused(false);
-    restartGame();
-  };
-
   // load saved game
   const handleLoadGame = async (sessionId: string) => {
     await loadGameSession(sessionId);
@@ -353,8 +339,9 @@ export default function MemoryLevelGame() {
 
   // delete saved game
   const handleDeleteGame = async (sessionId: string) => {
-    await memoryApi.deleteSession(sessionId);
+    await axiosClient.delete(`/sessions/${sessionId}`);
     await fetchSavedSessions();
+    toast.success("Đã xóa ván chơi!");
   }
 
   // play again
