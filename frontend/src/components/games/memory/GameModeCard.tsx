@@ -30,7 +30,7 @@ const LevelModeCard = ({ startLevelMode }: LevelModeCardProps) => {
                 </div>
                 <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Cấp độ</span>
                 <span className="flex flex-wrap justify-center gap-1 font-black text-foreground">
-                    6
+                    5
                 </span>
             </div>
 

@@ -1,6 +1,6 @@
 import { RoundButton } from '@/components/ui/round-button';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Pause, Play, Settings2, RotateCcw, Star } from 'lucide-react';
+import { ArrowLeft, Pause, Play, RotateCcw, Star, ChevronLeft } from 'lucide-react';
 
 interface CandyType {
     id: string;
@@ -81,11 +81,11 @@ const GamePauseOverlay = ({ resetToSetup }: GamePauseOverlayProps) => {
 interface GameOverOverlayProps {
     score: number;
     targetScore: number;
-    startGame: () => void;
-    resetToSetup: () => void;
+    onRestart: () => void;
+    onExit: () => void;
 }
 
-const GameOverOverlay = ({ score, targetScore, startGame, resetToSetup }: GameOverOverlayProps) => {
+const GameOverOverlay = ({ score, targetScore, onRestart, onExit }: GameOverOverlayProps) => {
   const calculateStars = (score: number, targetScore: number) => {
     if (score < targetScore) return 0
     if (score >= targetScore * 2.5) return 3
@@ -125,7 +125,7 @@ const GameOverOverlay = ({ score, targetScore, startGame, resetToSetup }: GameOv
         initial={{ scale: 0.8, y: 50 }}
         animate={{ scale: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 100, damping: 15 }}
-        className="relative w-11/12 max-w-sm rounded-3xl p-6 sm:p-8 shadow-2xl border-2 overflow-hidden backdrop-blur-md bg-card border-primary/30"
+        className="relative w-11/12 max-w-sm rounded-3xl p-4 sm:p-8 shadow-2xl border-2 overflow-hidden backdrop-blur-md bg-card border-primary/30"
       >
         {/* Background Animated Elements - Card Level */}
         <motion.div
@@ -228,24 +228,19 @@ const GameOverOverlay = ({ score, targetScore, startGame, resetToSetup }: GameOv
           variants={itemVariants}
           className="flex gap-3 justify-center flex-wrap relative z-10"
         >
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={startGame}
-            className="flex items-center gap-2 px-6 py-3 bg-linear-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground font-bold rounded-xl transition-all duration-200 shadow-lg hover:shadow-primary/50 active:scale-95 border-b-4 border-primary/60 hover:border-primary/40"
+          <RoundButton
+            onClick={onRestart}
           >
             <RotateCcw className="w-5 h-5" />
             Chơi lại
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={resetToSetup}
-            className="flex items-center gap-2 px-6 py-3 bg-linear-to-r from-muted to-muted/80 hover:from-muted/90 hover:to-muted/70 text-foreground font-bold rounded-xl transition-all duration-200 shadow-lg hover:shadow-muted/50 active:scale-95 border-b-4 border-muted/60 hover:border-muted/40"
+          </RoundButton>
+          <RoundButton
+            variant="danger"
+            onClick={onExit}
           >
-            <Settings2 className="w-5 h-5" />
-            Cài đặt
-          </motion.button>
+            <ChevronLeft/>
+            về trang chủ
+          </RoundButton>
         </motion.div>
       </motion.div>
     </motion.div>

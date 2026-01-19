@@ -91,7 +91,7 @@ const GameBoardConfig = ({numCandyTypes, setNumCandyTypes, boardSize, setBoardSi
                         key={n}
                         onClick={() => setNumCandyTypes(n)}
                         className={cn(
-                        "w-9 h-9 rounded-xl font-black text-sm transition-all border-b-2",
+                        "w-10 h-10 rounded-md font-black text-sm transition-all border-b-2",
                         numCandyTypes === n 
                             ? "bg-primary text-primary-foreground border-primary-700 shadow-md" 
                             : "bg-background text-muted-foreground border-2"
@@ -113,9 +113,9 @@ const GameBoardConfig = ({numCandyTypes, setNumCandyTypes, boardSize, setBoardSi
                         key={s}
                         onClick={() => setBoardSize(s)}
                         className={cn(
-                        "flex-1 h-12 rounded-2xl font-black transition-all border-b-4 relative overflow-hidden",
+                        "flex-1 h-12 rounded-md font-black transition-all border-b-4 relative overflow-hidden",
                         boardSize === s 
-                            ? "bg-primary text-primary-foreground border-primary-700 shadow-lg" 
+                            ? "bg-primary text-primary-foreground border-primary-700" 
                             : "bg-background text-muted-foreground border-2 hover:border-primary/30"
                         )}
                     >
@@ -135,9 +135,49 @@ interface TimeAndRoundsConfigProps {
     setTargetMatches: (value: number) => void;
     timeLimit: number;
     targetMatches: number;
+    defaultTimeOptions?: number[];
+    defaultRoundOptions?: number[];
+    defaultTimeLimit?: number;
+    defaultTargetMatches?: number;
 }
 
-const TimeAndRoundsConfig = ({gameMode, setTimeLimit, setTargetMatches, timeLimit, targetMatches} : TimeAndRoundsConfigProps) => {
+const TimeAndRoundsConfig = ({
+    gameMode, 
+    setTimeLimit, 
+    setTargetMatches, 
+    timeLimit, 
+    targetMatches,
+    defaultTimeOptions = [30, 60, 180],
+    defaultRoundOptions = [5, 10, 20],
+    defaultTimeLimit,
+    defaultTargetMatches
+} : TimeAndRoundsConfigProps) => {
+    // Tạo mảng thời gian bao gồm giá trị mặc định và giá trị hiện tại (lọc bỏ giá trị 0)
+    const allTimeOptions = [...new Set([
+        ...defaultTimeOptions, 
+        ...(defaultTimeLimit && defaultTimeLimit > 0 ? [defaultTimeLimit] : []),
+        ...(timeLimit > 0 ? [timeLimit] : [])
+    ])].sort((a, b) => a - b);
+    
+    // Tạo mảng rounds bao gồm giá trị mặc định và giá trị hiện tại (lọc bỏ giá trị 0)
+    const allRoundOptions = [...new Set([
+        ...defaultRoundOptions,
+        ...(defaultTargetMatches && defaultTargetMatches > 0 ? [defaultTargetMatches] : []),
+        ...(targetMatches > 0 ? [targetMatches] : [])
+    ])].sort((a, b) => a - b);
+    
+    const formatTime = (seconds: number) => {
+        if (seconds < 60) return `${seconds}s`;
+        
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        
+        if (remainingSeconds === 0) {
+            return `${minutes}p`;
+        }
+        return `${minutes}p${remainingSeconds.toString().padStart(2, '0')}s`;
+    };
+
     return (
         <>
           {gameMode === "time" && (
@@ -147,22 +187,22 @@ const TimeAndRoundsConfig = ({gameMode, setTimeLimit, setTargetMatches, timeLimi
                 className="bg-muted/40 backdrop-blur-sm rounded-2xl border border-primary/20 p-5"
             >
                 <div className="flex items-center gap-2 text-primary font-black uppercase mb-4 text-sm">
-                <Clock className="w-4 h-4" />
-                Thời gian
+                    <Clock className="w-4 h-4" />
+                    Thời gian
                 </div>
                 <div className="grid grid-cols-3 gap-2">
-                {[30, 60, 180].map((time) => (
+                {allTimeOptions.map((time) => (
                     <button
-                    key={time}
-                    onClick={() => setTimeLimit(time)}
-                    className={cn(
+                        key={time}
+                        onClick={() => setTimeLimit(time)}
+                        className={cn(
                         "py-3 px-2 rounded-lg font-bold text-sm transition-all border",
                         timeLimit === time
                         ? "bg-primary text-primary-foreground border-primary shadow-lg"
                         : "bg-muted border-primary/20 hover:bg-muted/80"
                     )}
                     >
-                    {time === 30 ? "30 giây" : time === 60 ? "1 phút" : "3 phút"}
+                    {formatTime(time)}
                     </button>
                 ))}
                 </div>
@@ -181,7 +221,7 @@ const TimeAndRoundsConfig = ({gameMode, setTimeLimit, setTargetMatches, timeLimi
                 Lần ghép mục tiêu
                 </div>
                 <div className="grid grid-cols-3 gap-2">
-                {[5, 10, 20].map((rounds) => (
+                {allRoundOptions.map((rounds) => (
                     <button
                     key={rounds}
                     onClick={() => setTargetMatches(rounds)}
