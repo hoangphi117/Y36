@@ -38,6 +38,7 @@ import { toast } from "sonner";
 import axiosClient from "@/lib/axios";
 import { GameLayout } from "@/components/layouts/GameLayout";
 import { triggerWinEffects } from "@/lib/fireworks";
+import { useGameSound } from "@/hooks/useGameSound";
 
 
 const BOARD_SIZE = 6;
@@ -71,6 +72,9 @@ export default function Match3Game() {
   const [isPaused, setIsPaused] = useState(false);
   const [showGameOver, setShowGameOver] = useState(false);
   const [targetScore, setTargetScore] = useState(500);
+  
+  // game sounds
+  const { playSound } = useGameSound(true);
   
   // Session state
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
@@ -342,11 +346,11 @@ export default function Match3Game() {
     if (foundMatch) {
       const emptyCount = newBoard.filter(cell => cell === "").length;
       setScore(prev => prev + emptyCount * 10);
+      playSound("pop");
       setBoard(newBoard);
     }
     return foundMatch;
-  }, [board, boardSize]);
-
+  }, [board, boardSize, playSound]);
   // Handle moving candies into empty squares below
   const moveIntoSquareBelow = useCallback(() => {
     const newBoard = [...board];
@@ -396,6 +400,9 @@ export default function Match3Game() {
 
           if(score >= targetScore)
             triggerWinEffects();
+          else {
+            playSound("lose");
+          }
           
           setTimeout(async () => {
             if (currentSessionId) {
@@ -421,6 +428,9 @@ export default function Match3Game() {
 
         if(score >= targetScore)
           triggerWinEffects();
+        else {
+          playSound("lose");
+        }
 
         if (currentSessionId) {
           gameSession.completeGame(score);
