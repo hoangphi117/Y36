@@ -59,8 +59,12 @@ export function LoadGameDialog({
   const handleLoadSession = async (sessionId: string) => {
     try {
       setIsLoading(true);
-      if (onSaveSession) {
-        await onSaveSession();
+      // Chỉ lưu session hiện tại nếu nó đã tồn tại trong danh sách sessions
+      if (onSaveSession && currentSessionId) {
+        const sessionExists = sessions.some(s => s.id === currentSessionId);
+        if (sessionExists) {
+          await onSaveSession();
+        }
       }
       onLoadSession(sessionId);
       onOpenChange(false);

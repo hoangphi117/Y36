@@ -205,8 +205,19 @@ export default function MemoryLevelGame() {
 
   // Handle card flip
   const handleCardFlip = (cardId: number) => {
-    if (!isStarted || gameStatus !== "playing" || flipped.length >= 2 || flipped.includes(cardId) || matched.includes(cardId) || isPaused) {
+    if (!isStarted || gameStatus !== "playing" || flipped.includes(cardId) || matched.includes(cardId) || isPaused) {
       return;
+    }
+
+    // Nếu đang có 2 thẻ mở và không khớp, đóng chúng ngay lập tức khi click thẻ mới
+    if (flipped.length === 2) {
+      const [first, second] = flipped;
+      // Kiểm tra xem 2 thẻ có khớp không
+      if (cards[first].iconIndex !== cards[second].iconIndex) {
+        // Không khớp, đóng ngay và mở thẻ mới
+        setFlipped([cardId]);
+        return;
+      }
     }
 
     const newFlipped = [...flipped, cardId];
@@ -219,7 +230,7 @@ export default function MemoryLevelGame() {
         setMatched([...matched, first, second]);
         setFlipped([]);
       } else {
-        setTimeout(() => setFlipped([]), 600);
+        setTimeout(() => setFlipped([]), 400);
       }
     }
   };
@@ -359,42 +370,6 @@ export default function MemoryLevelGame() {
     }
   }
 
-  // Auto-save khi rời khỏi trang
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (session && session.status === "playing" && isStarted) {
-        // Auto-save session với board state hiện tại
-        const currentBoard = getCurrentSessionState();
-        const url = `${import.meta.env.VITE_API_BASE_URL}/sessions/${session.id}/save`;
-        
-        const token = useAuthStore.getState().token;
-        const apiKey = import.meta.env.VITE_API_KEY;
-
-        fetch(url, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-            "x-api-key": apiKey,
-          },
-          body: JSON.stringify({
-            board_state: currentBoard,
-            status: "saved",
-          }),
-          keepalive: true,
-        }).catch((err) => console.error("Auto-save failed:", err));
-      }
-    };
-
-    window.addEventListener("pagehide", handleBeforeUnload);
-    window.addEventListener("beforeunload", handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener("pagehide", handleBeforeUnload);
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, [session, isStarted, cards, flipped, matched, currentLevel, moves, totalScore, timeLeft]);
-
   // Calculate responsive columns based on screen width and card count
   const getResponsiveColumns = (totalCards: number): number => {
     if (typeof window === "undefined") return 4;
@@ -412,8 +387,8 @@ export default function MemoryLevelGame() {
   };
 
   // Render card component with memo to prevent unnecessary re-renders
-  const CardComponent = memo(({ card, isFlipped, isMatched, onClick, isComparing }: any) => {
-    const isDisabled = isMatched || isFlipped || isComparing;
+  const CardComponent = memo(({ card, isFlipped, isMatched, onClick }: any) => {
+    const isDisabled = isMatched || isFlipped;
     
     return (
       <motion.button
@@ -447,7 +422,6 @@ export default function MemoryLevelGame() {
     return (
       prevProps.isFlipped === nextProps.isFlipped &&
       prevProps.isMatched === nextProps.isMatched &&
-      prevProps.isComparing === nextProps.isComparing &&
       prevProps.card.iconIndex === nextProps.card.iconIndex
     );
   });
@@ -563,7 +537,6 @@ export default function MemoryLevelGame() {
                   card={card}
                   isFlipped={isStarted && (flipped.includes(idx) || matched.includes(idx))}
                   isMatched={isStarted && matched.includes(idx)}
-                  isComparing={flipped.length >= 2}
                   onClick={() => handleCardFlip(idx)}
                 />
               ))}
