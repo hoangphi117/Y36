@@ -28,7 +28,6 @@ import { RoundButton } from "@/components/ui/round-button";
 import { convertCardsToBoardState, createSessionSave, restoreBoardState } from "@/utils/memorySessionHelper";
 import type { MemorySessionSave } from "@/types/memoryGame";
 import { PauseMenu } from "@/components/games/memory/PauseMenu";
-import SessionHistoryDialog from "@/components/games/memory/SessionHistoryDialog";
 import { useGameSession } from "@/hooks/useGameSession";
 import { LoadGameDialog } from "@/components/dialogs/LoadGameDialog";
 import { toast } from "react-hot-toast";
@@ -83,7 +82,6 @@ export default function MemoryLevelGame() {
   const [moves, setMoves] = useState(0);
   const [isStarted, setIsStarted] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [levelConfigs, setLevelConfigs] = useState<MemoryLevelConfig[]>([]);
   const [isRestoringSession, setIsRestoringSession] = useState(false);
 
@@ -502,7 +500,7 @@ export default function MemoryLevelGame() {
             >
               <Download className="w-3.5 h-3.5 mr-1.5" /> 
             </RoundButton>
-            </LoadGameDialog>
+            </LoadGameDialog> 
           </div>
 
           {/* Game board */}
@@ -556,15 +554,6 @@ export default function MemoryLevelGame() {
           onContinue={() => setIsPaused(false)}
           onSaveAndExit={handleSaveAndExit}
           onRestart={handlePlayAgain}
-        />
-      )}
-
-      {isHistoryOpen && (
-        <SessionHistoryDialog 
-          isOpen={isHistoryOpen}
-          onClose={() => setIsHistoryOpen(false)}
-          sessions={[]} 
-          onLoadSession={() => {}}
         />
       )}
     </>

@@ -78,7 +78,6 @@ export default function Match3Game() {
 
   const activeCandies = useMemo(() => CANDY_TYPES.slice(0, numCandyTypes), [numCandyTypes]);
 
-  // getBoardState để truyền cho useGameSession
   const getBoardState = useCallback(() => {
     const matrix = convertBoard(board, boardSize);
     const boardState: board_state = {
@@ -93,10 +92,8 @@ export default function Match3Game() {
     };
   }, [board, boardSize, score, gameMode, targetMatches, matchesCount, timeRemaining]);
 
-  // Tích hợp useGameSession (chỉ dùng để load saved sessions, không auto-start)
   const gameSession = useGameSession({ gameId: 5, getBoardState, autoCreate: false });
 
-  // Hàm tạo random board (đảm bảo không có matches ban đầu)
   const createRandomBoard = useCallback((size: number, candyTypes: number): string[] => {
     const randomBoard: string[] = [];
     const activeCandies = CANDY_TYPES.slice(0, candyTypes);
@@ -128,7 +125,7 @@ export default function Match3Game() {
     gameSession.startGame();
   }, []);
 
-  // Xử lý khi session được tạo/load từ useGameSession
+  // Handle when session is created/loaded from useGameSession
   useEffect(() => {
     try {
       if (!gameSession.session) return;
@@ -136,7 +133,7 @@ export default function Match3Game() {
       const newSession = gameSession.session;
       setCurrentSessionId(newSession.id);
       
-      // Lấy config từ session - có thể ở default_config hoặc trực tiếp
+      // Get config from session - may be in default_config or directly
       const rawConfig = newSession.session_config;
       const config = rawConfig.default_config || rawConfig;
       
@@ -149,12 +146,12 @@ export default function Match3Game() {
       setTimeLimit(config.time_limit);
       setTargetScore(config.target_score);
 
-      // Kiểm tra board_state có dữ liệu không
+      // Check if board_state has data
       const sessionData = newSession.board_state as { score?: number; board_state?: board_state } | null;
       const hasBoardState = sessionData && sessionData.board_state && sessionData.board_state.matrix;
 
       if (hasBoardState) {
-        // Restore board từ saved board_state
+        // Restore board from saved board_state
         const boardState = sessionData.board_state!;
         const restoredBoard = restoreBoard(boardState.matrix);
         setBoard(restoredBoard);
@@ -164,7 +161,7 @@ export default function Match3Game() {
           setScore(sessionData.score);
         }
         
-        // Restore game mode và progress
+        // Restore game mode and progress
         if (config.moves_limit && config.moves_limit > 0) {
           setGameMode("rounds");
           setTargetMatches(config.moves_limit);
@@ -177,13 +174,12 @@ export default function Match3Game() {
           setTimeRemaining(timeRemaining);
         }
       } else {
-        // Tạo board mới bằng random (session mới hoặc chưa có board_state)
+        // Create new board by randomization
         const randomBoard = createRandomBoard(config.cols, config.candy_types);
         setBoard(randomBoard);
         setScore(0);
         setMatchesCount(0);
         
-        // Xác định game mode dựa trên moves_limit
         if(config.moves_limit && config.moves_limit > 0) {
           setGameMode("rounds");
           setTargetMatches(config.moves_limit);
@@ -192,7 +188,6 @@ export default function Match3Game() {
           setGameMode("time");
           setTimeRemaining(config.time_limit);
         } else {
-          // Default to time mode nếu cả 2 đều là 0
           setGameMode("time");
           setTimeRemaining(30);
         }
@@ -206,7 +201,7 @@ export default function Match3Game() {
     }
   }, [gameSession.session, createRandomBoard]);
 
-  // Hàm restart game với settings mới
+  // Restart game with new settings
   const restartGameWithSettings = useCallback(async (newSettings?: {
     gameMode: "time" | "rounds" | "endless";
     timeLimit: number;
@@ -215,14 +210,13 @@ export default function Match3Game() {
     boardSize: number;
   }) => {
     try {
-      // Reset game over state ngay lập tức
+      // Reset game over state immediately
       setShowGameOver(false);
       setIsPaused(false);
       
-      // Sử dụng settings mới nếu có, nếu không dùng giá trị hiện tại
+      // Use new settings if available, otherwise use current values
       const settings = newSettings || { gameMode, timeLimit, targetMatches, numCandyTypes, boardSize };
       
-      // Tính target score dựa trên settings
       let target = 500;
       if(settings.gameMode === "time") {
         target = calcTargetScore(settings.gameMode, settings.boardSize, settings.numCandyTypes, settings.timeLimit);
@@ -231,7 +225,7 @@ export default function Match3Game() {
         target = calcTargetScore(settings.gameMode, settings.boardSize, settings.numCandyTypes, settings.targetMatches);
       }
       
-      // Tạo sessionConfig từ settings
+      // Create sessionConfig from settings
       const sessionConfig = {
         mode: "vs_ai",
         ai_level: "easy",
@@ -248,16 +242,16 @@ export default function Match3Game() {
 
       console.log("check session config: ", sessionConfig);
 
-      // Tạo session mới với custom config
+      // Create new session with custom config
       await gameSession.startGame(sessionConfig);
     } catch (error) {
       console.error("Error restarting game:", error);
     }
   }, [currentSessionId, gameMode, timeLimit, boardSize, numCandyTypes, targetMatches, gameSession]);
 
-  // Hàm restart game nhanh (không thay đổi settings, không tạo session mới)
+  // Quick restart game (without changing settings or creating new session)
   const quickRestart = useCallback(() => {
-    // Reset board với config hiện tại
+    // Reset board with current config
     const randomBoard = createRandomBoard(boardSize, numCandyTypes);
     setBoard(randomBoard);
     setScore(0);
@@ -267,12 +261,12 @@ export default function Match3Game() {
     setShowGameOver(false);
   }, [boardSize, numCandyTypes, createRandomBoard, gameMode, timeLimit]);
 
-  // check match 3, 4, 5
+  // Check for matches (3, 4, 5)
   const checkForMatches = useCallback(() => {
     const newBoard = [...board];
     let foundMatch = false;
 
-    // Check row
+    // Check rows
     for (let i = 0; i < boardSize * boardSize; i++) {
       if (i % boardSize < boardSize - 2) {
         const match = [i, i + 1, i + 2];
@@ -284,7 +278,7 @@ export default function Match3Game() {
       }
     }
 
-    // Check col
+    // Check columns
     for (let i = 0; i < boardSize * boardSize; i++) {
       const match = [i, i + boardSize, i + boardSize * 2];
       const color = board[i];
@@ -302,7 +296,7 @@ export default function Match3Game() {
     return foundMatch;
   }, [board, boardSize]);
 
-  // handle move into square below
+  // Handle moving candies into empty squares below
   const moveIntoSquareBelow = useCallback(() => {
     const newBoard = [...board];
     let moved = false;
@@ -338,9 +332,8 @@ export default function Match3Game() {
     return () => clearInterval(timer);
   }, [checkForMatches, moveIntoSquareBelow, isInitializing, showGameOver]);
 
-  // Timer effect
+  // Timer countdown effect
   useEffect(() => {
-    // Chỉ chạy timer khi đang ở mode time, có thời gian còn lại, và game đang active
     if (isInitializing || isPaused || gameMode !== "time" || showGameOver || timeRemaining <= 0) return;
 
     const timer = setInterval(() => {
@@ -364,7 +357,7 @@ export default function Match3Game() {
     return () => clearInterval(timer);
   }, [isInitializing, isPaused, gameMode, showGameOver, timeRemaining, currentSessionId, score, timeLimit]);
 
-  // Check for target matches
+  // Check if target matches reached
   useEffect(() => {
     if (gameMode === "rounds" && matchesCount >= targetMatches && !showGameOver) {
       // Complete session
@@ -380,7 +373,7 @@ export default function Match3Game() {
     }
   }, [matchesCount, targetMatches, gameMode, showGameOver, currentSessionId, score]);
 
-  // handle swap
+  // Handle candy swap
   const handleSquareClick = (idx: number) => {
     if (selectedSquare === null) {
       setSelectedSquare(idx);
@@ -404,7 +397,7 @@ export default function Match3Game() {
     }
   };
 
-  // Save game
+  // Save game session
   const handleSaveGame = async () => {
     if (!gameSession.session) {
       console.error("No active session to save.");
@@ -419,31 +412,31 @@ export default function Match3Game() {
     }
   };
 
-  // load saved game
+  // Load saved game session
   const handleLoadGame = async (sessionId: string) => {
     gameSession.loadGame(sessionId);
   }
 
-  // delete saved game
+  // Delete saved game session
   const handleDeleteGame = async (sessionId: string) => {
     await axiosClient.delete(`/sessions/${sessionId}`);
     await gameSession.fetchSavedSessions();
     toast.success("Đã xóa ván chơi!");
   }
 
-  // play again
+  // Play again (restart with same settings)
   const handlePlayAgain = async () => {
     await restartGameWithSettings();
   }
 
-  // handle save currrent session before loading another session
+  // Save current session before loading another session
   const handleSaveCurrentSession = async () => {
     if (currentSessionId) {
       await gameSession.saveGame(true);
     }
   }
 
-  // Hiển thị loading
+  // Show loading screen
   if (isInitializing) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-background text-foreground">

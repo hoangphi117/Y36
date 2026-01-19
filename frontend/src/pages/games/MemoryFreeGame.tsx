@@ -17,7 +17,7 @@ import icon16 from "@/assets/memoryIcons/icon16.png";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { GameHeader } from "@/components/games/GameHeader";
-import { Infinity as InfynityIcon, Play, Settings2, Pause } from "lucide-react";
+import { Infinity as InfynityIcon, Play, Settings2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BackToSelectionButton, RefreshGameButton } from "@/components/games/memory/SettingButtons";
 import StatCard from "@/components/games/memory/StatCard";
@@ -25,8 +25,6 @@ import { GameStatusOverlay } from "@/components/games/memory/GameBoardOverlay";
 import { useNavigate } from "react-router-dom";
 import { RoundButton } from "@/components/ui/round-button";
 import SettingDialog from "@/components/games/memory/SettingDialog";
-import { convertCardsToBoardState, createSessionSave } from "@/utils/memorySessionHelper";
-import type { MemorySessionSave } from "@/types/memoryGame";
 import { PauseMenu } from "@/components/games/memory/PauseMenu";
 
 const ICONS = [icon1, icon2, icon3, icon4, icon5, icon6, icon7, icon8, icon9, icon10, icon11, icon12, icon13, icon14, icon15, icon16];
@@ -257,16 +255,6 @@ export default function MemoryFreeGame() {
           <div className="flex flex-row gap-2 sm:gap-3 items-center justify-start mb-3">
             <BackToSelectionButton backToSelection={backToSelection} />
             { isStarted &&  freeGameStatus === "playing" && <RefreshGameButton restartGame={initializeFreeGame} />}
-            {/* {isStarted && freeGameStatus === "playing" && (
-              <RoundButton 
-                size="small"
-                className="rounded-md"
-                onClick={() => setIsPaused(true)}
-              >
-                <Pause className="w-5 h-5" />
-                <span className="hidden min-[375px]:inline ml-1">Tạm dừng</span>
-              </RoundButton>
-            )} */}
             <RoundButton 
                 size="small"
                 className="rounded-md"
