@@ -1,6 +1,7 @@
 const GameSession = require("../../models/GameSession");
 const Game = require("../../models/Game");
 const UserGameStats = require("../../models/UserGameStats");
+const AchievementService = require("../../services/AchievementService");
 
 class GameSessionController {
   async startSession(req, res) {
@@ -125,9 +126,15 @@ class GameSessionController {
         isWin,
       });
 
+      const newAchievements = await AchievementService.checkAndUnlock(
+        userId,
+        gameId,
+      );
+
       return res.status(200).json({
         message: "Session completed",
         session: completedSession,
+        newAchievements: newAchievements,
       });
     } catch (error) {
       console.error("Complete Session Error:", error);
