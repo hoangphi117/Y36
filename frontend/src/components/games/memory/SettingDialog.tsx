@@ -107,7 +107,7 @@ export default function SettingDialog({
       <div className="flex gap-3 pt-4">
         <button
           onClick={() => setIsConfigDialogOpen(false)}
-          className="flex-1 px-6 py-3 rounded-xl border-2 border-muted-foreground text-muted-foreground font-bold hover:bg-muted transition-colors"
+          className="flex-1 text-sm sm:text-base px-6 py-3 rounded-xl border-2 border-muted-foreground text-muted-foreground font-bold hover:bg-muted transition-colors"
         >
           Hủy
         </button>
@@ -115,7 +115,7 @@ export default function SettingDialog({
           onClick={handleApply}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="flex-1 px-6 py-3 rounded-xl bg-accent text-white font-bold hover:bg-accent/90 transition-colors shadow-lg"
+          className="flex-1 text-sm sm:text-base px-6 py-3 rounded-xl bg-accent text-white font-bold hover:bg-accent/90 transition-colors shadow-lg"
         >
           Áp dụng
         </motion.button>
