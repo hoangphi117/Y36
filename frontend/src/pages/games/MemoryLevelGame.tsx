@@ -14,7 +14,7 @@ import icon13 from "@/assets/memoryIcons/icon13.png";
 import icon14 from "@/assets/memoryIcons/icon14.png";
 import icon15 from "@/assets/memoryIcons/icon15.png";
 import icon16 from "@/assets/memoryIcons/icon16.png";
-import { use, useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, memo } from "react";
 import { motion } from "framer-motion";
 import { GameHeader } from "@/components/games/GameHeader";
 import { AlarmClock, History, Play, Pause, Download, RotateCcw } from "lucide-react";
@@ -202,20 +202,6 @@ export default function MemoryLevelGame() {
       console.error("Error loading session:", error);
     }
   }, [session]);
-
-  // Initialize level mode game
-  const initializeLevelGame = () => {
-    if (levelConfigs.length === 0) return;
-    const levelConfig = levelConfigs[currentLevel];
-    const newCards = generateCards(levelConfig.pairs);
-    setCards(newCards);
-    setFlipped([]);
-    setMatched([]);
-    setGameStatus("playing");
-    setTimeLeft(levelConfig.timeLimit);
-    setMoves(0);
-    setIsStarted(true);
-  };
 
   // Handle card flip
   const handleCardFlip = (cardId: number) => {
@@ -425,33 +411,46 @@ export default function MemoryLevelGame() {
     return Math.min(Math.max(2, maxColumns), idealColumns);
   };
 
-  // Render card component
-  const CardComponent = ({ card, isFlipped, isMatched, onClick }: any) => (
-    <motion.button
-      onClick={onClick}
-      disabled={isMatched}
-      whileHover={!isMatched ? { scale: 1.05 } : {}}
-      whileTap={!isMatched ? { scale: 0.95 } : {}}
-      className={cn(
-        "relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-lg transition-all cursor-pointer",
-        "flex items-center justify-center font-bold text-sm sm:text-xl md:text-2xl",
-        "border-2 border-primary/30",
-        isMatched 
-          ? "opacity-40 cursor-not-allowed bg-muted" 
-          : isFlipped
-          ? "bg-primary text-white shadow-lg"
-          : "bg-gradient-to-br from-accent via-accent/80 to-accent/60 text-primary hover:shadow-xl"
-      )}
-    >
-      {isFlipped && (
-        <img 
-          src={ICONS[card.iconIndex]} 
-          alt="icon" 
-          className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16 object-contain"
-        />
-      )}
-    </motion.button>
-  );
+  // Render card component with memo to prevent unnecessary re-renders
+  const CardComponent = memo(({ card, isFlipped, isMatched, onClick, isComparing }: any) => {
+    const isDisabled = isMatched || isFlipped || isComparing;
+    
+    return (
+      <motion.button
+        onClick={onClick}
+        disabled={isDisabled}
+        whileHover={!isDisabled ? { scale: 1.05 } : undefined}
+        whileTap={!isDisabled ? { scale: 0.95 } : undefined}
+        className={cn(
+          "relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-lg transition-all",
+          "flex items-center justify-center font-bold text-sm sm:text-xl md:text-2xl",
+          "border-2 border-primary/30",
+          isDisabled ? "cursor-not-allowed" : "cursor-pointer",
+          isMatched 
+            ? "opacity-40 bg-muted" 
+            : isFlipped
+            ? "bg-primary text-white shadow-lg"
+            : "bg-gradient-to-br from-accent via-accent/80 to-accent/60 text-primary hover:shadow-xl"
+        )}
+      >
+        {isFlipped && (
+          <img 
+            src={ICONS[card.iconIndex]} 
+            alt="icon" 
+            className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16 object-contain"
+          />
+        )}
+      </motion.button>
+    );
+  }, (prevProps, nextProps) => {
+    // Custom comparison to prevent re-render if props haven't changed
+    return (
+      prevProps.isFlipped === nextProps.isFlipped &&
+      prevProps.isMatched === nextProps.isMatched &&
+      prevProps.isComparing === nextProps.isComparing &&
+      prevProps.card.iconIndex === nextProps.card.iconIndex
+    );
+  });
 
   if (levelConfigs.length === 0) {
     return (
@@ -528,7 +527,6 @@ export default function MemoryLevelGame() {
               sessions={savedSessions}
               onLoadSession={handleLoadGame}
               onDeleteSession={handleDeleteGame}
-              onNewGame={startGameSession}
               onSaveSession={handleSaveCurrentSession}
             >
               <RoundButton 
@@ -562,10 +560,10 @@ export default function MemoryLevelGame() {
               {cards.map((card, idx) => (
                 <CardComponent
                   key={idx}
-                  cardId={idx}
                   card={card}
                   isFlipped={isStarted && (flipped.includes(idx) || matched.includes(idx))}
                   isMatched={isStarted && matched.includes(idx)}
+                  isComparing={flipped.length >= 2}
                   onClick={() => handleCardFlip(idx)}
                 />
               ))}
@@ -581,8 +579,9 @@ export default function MemoryLevelGame() {
                 <GameStatusOverlay 
                   totalScore={totalScore} 
                   gameStatus={gameStatus} 
-                  action={gameStatus === "completed" ? nextLevel : restartGame}
+                  action={gameStatus === "completed" && currentLevel < levelConfigs.length - 1 ? nextLevel : handlePlayAgain}
                   currentLevel={currentLevel}
+                  totalLevels={levelConfigs.length}
                 />
               </motion.div>
             )}

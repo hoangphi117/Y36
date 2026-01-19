@@ -20,7 +20,6 @@ interface LoadGameDialogProps {
   currentSessionId?: string;
   onLoadSession: (sessionId: string) => void;
   onDeleteSession?: (sessionId: string) => void;
-  onNewGame: () => void;
   onSaveSession?: () => void;
   children: React.ReactNode;
 }

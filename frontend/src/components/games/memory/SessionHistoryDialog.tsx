@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Clock, Calendar, X, Play, Trash2 } from 'lucide-react';
+import { Trophy, Clock, Calendar, X, Play } from 'lucide-react';
 import type { IGameSession } from '@/types/gameSession';
 
 // Hàm format thời gian chơi (giây -> phút:giây)
