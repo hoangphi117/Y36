@@ -51,6 +51,13 @@ const MY_GAMES = [
     variant: "accent" as const,
     url: "/memory",
   },
+  {
+    id: 7,
+    title: "Vẽ tranh",
+    image: "https://img.poki-cdn.com/cdn-cgi/image/q=78,scq=50,width=1200,height=1200,fit=cover,f=png/83de99e3e72db597f408c2f3c66afc3c/drawing.png",
+    variant: "danger" as const,
+    url: "/drawing",
+  },
 ];
 
 export default function HomePage() {
