@@ -559,6 +559,12 @@ export default function MemoryLevelGame() {
               </motion.div>
             )}
           </motion.div>
+
+          <div className="mt-8 px-4 max-w-2xl text-center">
+            <p className="text-muted-foreground text-sm font-medium animate-pulse">
+              Tìm và ghép các cặp biểu tượng giống nhau để ghi điểm cao nhất!
+            </p>
+          </div>
         </motion.div>
       </div>
 

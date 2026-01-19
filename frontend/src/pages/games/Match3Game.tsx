@@ -667,20 +667,77 @@ export default function Match3Game() {
             animate={{ opacity: 1 }}
           >
             <motion.div
-              className="text-center space-y-6"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.2 }}
+              className="text-center space-y-4 sm:space-y-6 px-4 sm:px-6 max-w-md w-full"
+              initial={{ scale: 0.8, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
             >
-              <RoundButton
-                size="large"
-                variant="primary"
-                onClick={handleStartGame}
-                className="text-lg px-8 py-4 shadow-2xl hover:scale-105 transition-transform"
+              {/* Game Logo/Title */}
+              <motion.div
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="space-y-2"
               >
-                <PlayCircle className="w-6 h-6 mr-2" />
-                BẮT ĐẦU CHƠI
-              </RoundButton>
+                <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-primary/10 rounded-3xl mb-2 sm:mb-4">
+                  <Trophy className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
+                </div>
+                <p className="text-sm sm:text-base text-muted-foreground font-medium">
+                  Ghép 3 kẹo cùng màu để ghi điểm!
+                </p>
+              </motion.div>
+
+              {/* Game Info Cards */}
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                className="grid grid-cols-2 gap-2 sm:gap-3"
+              >
+                <div className="bg-background/50 backdrop-blur-sm rounded-2xl p-3 sm:p-4 border border-border">
+                  <div className="flex flex-col items-center gap-1 sm:gap-2">
+                    {gameMode === "time" ? (
+                      <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                    ) : gameMode === "rounds" ? (
+                      <Target className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                    ) : (
+                      <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                    )}
+                    <p className="text-xs sm:text-sm text-muted-foreground font-medium">Chế độ</p>
+                    <p className="text-sm sm:text-base font-bold text-foreground">
+                      {gameMode === "time" ? "Thời gian" : gameMode === "rounds" ? "Lượt chơi" : "Vô tận"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-background/50 backdrop-blur-sm rounded-2xl p-3 sm:p-4 border border-border">
+                  <div className="flex flex-col items-center gap-1 sm:gap-2">
+                    <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                    <p className="text-xs sm:text-sm text-muted-foreground font-medium">Mục tiêu</p>
+                    <p className="text-sm sm:text-base font-bold text-foreground">
+                      {gameMode === "time" ? `${timeLimit}s` : gameMode === "rounds" ? `${targetMatches} lượt` : "Không giới hạn"}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Start Button */}
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                <RoundButton
+                  size="large"
+                  variant="primary"
+                  onClick={handleStartGame}
+                  className="w-full text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 shadow-2xl hover:scale-105 transition-transform font-bold"
+                >
+                  <PlayCircle className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
+                  BẮT ĐẦU CHƠI
+                </RoundButton>
+              </motion.div>
+
             </motion.div>
           </motion.div>
         )}
@@ -705,13 +762,13 @@ export default function Match3Game() {
         
       </div>
 
-        <div className="mt-8 px-4 max-w-2xl">
-          <div className="space-y-2 text-center">
-            <p className="text-muted-foreground text-sm font-medium animate-pulse">
-              💡 Mẹo: Chọn 2 ô cạnh nhau để tráo đổi vị trí!
-            </p>
-          </div>
+      <div className="mt-8 px-4 max-w-2xl">
+        <div className="space-y-2 text-center">
+          <p className="text-muted-foreground text-sm font-medium animate-pulse">
+            💡 Mẹo: Chọn 2 ô cạnh nhau để tráo đổi vị trí!
+          </p>
         </div>
+      </div>
       </div>
 
       {/* Settings Dialog */}
