@@ -303,15 +303,14 @@ export default function MemoryFreeGame() {
 
           {/* Game board */}
           <motion.div
-            className="bg-card rounded-2xl p-2 sm:p-6 shadow-lg border-2 border-primary/10 mb-4 sm:mb-8 flex justify-center overflow-x-auto relative"
+            className="bg-card rounded-2xl p-2 sm:p-6 shadow-lg border-2 border-primary/10 mb-4 sm:mb-8 flex justify-center overflow-x-auto relative min-h-[500px]"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
           >
             <div 
-              className={`grid`}
+              className="grid gap-1"
               style={{
                 gridTemplateColumns: `repeat(${getResponsiveColumns(freePairs * 2)}, auto)`,
-                gap: `${window.innerWidth < 640 ? 4 : window.innerWidth < 768 ? 6 : 8}px`,
                 justifyContent: 'center'
               }}
             >
