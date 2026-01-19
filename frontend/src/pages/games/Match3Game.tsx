@@ -9,6 +9,7 @@ import {
   Settings,
   RotateCcw,
   Download,
+  Loader2,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -61,7 +62,7 @@ export default function Match3Game() {
   const navigate = useNavigate();
   
   // Game states
-  const [gameMode, setGameMode] = useState<"time" | "rounds" | "endless">("time");
+  const [gameMode, setGameMode] = useState<"time" | "rounds" | "endless">("rounds");
   const [timeLimit, setTimeLimit] = useState(30); 
   const [targetMatches, setTargetMatches] = useState(10); 
   const [matchesCount, setMatchesCount] = useState(0);
@@ -73,11 +74,14 @@ export default function Match3Game() {
   // Session state
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [hasStarted, setHasStarted] = useState(false);
   
   // Dialog states
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
 
   const activeCandies = useMemo(() => CANDY_TYPES.slice(0, numCandyTypes), [numCandyTypes]);
+
+  
 
   const getBoardState = useCallback(() => {
     const matrix = convertBoard(board, boardSize);
@@ -94,6 +98,16 @@ export default function Match3Game() {
   }, [board, boardSize, score, gameMode, targetMatches, matchesCount, timeRemaining]);
 
   const gameSession = useGameSession({ gameId: 5, getBoardState, autoCreate: false });
+
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    // Set isInitializing to false after a short delay to show loading
+    const timer = setTimeout(() => {
+      setIsInitializing(false);
+    }, 200);
+    return () => clearTimeout(timer);
+  }, []);
 
   const createRandomBoard = useCallback((size: number, candyTypes: number): string[] => {
     const randomBoard: string[] = [];
@@ -121,10 +135,32 @@ export default function Match3Game() {
     
     return randomBoard;
   }, []);
-
   useEffect(() => {
-    gameSession.startGame();
+    const getDefaultConfig = async () => {
+      try {
+        const response = await axiosClient.get(`/games/5`);
+        const defaultConfig = response.data.data.default_config;
+        console.log(response);
+        setBoardSize(defaultConfig.cols);
+        setNumCandyTypes(defaultConfig.candy_types);
+        setTimeLimit(defaultConfig.time_limit);
+        setTargetScore(defaultConfig.target_score);
+        if(defaultConfig.time_limit && defaultConfig.time_limit > 0) {
+          setGameMode("time");
+          setTimeRemaining(defaultConfig.time_limit);
+        } else if(defaultConfig.moves_limit && defaultConfig.moves_limit > 0) {
+          setGameMode("rounds");
+          setTargetMatches(defaultConfig.moves_limit);
+          setTimeRemaining(0);
+        }
+
+      } catch (error) {
+        console.error("Error fetching default config:", error);
+      }
+    };
+    getDefaultConfig();
   }, []);
+
 
   // Handle when session is created/loaded from useGameSession
   useEffect(() => {
@@ -197,8 +233,10 @@ export default function Match3Game() {
       setIsPaused(false);
       setShowGameOver(false);
       setIsInitializing(false);
+      setHasStarted(true);
     } catch (error) {
       console.error("Error loading session:", error);
+      setIsInitializing(false);
     }
   }, [gameSession.session, createRandomBoard]);
 
@@ -249,6 +287,12 @@ export default function Match3Game() {
       console.error("Error restarting game:", error);
     }
   }, [currentSessionId, gameMode, timeLimit, boardSize, numCandyTypes, targetMatches, gameSession]);
+
+  // Start game for the first time
+  const handleStartGame = async () => {
+    setIsInitializing(true);
+    await gameSession.startGame();
+  };
 
   // Quick restart game (without changing settings or creating new session)
   const quickRestart = useCallback(() => {
@@ -322,7 +366,7 @@ export default function Match3Game() {
   }, [board, boardSize, activeCandies]); 
 
   useEffect(() => {
-    if (isInitializing || showGameOver) return;
+    if (!hasStarted || isInitializing || showGameOver) return;
     
     const timer = setInterval(() => {
       const matched = checkForMatches();
@@ -331,11 +375,11 @@ export default function Match3Game() {
       }
     }, 150);
     return () => clearInterval(timer);
-  }, [checkForMatches, moveIntoSquareBelow, isInitializing, showGameOver]);
+  }, [hasStarted, checkForMatches, moveIntoSquareBelow, isInitializing, showGameOver]);
 
   // Timer countdown effect
   useEffect(() => {
-    if (isInitializing || isPaused || gameMode !== "time" || showGameOver || timeRemaining <= 0) return;
+    if (!hasStarted || isInitializing || isPaused || gameMode !== "time" || showGameOver || timeRemaining <= 0) return;
 
     const timer = setInterval(() => {
       setTimeRemaining(prev => {
@@ -356,10 +400,11 @@ export default function Match3Game() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isInitializing, isPaused, gameMode, showGameOver, timeRemaining, currentSessionId, score, timeLimit]);
+  }, [hasStarted, isInitializing, isPaused, gameMode, showGameOver, timeRemaining, currentSessionId, score, timeLimit]);
 
   // Check if target matches reached
   useEffect(() => {
+    if (!hasStarted) return;
     if (gameMode === "rounds" && matchesCount >= targetMatches && !showGameOver) {
       // Complete session
       const completeGame = async () => {
@@ -372,7 +417,7 @@ export default function Match3Game() {
       const timer = setTimeout(completeGame, 500);
       return () => clearTimeout(timer);
     }
-  }, [matchesCount, targetMatches, gameMode, showGameOver, currentSessionId, score]);
+  }, [hasStarted, matchesCount, targetMatches, gameMode, showGameOver, currentSessionId, score]);
 
   // Handle candy swap
   const handleSquareClick = (idx: number) => {
@@ -415,7 +460,8 @@ export default function Match3Game() {
 
   // Load saved game session
   const handleLoadGame = async (sessionId: string) => {
-    gameSession.loadGame(sessionId);
+    setIsInitializing(true);
+    await gameSession.loadGame(sessionId);
   }
 
   // Delete saved game session
@@ -440,11 +486,11 @@ export default function Match3Game() {
   // Show loading screen
   if (isInitializing) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-background text-foreground">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground">Đang khởi tạo game...</p>
-        </div>
+      <div className="flex h-[80vh] flex-col items-center justify-center gap-4">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="animate-pulse font-medium text-muted-foreground">
+          Đang tải dữ liệu...
+        </p>
       </div>
     );
   }
@@ -490,9 +536,11 @@ export default function Match3Game() {
       {/* Controls */}
       <div className="w-full max-w-6xl px-4 mb-8">
         <div className="flex gap-2 justify-center mb-4 flex-wrap">
-          <RoundButton size="small" variant="primary" onClick={quickRestart} className="text-xs py-1.5 px-3">
-            <RotateCcw className="w-3.5 h-3.5 mr-1.5" /> Chơi lại
-          </RoundButton>
+          {hasStarted && (
+            <RoundButton size="small" variant="primary" onClick={quickRestart} className="text-xs py-1.5 px-3">
+              <RotateCcw className="w-3.5 h-3.5 mr-1.5" /> Chơi lại
+            </RoundButton>
+          )}
           
           <LoadGameDialog
             open={gameSession.showLoadDialog}
@@ -517,22 +565,25 @@ export default function Match3Game() {
             
           </LoadGameDialog>
           
-          <RoundButton 
-            size="small" 
-            variant="accent" 
-            onClick={() => setIsPaused(!isPaused)}
-            className="text-xs py-1.5 px-3"
-          >
-            {isPaused ? (
-              <>
-                <PlayCircle className="w-3.5 h-3.5 mr-1.5" /> TIẾP TỤC
-              </>
-            ) : (
-              <>
-                <Pause className="w-3.5 h-3.5 mr-1.5" /> TẠM DỪNG
-              </>
-            )}
-          </RoundButton>
+          {hasStarted && (
+            <RoundButton 
+              size="small" 
+              variant="accent" 
+              onClick={() => setIsPaused(!isPaused)}
+              className="text-xs py-1.5 px-3"
+
+            >
+              {isPaused ? (
+                <>
+                  <PlayCircle className="w-3.5 h-3.5 mr-1.5" /> TIẾP TỤC
+                </>
+              ) : (
+                <>
+                  <Pause className="w-3.5 h-3.5 mr-1.5" /> TẠM DỪNG
+                </>
+              )}
+            </RoundButton>
+          )}
           <RoundButton size="small" variant="neutral" onClick={() => setShowSettingsDialog(true)} className="text-xs py-1.5 px-3">
             <Settings className="w-3.5 h-3.5 mr-1.5" /> CÀI ĐẶT
           </RoundButton>
@@ -553,26 +604,27 @@ export default function Match3Game() {
               gap: `${boardSize <= 6 ? '0.5rem' : '0.375rem'}`
             }}
           >
-            {board.map((typeId, index) => {
+            {(board.length > 0 ? board : Array(boardSize * boardSize).fill("")).map((typeId, index) => {
               const type = CANDY_TYPES.find(t => t.id === typeId);
               return (
                 <motion.button
-                  key={`${index}-${typeId}`}
+                  key={`${index}-${typeId || 'empty'}`}
                   layout
-                  whileHover={!isPaused ? { scale: 1.05 } : undefined}
-                  onClick={() => !isPaused && handleSquareClick(index)}
-                  disabled={isPaused}
+                  whileHover={!isPaused && hasStarted ? { scale: 1.05 } : undefined}
+                  onClick={() => !isPaused && hasStarted && handleSquareClick(index)}
+                  disabled={isPaused || !hasStarted}
                   className={cn(
                     "w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center relative bg-linear-to-br from-white/10 to-transparent border border-white/10",
-                    selectedSquare === index ? "ring-4 ring-primary z-20" : "",
-                    isPaused ? "opacity-50 cursor-not-allowed" : ""
+                    selectedSquare === index && hasStarted ? "ring-4 ring-primary z-20" : "",
+                    isPaused ? "opacity-50 cursor-not-allowed" : "",
+                    !hasStarted ? "invisible" : ""
                   )}
                   style={{
                     backgroundImage: `url(${iceBorder})`,
                   }}
                 >
                   <AnimatePresence>
-                    {type && (
+                    {type && hasStarted && (
                       <motion.img 
                         initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ opacity: 0 }}
                         src={type.icon} className="w-4/5 h-4/5 object-contain" 
@@ -584,6 +636,32 @@ export default function Match3Game() {
             })}
           </div>
 
+        {/* Start Game Overlay */}
+        {!hasStarted && !isInitializing && (
+          <motion.div
+            className="absolute inset-0 bg-muted/95 rounded-[2.5rem] flex items-center justify-center z-30"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <motion.div
+              className="text-center space-y-6"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              <RoundButton
+                size="large"
+                variant="primary"
+                onClick={handleStartGame}
+                className="text-lg px-8 py-4 shadow-2xl hover:scale-105 transition-transform"
+              >
+                <PlayCircle className="w-6 h-6 mr-2" />
+                BẮT ĐẦU CHƠI
+              </RoundButton>
+            </motion.div>
+          </motion.div>
+        )}
+
         {/* Game Over Modal */}
         {showGameOver && (
           <GameOverOverlay 
@@ -593,26 +671,6 @@ export default function Match3Game() {
             onExit={() => navigate("/")}
           />
         )}
-
-        {/* Settings Dialog (inline mode) */}
-        <SettingsDialog
-          open={showSettingsDialog}
-          onOpenChange={setShowSettingsDialog}
-          gameMode={gameMode}
-          timeLimit={timeLimit}
-          targetMatches={targetMatches}
-          numCandyTypes={numCandyTypes}
-          boardSize={boardSize}
-          onApply={async (settings) => {
-            await restartGameWithSettings(settings);
-            setGameMode(settings.gameMode);
-            setTimeLimit(settings.timeLimit);
-            setTargetMatches(settings.targetMatches);
-            setNumCandyTypes(settings.numCandyTypes);
-            setBoardSize(settings.boardSize);
-          }}
-          inline
-        />
       </div>
         {isPaused && (
           <PauseMenu 
@@ -632,6 +690,25 @@ export default function Match3Game() {
           </div>
         </div>
       </div>
+
+      {/* Settings Dialog */}
+      <SettingsDialog
+        open={showSettingsDialog}
+        onOpenChange={setShowSettingsDialog}
+        gameMode={gameMode}
+        timeLimit={timeLimit}
+        targetMatches={targetMatches}
+        numCandyTypes={numCandyTypes}
+        boardSize={boardSize}
+        onApply={async (settings) => {
+          await restartGameWithSettings(settings);
+          setGameMode(settings.gameMode);
+          setTimeLimit(settings.timeLimit);
+          setTargetMatches(settings.targetMatches);
+          setNumCandyTypes(settings.numCandyTypes);
+          setBoardSize(settings.boardSize);
+        }}
+      />
     </GameLayout>
   );
 }

@@ -17,7 +17,7 @@ import icon16 from "@/assets/memoryIcons/icon16.png";
 import { useEffect, useState, memo } from "react";
 import { motion } from "framer-motion";
 import { GameHeader } from "@/components/games/GameHeader";
-import { AlarmClock, Pause, Download, RotateCcw } from "lucide-react";
+import { AlarmClock, Pause, Download, RotateCcw, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BackToSelectionButton } from "@/components/games/memory/SettingButtons";
 import StatCard from "@/components/games/memory/StatCard";
@@ -415,12 +415,12 @@ export default function MemoryLevelGame() {
 
   if (levelConfigs.length === 0) {
     return (
-      <>
-        <GameHeader />
-        <div className="min-h-screen flex items-center justify-center">
-          <p>Đang tải...</p>
-        </div>
-      </>
+      <div className="flex h-[80vh] flex-col items-center justify-center gap-4">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="animate-pulse font-medium text-muted-foreground">
+          Đang tải dữ liệu...
+        </p>
+      </div>
     );
   }
 

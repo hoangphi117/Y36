@@ -264,7 +264,7 @@ export default function MemoryFreeGame() {
 
           {/* Game board */}
           <motion.div
-            className="bg-card rounded-2xl p-2 sm:p-6 shadow-lg border-2 border-primary/10 mb-4 sm:mb-8 flex justify-center overflow-x-auto relative min-h-[500px]"
+            className="bg-card rounded-2xl p-2 sm:p-6 shadow-lg border-2 border-primary/10 mb-4 sm:mb-8 flex justify-center overflow-x-auto relative"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
           >
@@ -322,30 +322,29 @@ export default function MemoryFreeGame() {
                 />
               </motion.div>
             )}
-
-            {/* Configuration Dialog (inline mode) */}
-            {isConfigDialogOpen && (
-              <SettingDialog 
-                setFreePairs={setFreePairs}
-                setFreeTime={setFreeTime}
-                setFreeTimeLeft={setFreeTimeLeft}
-                setFreeCards={setFreeCards}
-                setFreeFlipped={setFreeFlipped}
-                setFreeMatched={setFreeMatched}
-                setFreeGameStatus={setFreeGameStatus}
-                setIsConfigDialogOpen={setIsConfigDialogOpen}
-                setIsStarted={setIsStarted}
-                generateCards={generateCards}
-                freePairs={freePairs}
-                freeTime={freeTime}
-                open={isConfigDialogOpen}
-                inline
-              />
-            )}
           </motion.div>
 
         </motion.div>
       </div>
+
+      {/* Configuration Dialog */}
+      {isConfigDialogOpen && (
+        <SettingDialog 
+          setFreePairs={setFreePairs}
+          setFreeTime={setFreeTime}
+          setFreeTimeLeft={setFreeTimeLeft}
+          setFreeCards={setFreeCards}
+          setFreeFlipped={setFreeFlipped}
+          setFreeMatched={setFreeMatched}
+          setFreeGameStatus={setFreeGameStatus}
+          setIsConfigDialogOpen={setIsConfigDialogOpen}
+          setIsStarted={setIsStarted}
+          generateCards={generateCards}
+          freePairs={freePairs}
+          freeTime={freeTime}
+          open={isConfigDialogOpen}
+        />
+      )}
 
       {/* Pause Menu */}
       {isPaused && (
