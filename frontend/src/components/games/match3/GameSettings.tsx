@@ -197,7 +197,7 @@ const TimeAndRoundsConfig = ({
                         onClick={() => setTimeLimit(time)}
                         className={cn(
                         "py-3 px-2 rounded-lg font-bold text-sm transition-all border",
-                        timeLimit === time
+                        timeLimit === time || (timeLimit === 0 && time === allTimeOptions[0])
                         ? "bg-primary text-primary-foreground border-primary shadow-lg"
                         : "bg-muted border-primary/20 hover:bg-muted/80"
                     )}
@@ -227,7 +227,7 @@ const TimeAndRoundsConfig = ({
                     onClick={() => setTargetMatches(rounds)}
                     className={cn(
                         "py-3 px-2 rounded-lg font-bold text-sm transition-all border",
-                        targetMatches === rounds
+                        targetMatches === rounds || (targetMatches === 0 && rounds === allRoundOptions[0])
                         ? "bg-primary text-primary-foreground border-primary shadow-lg"
                         : "bg-muted border-primary/20 hover:bg-muted/80"
                     )}

@@ -94,7 +94,7 @@ export default function Match3Game() {
   }, [board, boardSize, score, gameMode, targetMatches, matchesCount, timeRemaining]);
 
   // Tích hợp useGameSession (chỉ dùng để load saved sessions, không auto-start)
-  const gameSession = useGameSession({ gameId: 5, getBoardState });
+  const gameSession = useGameSession({ gameId: 5, getBoardState, autoCreate: false });
 
   // Hàm tạo random board (đảm bảo không có matches ban đầu)
   const createRandomBoard = useCallback((size: number, candyTypes: number): string[] => {
@@ -218,11 +218,6 @@ export default function Match3Game() {
       // Reset game over state ngay lập tức
       setShowGameOver(false);
       setIsPaused(false);
-      
-      if (currentSessionId) {
-        await gameSession.saveGame(true);
-        setCurrentSessionId(null);
-      }
       
       // Sử dụng settings mới nếu có, nếu không dùng giá trị hiện tại
       const settings = newSettings || { gameMode, timeLimit, targetMatches, numCandyTypes, boardSize };

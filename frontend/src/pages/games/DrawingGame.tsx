@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { GameHeader } from "@/components/games/GameHeader";
-import { Palette, Download, Trash2, Save, Undo, Redo, History } from "lucide-react";
+import { Palette, Download, Trash2, Save, Undo, Redo, History, Pencil, Square, Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RoundButton } from "@/components/ui/round-button";
 import { useGameSession } from "@/hooks/useGameSession";
@@ -36,6 +36,9 @@ interface Path {
   color: string;
   size: number;
   points: Point[];
+  type?: 'pen' | 'rectangle' | 'circle';
+  startPoint?: Point;
+  endPoint?: Point;
 }
 
 interface DrawingBoardState {
@@ -51,11 +54,13 @@ interface CanvasConfig {
 export default function DrawingGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [currentTool, setCurrentTool] = useState<'pen' | 'rectangle' | 'circle'>('pen');
   const [currentColor, setCurrentColor] = useState(COLORS[6]); // Purple
   const [currentSize, setCurrentSize] = useState(4);
   const [tempSize, setTempSize] = useState(4); // Temporary size for slider
   const [paths, setPaths] = useState<Path[]>([]);
   const [currentPath, setCurrentPath] = useState<Point[]>([]);
+  const [startPoint, setStartPoint] = useState<Point | null>(null);
   const [canvasConfig, setCanvasConfig] = useState<CanvasConfig>({
     canvas_width: 800,
     canvas_height: 600,
@@ -63,6 +68,7 @@ export default function DrawingGame() {
   });
   const [history, setHistory] = useState<Path[][]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   // Get board state for session
   const getBoardState = useCallback((): DrawingBoardState => {
@@ -85,6 +91,7 @@ export default function DrawingGame() {
   } = useGameSession({
     gameId: GAME_ID,
     getBoardState,
+    autoCreate: false,
   });
 
   // Start new game session
@@ -102,7 +109,12 @@ export default function DrawingGame() {
 
   // Handle session load/create
   useEffect(() => {
-    if (!session) return;
+    if (!session) {
+      if (!isLoading) {
+        setIsInitializing(false);
+      }
+      return;
+    }
 
     try {
       // Get config
@@ -124,10 +136,13 @@ export default function DrawingGame() {
         setHistory([boardState.paths]);
         setHistoryIndex(0);
       }
+      
+      setIsInitializing(false);
     } catch (error) {
       console.error("Error loading session:", error);
+      setIsInitializing(false);
     }
-  }, [session]);
+  }, [session, isLoading]);
 
   // Draw on canvas
   useEffect(() => {
@@ -143,40 +158,62 @@ export default function DrawingGame() {
 
     // Draw all paths
     paths.forEach((path) => {
-      if (path.points.length < 2) return;
-
       ctx.strokeStyle = path.color;
       ctx.lineWidth = path.size;
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
 
-      ctx.beginPath();
-      ctx.moveTo(path.points[0].x, path.points[0].y);
-
-      for (let i = 1; i < path.points.length; i++) {
-        ctx.lineTo(path.points[i].x, path.points[i].y);
+      if (path.type === 'rectangle' && path.startPoint && path.endPoint) {
+        const width = path.endPoint.x - path.startPoint.x;
+        const height = path.endPoint.y - path.startPoint.y;
+        ctx.strokeRect(path.startPoint.x, path.startPoint.y, width, height);
+      } else if (path.type === 'circle' && path.startPoint && path.endPoint) {
+        const centerX = (path.startPoint.x + path.endPoint.x) / 2;
+        const centerY = (path.startPoint.y + path.endPoint.y) / 2;
+        const radiusX = Math.abs(path.endPoint.x - path.startPoint.x) / 2;
+        const radiusY = Math.abs(path.endPoint.y - path.startPoint.y) / 2;
+        ctx.beginPath();
+        ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, 2 * Math.PI);
+        ctx.stroke();
+      } else if (path.points.length >= 2) {
+        ctx.beginPath();
+        ctx.moveTo(path.points[0].x, path.points[0].y);
+        for (let i = 1; i < path.points.length; i++) {
+          ctx.lineTo(path.points[i].x, path.points[i].y);
+        }
+        ctx.stroke();
       }
-
-      ctx.stroke();
     });
 
-    // Draw current path
-    if (currentPath.length > 0) {
-      ctx.strokeStyle = currentColor;
-      ctx.lineWidth = currentSize;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
+    // Draw current path/shape
+    ctx.strokeStyle = currentColor;
+    ctx.lineWidth = currentSize;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
 
+    if (currentTool === 'pen' && currentPath.length > 0) {
       ctx.beginPath();
       ctx.moveTo(currentPath[0].x, currentPath[0].y);
-
       for (let i = 1; i < currentPath.length; i++) {
         ctx.lineTo(currentPath[i].x, currentPath[i].y);
       }
-
+      ctx.stroke();
+    } else if (currentTool === 'rectangle' && startPoint && currentPath.length > 0) {
+      const endPoint = currentPath[currentPath.length - 1];
+      const width = endPoint.x - startPoint.x;
+      const height = endPoint.y - startPoint.y;
+      ctx.strokeRect(startPoint.x, startPoint.y, width, height);
+    } else if (currentTool === 'circle' && startPoint && currentPath.length > 0) {
+      const endPoint = currentPath[currentPath.length - 1];
+      const centerX = (startPoint.x + endPoint.x) / 2;
+      const centerY = (startPoint.y + endPoint.y) / 2;
+      const radiusX = Math.abs(endPoint.x - startPoint.x) / 2;
+      const radiusY = Math.abs(endPoint.y - startPoint.y) / 2;
+      ctx.beginPath();
+      ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, 2 * Math.PI);
       ctx.stroke();
     }
-  }, [paths, currentPath, canvasConfig, currentColor, currentSize]);
+  }, [paths, currentPath, canvasConfig, currentColor, currentSize, currentTool, startPoint]);
 
   // Get mouse position relative to canvas
   const getMousePos = (e: React.MouseEvent<HTMLCanvasElement>): Point => {
@@ -197,6 +234,7 @@ export default function DrawingGame() {
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     setIsDrawing(true);
     const pos = getMousePos(e);
+    setStartPoint(pos);
     setCurrentPath([pos]);
   };
 
@@ -205,21 +243,42 @@ export default function DrawingGame() {
     if (!isDrawing) return;
 
     const pos = getMousePos(e);
-    setCurrentPath((prev) => [...prev, pos]);
+    if (currentTool === 'pen') {
+      setCurrentPath((prev) => [...prev, pos]);
+    } else {
+      // For shapes, only keep start and current point
+      setCurrentPath([pos]);
+    }
   };
 
   // Handle mouse up
   const handleMouseUp = () => {
-    if (!isDrawing || currentPath.length === 0) {
+    if (!isDrawing || currentPath.length === 0 || !startPoint) {
       setIsDrawing(false);
+      setStartPoint(null);
       return;
     }
 
-    const newPath: Path = {
-      color: currentColor,
-      size: currentSize,
-      points: currentPath,
-    };
+    let newPath: Path;
+    
+    if (currentTool === 'pen') {
+      newPath = {
+        color: currentColor,
+        size: currentSize,
+        points: currentPath,
+        type: 'pen',
+      };
+    } else {
+      const endPoint = currentPath[currentPath.length - 1];
+      newPath = {
+        color: currentColor,
+        size: currentSize,
+        points: [],
+        type: currentTool,
+        startPoint: startPoint,
+        endPoint: endPoint,
+      };
+    }
 
     const newPaths = [...paths, newPath];
     setPaths(newPaths);
@@ -231,6 +290,7 @@ export default function DrawingGame() {
     setHistoryIndex(newHistory.length - 1);
 
     setCurrentPath([]);
+    setStartPoint(null);
     setIsDrawing(false);
   };
 
@@ -328,6 +388,21 @@ export default function DrawingGame() {
     };
   }, [session, paths]);
 
+  // Loading screen
+  if (isInitializing || isLoading) {
+    return (
+      <>
+        <GameHeader />
+        <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-background to-accent/5">
+          <div className="text-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="text-lg font-medium text-muted-foreground animate-pulse">Đang khởi tạo canvas...</p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <GameHeader />
@@ -384,6 +459,49 @@ export default function DrawingGame() {
                       value={currentColor}
                     />
                   </label>
+                </div>
+              </div>
+
+              {/* Tool selection */}
+              <div className="flex items-center gap-2 justify-center sm:justify-start">
+                <span className="text-xs sm:text-sm font-medium text-muted-foreground">Công cụ:</span>
+                <div className="flex gap-1.5">
+                  <button
+                    onClick={() => setCurrentTool('pen')}
+                    className={cn(
+                      "p-2 rounded-lg transition-all",
+                      currentTool === 'pen'
+                        ? "bg-primary text-primary-foreground shadow-md"
+                        : "bg-muted hover:bg-muted/80"
+                    )}
+                    title="Bút vẽ"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setCurrentTool('rectangle')}
+                    className={cn(
+                      "p-2 rounded-lg transition-all",
+                      currentTool === 'rectangle'
+                        ? "bg-primary text-primary-foreground shadow-md"
+                        : "bg-muted hover:bg-muted/80"
+                    )}
+                    title="Hình vuông"
+                  >
+                    <Square className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setCurrentTool('circle')}
+                    className={cn(
+                      "p-2 rounded-lg transition-all",
+                      currentTool === 'circle'
+                        ? "bg-primary text-primary-foreground shadow-md"
+                        : "bg-muted hover:bg-muted/80"
+                    )}
+                    title="Hình tròn"
+                  >
+                    <Circle className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
 

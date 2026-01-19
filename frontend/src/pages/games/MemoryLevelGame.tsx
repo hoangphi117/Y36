@@ -131,6 +131,7 @@ export default function MemoryLevelGame() {
   } = useGameSession({
     gameId: 6, // memory game id
     getBoardState: () => getCurrentSessionState(),
+    autoCreate: false,
   });
 
   // start new game session
