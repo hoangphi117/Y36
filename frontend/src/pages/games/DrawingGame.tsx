@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { GameHeader } from "@/components/games/GameHeader";
-import { Palette, Download, Trash2, Save, Undo, Redo, History, Pencil, Square, Circle, Loader2 } from "lucide-react";
+import { Palette, Download, Trash2, Save, Undo, Redo, History, Pencil, Square, Circle, Loader2, Eraser } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RoundButton } from "@/components/ui/round-button";
 import { useGameSession } from "@/hooks/useGameSession";
@@ -37,7 +37,7 @@ interface Path {
   color: string;
   size: number;
   points: Point[];
-  type?: 'pen' | 'rectangle' | 'circle';
+  type?: 'pen' | 'rectangle' | 'circle' | 'eraser';
   startPoint?: Point;
   endPoint?: Point;
 }
@@ -55,7 +55,7 @@ interface CanvasConfig {
 export default function DrawingGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [currentTool, setCurrentTool] = useState<'pen' | 'rectangle' | 'circle'>('pen');
+  const [currentTool, setCurrentTool] = useState<'pen' | 'rectangle' | 'circle' | 'eraser'>('pen');
   const [currentColor, setCurrentColor] = useState(COLORS[6]); // Purple
   const [currentSize, setCurrentSize] = useState(4);
   const [tempSize, setTempSize] = useState(4); // Temporary size for slider
@@ -190,12 +190,12 @@ export default function DrawingGame() {
     });
 
     // Draw current path/shape
-    ctx.strokeStyle = currentColor;
-    ctx.lineWidth = currentSize;
+    ctx.strokeStyle = currentTool === 'eraser' ? canvasConfig.background_color : currentColor;
+    ctx.lineWidth = currentTool === 'eraser' ? currentSize * 2 : currentSize;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
 
-    if (currentTool === 'pen' && currentPath.length > 0) {
+    if ((currentTool === 'pen' || currentTool === 'eraser') && currentPath.length > 0) {
       ctx.beginPath();
       ctx.moveTo(currentPath[0].x, currentPath[0].y);
       for (let i = 1; i < currentPath.length; i++) {
@@ -247,7 +247,7 @@ export default function DrawingGame() {
     if (!isDrawing) return;
 
     const pos = getMousePos(e);
-    if (currentTool === 'pen') {
+    if (currentTool === 'pen' || currentTool === 'eraser') {
       setCurrentPath((prev) => [...prev, pos]);
     } else {
       // For shapes, only keep start and current point
@@ -265,12 +265,12 @@ export default function DrawingGame() {
 
     let newPath: Path;
     
-    if (currentTool === 'pen') {
+    if (currentTool === 'pen' || currentTool === 'eraser') {
       newPath = {
-        color: currentColor,
-        size: currentSize,
+        color: currentTool === 'eraser' ? canvasConfig.background_color : currentColor,
+        size: currentTool === 'eraser' ? currentSize * 2 : currentSize,
         points: currentPath,
-        type: 'pen',
+        type: currentTool,
       };
     } else {
       const endPoint = currentPath[currentPath.length - 1];
@@ -503,6 +503,18 @@ export default function DrawingGame() {
                   >
                     <Circle className="w-4 h-4" />
                   </button>
+                  <button
+                    onClick={() => setCurrentTool('eraser')}
+                    className={cn(
+                      "p-2 rounded-lg transition-all",
+                      currentTool === 'eraser'
+                        ? "bg-primary text-primary-foreground shadow-md"
+                        : "bg-muted hover:bg-muted/80"
+                    )}
+                    title="Tẩy xóa"
+                  >
+                    <Eraser className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
 
@@ -619,7 +631,10 @@ export default function DrawingGame() {
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
-                className="border-2 border-border rounded-lg cursor-crosshair max-w-full h-auto block"
+                className={cn(
+                  "border-2 border-border rounded-lg max-w-full h-auto block",
+                  currentTool === 'eraser' ? "cursor-cell" : "cursor-crosshair"
+                )}
                 style={{ 
                   backgroundColor: canvasConfig.background_color,
                   touchAction: 'none'
