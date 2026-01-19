@@ -106,7 +106,10 @@ export function LoadGameDialog({
           </RoundButton>
           <RoundButton
             size="small"
-            onClick={onNewGame}
+            onClick={() => {
+              onOpenChange(false);
+              onNewGame();
+            }}
             className="flex-1 sm:flex-none gap-2"
           >
             <Plus className="w-4 h-4" /> Game Mới

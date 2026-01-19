@@ -17,6 +17,7 @@ import {
   Trophy,
   Volume2,
   VolumeX,
+  Settings,
 } from "lucide-react";
 import { useGameSound } from "@/hooks/useGameSound";
 
@@ -35,6 +36,7 @@ import {
 } from "@/config/gameConfigs";
 
 import formatTime from "@/utils/formatTime";
+import { GameLayout } from "@/components/layouts/GameLayout";
 
 const GAME_ID = 3;
 const DEFAULT_CONFIG = {
@@ -370,7 +372,7 @@ export default function SnakeGame() {
     );
 
   return (
-    <>
+    <GameLayout gameId={GAME_ID}>
       <GameHeader />
       <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background">
         {/* INFO */}
@@ -417,22 +419,16 @@ export default function SnakeGame() {
             </RoundButton>
           </LoadGameDialog>
 
-          {/* GAME SETTINGS (CONTROLLED) */}
-          {!isGameOver && (
-            <GameSettingsDialog
-              open={isSettingsOpen}
-              onOpenChange={setIsSettingsOpen}
-              currentBoardSize={gridSize}
-              currentSpeed={currentSpeed}
-              currentIncrement={speedIncrement}
-              boardSizeOptions={boardSizeOptions}
-              speedOptions={speedOptions}
-              incrementOptions={incrementOptions}
-              onSave={handleSaveSettings}
-              disabled={session?.status !== "playing"}
-              preventClose={isInitialSetup}
-            />
-          )}
+          {/* Settings Button */}
+          <RoundButton
+            size="small"
+            variant="neutral"
+            onClick={() => setIsSettingsOpen(true)}
+            title="Cài đặt"
+            disabled={isGameOver}
+          >
+            <Settings className="w-4 h-4" />
+          </RoundButton>
 
           <RoundButton
             size="small"
@@ -516,6 +512,24 @@ export default function SnakeGame() {
                 </div>
               )}
             </AnimatePresence>
+
+            {/* Settings Dialog (inline mode) */}
+            {!isGameOver && (
+              <GameSettingsDialog
+                open={isSettingsOpen}
+                onOpenChange={setIsSettingsOpen}
+                currentBoardSize={gridSize}
+                currentSpeed={currentSpeed}
+                currentIncrement={speedIncrement}
+                boardSizeOptions={boardSizeOptions}
+                speedOptions={speedOptions}
+                incrementOptions={incrementOptions}
+                onSave={handleSaveSettings}
+                disabled={session?.status !== "playing"}
+                preventClose={isInitialSetup}
+                inline
+              />
+            )}
           </div>
         </div>
 
@@ -561,6 +575,6 @@ export default function SnakeGame() {
           </RoundButton>
         </div>
       </div>
-    </>
+    </GameLayout>
   );
 }

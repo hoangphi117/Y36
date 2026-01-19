@@ -28,6 +28,7 @@ import SettingDialog from "@/components/games/memory/SettingDialog";
 import { convertCardsToBoardState, createSessionSave } from "@/utils/memorySessionHelper";
 import type { MemorySessionSave } from "@/types/memoryGame";
 import { PauseMenu } from "@/components/games/memory/PauseMenu";
+import { GameLayout } from "@/components/layouts/GameLayout";
 
 const ICONS = [icon1, icon2, icon3, icon4, icon5, icon6, icon7, icon8, icon9, icon10, icon11, icon12, icon13, icon14, icon15, icon16];
 
@@ -181,16 +182,9 @@ export default function MemoryFreeGame() {
 
   // Handle pause menu - save and exit
   const handleSaveAndExit = () => {
-    try {
-      // Save game session
-      saveGameSession();
-      // Navigate back to selection
-      navigate("/memory");
-    } catch (error) {
-      console.error("Error saving game:", error);
-      // Still navigate back even if save fails
-      navigate("/memory");
-    }
+    // TODO: Implement saveGameSession() when API is ready
+    // Navigate back to selection
+    navigate("/memory");
   };
 
   // Handle restart from pause menu
@@ -243,7 +237,7 @@ export default function MemoryFreeGame() {
 
   // Main Game Render
   return (
-    <>
+    <GameLayout gameId={6}>
       <GameHeader />
       <div className="min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 pt-16 sm:pt-20 bg-[var(--background)]">
         <motion.div
@@ -368,11 +362,10 @@ export default function MemoryFreeGame() {
                 />
               </motion.div>
             )}
-          </motion.div>
 
-          {/* Configuration Dialog */}
-          {isConfigDialogOpen && (
-            <SettingDialog 
+            {/* Configuration Dialog (inline mode) */}
+            {isConfigDialogOpen && (
+              <SettingDialog 
                 setFreePairs={setFreePairs}
                 setFreeTime={setFreeTime}
                 setFreeTimeLeft={setFreeTimeLeft}
@@ -385,8 +378,12 @@ export default function MemoryFreeGame() {
                 generateCards={generateCards}
                 freePairs={freePairs}
                 freeTime={freeTime}
-            />
-          )}
+                open={isConfigDialogOpen}
+                inline
+              />
+            )}
+          </motion.div>
+
         </motion.div>
       </div>
 
@@ -395,9 +392,9 @@ export default function MemoryFreeGame() {
         <PauseMenu
           onContinue={() => setIsPaused(false)}
           onSaveAndExit={handleSaveAndExit}
-          onRestart={handleRestartFromPause}
+          onRestart={restartFreeGame}
         />
       )}
-    </>
+    </GameLayout>
   );
 }

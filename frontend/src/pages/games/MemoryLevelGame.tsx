@@ -33,6 +33,7 @@ import SessionHistoryDialog from "@/components/games/memory/SessionHistoryDialog
 import { useGameSession } from "@/hooks/useGameSession";
 import { LoadGameDialog } from "@/components/dialogs/LoadGameDialog";
 import { useAuthStore } from "@/stores/useAuthStore";
+import { GameLayout } from "@/components/layouts/GameLayout";
 
 const ICONS = [icon1, icon2, icon3, icon4, icon5, icon6, icon7, icon8, icon9, icon10, icon11, icon12, icon13, icon14, icon15, icon16];
 
@@ -440,7 +441,7 @@ export default function MemoryLevelGame() {
   const levelConfig = levelConfigs[currentLevel];
 
   return (
-    <>
+    <GameLayout gameId={6}>
       <GameHeader />
       <div className="min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 pt-16 sm:pt-20 bg-[var(--background)]">
         <motion.div
@@ -579,6 +580,6 @@ export default function MemoryLevelGame() {
           onLoadSession={() => {}}
         />
       )}
-    </>
+    </GameLayout>
   );
 }
