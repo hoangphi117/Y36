@@ -6,6 +6,7 @@ import { type GameSession } from "@/types/game";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { triggerWinEffects } from "@/lib/fireworks";
 import { useAchievementStore } from "@/stores/useAchievementStore";
+import { useGameSound } from "@/hooks/useGameSound";
 
 interface UseGameSessionProps {
   gameId: number;
@@ -34,6 +35,8 @@ export function useGameSession({
   const [currentPlayTime, setCurrentPlayTime] = useState(0);
 
   const addAchievement = useAchievementStore((s) => s.addAchievement);
+
+  const { playSound } = useGameSound();
 
   useEffect(() => {
     sessionRef.current = session;
@@ -207,7 +210,8 @@ export function useGameSession({
         const newAchievements = res.data.newAchievements;
         if (newAchievements && newAchievements.length > 0) {
           newAchievements.forEach((ach: any) => {
-            addAchievement(ach); // Đẩy vào store thay vì dùng toast
+            addAchievement(ach);
+            playSound("steam");
           });
           triggerWinEffects();
         }

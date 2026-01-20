@@ -11,7 +11,6 @@ export const MainLayout = () => {
 
       <main className="flex-1 w-[90%] md:w-[80%] mx-auto py-8">
         <Outlet />
-        <AchievementPopup />
       </main>
 
       <Footer />
