@@ -7,6 +7,7 @@ import { Eye, EyeOff, Lock, Mail, Shield, LogIn, KeyRound } from 'lucide-react';
 import { useGameSound } from '@/hooks/useGameSound';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AdminInput } from '@/components/admin/ui/AdminInput';
+import { Toaster } from 'react-hot-toast';
 
 export const AdminLoginPage = () => {
   const [email, setEmail] = useState('');
@@ -74,7 +75,21 @@ export const AdminLoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+    <>
+      <Toaster 
+        position="top-center"
+        containerStyle={{
+          top: 20,
+          zIndex: 99999,
+        }}
+        toastOptions={{
+          style: {
+            background: 'transparent',
+            boxShadow: 'none',
+          },
+        }}
+      />
+      <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
         {/* Animated Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-background via-primary/5 to-accent/10" />
         
@@ -281,5 +296,6 @@ export const AdminLoginPage = () => {
           </div>
         </motion.div>
       </div>
+    </>
   );
 };
