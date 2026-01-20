@@ -14,7 +14,6 @@ import {
   Upload,
   Download,
   Clock,
-  LogOut,
   Trophy,
   Volume2,
   VolumeX,
@@ -22,10 +21,9 @@ import {
 } from "lucide-react";
 import { useGameSound } from "@/hooks/useGameSound";
 
-import { GameHeader } from "@/components/games/GameHeader";
 import useDocumentTitle from "@/hooks/useDocumentTitle";
 import { useGameSession } from "@/hooks/useGameSession";
-import { LoadGameDialog } from "./LoadGameDialog";
+import { LoadGameDialog } from "@/components/dialogs/LoadGameDialog";
 import {
   GameSettingsDialog,
   type Difficulty,
@@ -38,6 +36,8 @@ import {
 
 import formatTime from "@/utils/formatTime";
 import { GameLayout } from "@/components/layouts/GameLayout";
+import axiosClient from "@/lib/axios";
+import { toast } from "sonner";
 
 const GAME_ID = 3;
 const DEFAULT_CONFIG = {
@@ -52,7 +52,7 @@ const INITIAL_SNAKE = [
 ];
 const INITIAL_DIRECTION = { x: 0, y: -1 };
 
-export default function SnakeGame() {
+export default function SnakeGame({ onBack }: { onBack?: () => void }) {
   useDocumentTitle("Trò Rắn Săn Mồi");
 
   const [gridSize, setGridSize] = useState(DEFAULT_CONFIG.cols);
@@ -136,6 +136,7 @@ export default function SnakeGame() {
     getBoardState,
     isPaused: isPaused || isSettingsOpen,
     autoCreate: false,
+    onQuit: onBack,
   });
 
   useEffect(() => {
@@ -334,6 +335,17 @@ export default function SnakeGame() {
     setShowLoadDialog(true);
   };
 
+  const handleDeleteGame = async (sessionId: string) => {
+    try {
+      await axiosClient.delete(`/sessions/${sessionId}`);
+      await fetchSavedSessions();
+      toast.success("Đã xóa ván chơi!");
+    } catch (error) {
+      console.error("Failed to delete session:", error);
+      toast.error("Xóa thất bại");
+    }
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === " ") {
@@ -378,8 +390,9 @@ export default function SnakeGame() {
 
   return (
     <GameLayout gameId={GAME_ID}>
-      <GameHeader />
       <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background">
+        {/* HEADER REMOVED */}
+        
         {/* INFO */}
         <div className="flex justify-between items-center w-full max-w-md px-4 py-2 mb-6 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border">
           <div className="flex items-center gap-2">
@@ -414,6 +427,8 @@ export default function SnakeGame() {
             currentSessionId={session?.id}
             onLoadSession={loadGame}
             onNewGame={handleStandardNewGame}
+            onBack={onBack}
+            onDeleteSession={handleDeleteGame}
           >
             <RoundButton
               variant="neutral"
@@ -460,9 +475,7 @@ export default function SnakeGame() {
               <VolumeX className="w-4 h-4" />
             )}
           </RoundButton>
-          <RoundButton size="small" variant="neutral" onClick={quitGame}>
-            <LogOut className="w-4 h-4" />
-          </RoundButton>
+
         </div>
 
         {/* BOARD */}

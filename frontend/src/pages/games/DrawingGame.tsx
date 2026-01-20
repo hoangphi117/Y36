@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
-import { GameHeader } from "@/components/games/GameHeader";
-import { Palette, Download, Trash2, Save, Undo, Redo, History, Pencil, Square, Circle, Loader2, Eraser } from "lucide-react";
+import { Palette, Download, Trash2, Save, Undo, Redo, Pencil, Square, Circle, Loader2, Eraser, FolderOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RoundButton } from "@/components/ui/round-button";
 import { useGameSession } from "@/hooks/useGameSession";
@@ -52,7 +51,7 @@ interface CanvasConfig {
   background_color: string;
 }
 
-export default function DrawingGame() {
+export default function DrawingGame({ onBack }: { onBack?: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentTool, setCurrentTool] = useState<'pen' | 'rectangle' | 'circle' | 'eraser'>('pen');
@@ -93,6 +92,7 @@ export default function DrawingGame() {
     gameId: GAME_ID,
     getBoardState,
     autoCreate: false,
+    onQuit: onBack,
   });
 
   // Scroll to top and initial loading delay
@@ -350,12 +350,7 @@ export default function DrawingGame() {
     toast.success("Đã xóa bản vẽ!");
   };
 
-  // Save current session
-  const handleSaveCurrentSession = async () => {
-    if (session) {
-      await saveGameSession(true);
-    }
-  };
+
 
   // Auto-save before unload
   useEffect(() => {
@@ -406,20 +401,13 @@ export default function DrawingGame() {
 
   return (
     <GameLayout gameId={7}>
-      <GameHeader />
-      <div className="min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 pt-16 sm:pt-20 bg-gradient-to-br from-background via-background to-accent/5">
+      <div className="min-h-screen flex flex-col items-center justify-center p-2 sm:p-2 pt-16 sm:pt-0 bg-gradient-to-br from-background via-background to-accent/5">
         <motion.div
           className="w-full max-w-6xl px-2 sm:px-0"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          {/* Header */}
-          <div className="text-center mb-4 sm:mb-6">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-primary mb-1 sm:mb-2">
-              VẼ TỰ DO
-            </h1>
-            <p className="text-sm sm:text-base text-muted-foreground">Thể hiện sáng tạo của bạn</p>
-          </div>
+          {/* Header Removed */}
 
           {/* Toolbar */}
           <div className="bg-card rounded-xl sm:rounded-2xl p-2 sm:p-4 shadow-lg border-2 border-primary/10 mb-3 sm:mb-4">
@@ -579,26 +567,17 @@ export default function DrawingGame() {
                   <span className="hidden sm:inline ml-1.5">Lưu</span>
                   {isSaving && <span className="ml-1">...</span>}
                 </RoundButton>
-                <RoundButton
-                  size="small"
-                  variant="neutral"
-                  onClick={handleDownload}
-                  className="rounded-md px-2 sm:px-3"
-                  title="Tải về"
-                >
-                  <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline ml-1.5">Tải về</span>
-                </RoundButton>
-                <LoadGameDialog
+                                <LoadGameDialog
                   open={showLoadDialog}
                   onOpenChange={setShowLoadDialog}
                   sessions={savedSessions}
                   currentSessionId={session?.id}
                   onLoadSession={handleLoadGame}
                   onDeleteSession={handleDeleteGame}
-                  onSaveSession={handleSaveCurrentSession}
+                  onBack={onBack}
+                  onNewGame={() => startGameSession()}
                 >
-                  <RoundButton
+                    <RoundButton
                     size="small"
                     variant="neutral"
                     onClick={() => {
@@ -608,10 +587,20 @@ export default function DrawingGame() {
                     className="rounded-md px-2 sm:px-3"
                     title="Tải bản vẽ"
                   >
-                    <History />
-                    <span className="hidden sm:inline ml-1.5">Lịch sử</span>
+                    <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline ml-1.5">Tải bản lưu</span>
                   </RoundButton>
                 </LoadGameDialog>
+                <RoundButton
+                  size="small"
+                  variant="neutral"
+                  onClick={handleDownload}
+                  className="rounded-md px-2 sm:px-3"
+                  title="Lưu Ảnh"
+                >
+                  <FolderOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline ml-1.5">Tải ảnh về máy</span>
+                </RoundButton>
               </div>
             </div>
           </div>

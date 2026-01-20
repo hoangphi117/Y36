@@ -124,7 +124,7 @@ const ChatPage = () => {
     ) || [];
 
   return (
-    <div className="flex h-[calc(100vh-5rem)] bg-background border-t">
+    <div className="flex h-full bg-background border-t">
       {/* SIDEBAR */}
       <div className={cn(
         "w-full md:w-80 lg:w-96 border-r flex flex-col bg-muted/10 overflow-hidden",
@@ -359,19 +359,19 @@ const ChatPage = () => {
 
                             {isMe && (
                               <>
-                                {msg.is_read && isLastMessage ? (
-                                  <>
+                                {msg.is_read ? (
+                                  <div className="flex items-center gap-1">
                                     <CheckCheck
-                                      className="w-3 h-3"
+                                      className="w-3 h-3 text-primary"
                                       strokeWidth={2.5}
                                     />
-                                    <span>Đã xem</span>
-                                  </>
+                                    {isLastMessage && <span>Đã xem</span>}
+                                  </div>
                                 ) : (
-                                  <>
+                                  <div className="flex items-center gap-1">
                                     <Check className="w-3 h-3" />
-                                    <span>Đã gửi</span>
-                                  </>
+                                    {isLastMessage && <span>Đã gửi</span>}
+                                  </div>
                                 )}
                               </>
                             )}

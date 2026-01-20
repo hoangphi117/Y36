@@ -10,11 +10,11 @@ import {
   RotateCcw,
   Download,
   Loader2,
+  Upload,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { RoundButton } from "@/components/ui/round-button";
-import { GameHeader } from "@/components/games/GameHeader";
 import icon1 from "@/assets/candyIcons/candyOne.png";
 import icon2 from "@/assets/candyIcons/candyTwo.png";
 import icon3 from "@/assets/candyIcons/candyThree.png";
@@ -55,7 +55,7 @@ const CANDY_TYPES = [
 
 const NUM_TYPES = 6;
 
-export default function Match3Game() {
+export default function Match3Game({ onBack }: { onBack?: () => void }) {
   const [board, setBoard] = useState<string[]>([]);
   const [score, setScore] = useState(0);
   const [selectedSquare, setSelectedSquare] = useState<number | null>(null);
@@ -100,7 +100,7 @@ export default function Match3Game() {
     };
   }, [board, boardSize, score, gameMode, targetMatches, matchesCount, timeRemaining]);
 
-  const gameSession = useGameSession({ gameId: 5, getBoardState, autoCreate: false });
+  const gameSession = useGameSession({ gameId: 5, getBoardState, autoCreate: false, onQuit: onBack });
 
   // Scroll to top when component mounts
   useEffect(() => {
@@ -522,16 +522,11 @@ export default function Match3Game() {
 
   return (
     <GameLayout gameId={5}>
-      <div className="flex flex-col items-center min-h-screen bg-background text-foreground pb-10">
+      <div className="flex flex-col items-center min-h-screen bg-background text-foreground pb-4 pt-0">
 
-      <div className="z-20">
-        <GameHeader />
-      </div>
+        {/* HEADER REMOVED */}
 
-      <div className="text-center my-8 space-y-2">
-        <h1 className="text-4xl font-black text-primary uppercase italic drop-shadow-md">
-          MATCH 3 COMBO
-        </h1>
+      <div className="text-center mb-4 space-y-2">
         <motion.div className="flex items-center gap-4 justify-center text-2xl font-bold">
           <motion.p key="stat-score" initial={{ scale: 0 }} animate={{ scale: 1 }} className="flex items-center gap-2">
             <Trophy className="text-yellow-500" /> 
@@ -572,9 +567,11 @@ export default function Match3Game() {
             onOpenChange={gameSession.setShowLoadDialog}
             sessions={gameSession.savedSessions}
             currentSessionId={currentSessionId ?? undefined}
-            onSaveSession={handleSaveCurrentSession}
             onLoadSession={handleLoadGame}
+            onSaveSession={handleSaveCurrentSession}
             onDeleteSession={handleDeleteGame}
+            onNewGame={() => gameSession.startGame()}
+            onBack={onBack}
           >
             <RoundButton 
               size="small" 
@@ -585,7 +582,7 @@ export default function Match3Game() {
               }} 
               className="text-xs py-1.5 px-3 rounded-lg"
             >
-              <Download className="w-3.5 h-3.5 mr-1.5" /> 
+              <Download className="w-3.5 h-3.5 mr-1.5" /> Tải
             </RoundButton>
             
           </LoadGameDialog>
@@ -609,6 +606,16 @@ export default function Match3Game() {
               )}
             </RoundButton>
           )}
+          <RoundButton 
+            size="small" 
+            variant="primary" 
+            onClick={handleSaveGame} 
+            className="text-xs py-1.5 px-3"
+            disabled={gameSession.isSaving || !currentSessionId}
+          >
+            {gameSession.isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <Upload className="w-3.5 h-3.5 mr-1.5" />}
+            Lưu Game
+          </RoundButton>
           <RoundButton size="small" variant="neutral" onClick={() => setShowSettingsDialog(true)} className="text-xs py-1.5 px-3">
             <Settings className="w-3.5 h-3.5 mr-1.5" /> CÀI ĐẶT
           </RoundButton>

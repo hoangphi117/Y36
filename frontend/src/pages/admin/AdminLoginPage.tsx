@@ -4,7 +4,6 @@ import { useAdminLogin } from '@/hooks/admin/useAdminAuth';
 import { adminAuthService } from '@/services/admin/authService';
 import { useAdminTheme } from '@/hooks/admin/useAdminTheme';
 import { Eye, EyeOff, Lock, Mail, Shield, LogIn, KeyRound } from 'lucide-react';
-import { useGameSound } from '@/hooks/useGameSound';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AdminInput } from '@/components/admin/ui/AdminInput';
 import { Toaster } from 'react-hot-toast';
@@ -19,7 +18,6 @@ export const AdminLoginPage = () => {
   
   const emailInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
-  const { playSound } = useGameSound(true);
   const loginMutation = useAdminLogin();
   const { theme } = useAdminTheme();
 
@@ -69,7 +67,6 @@ export const AdminLoginPage = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    playSound('button1');
     
     if (!validate()) return;
     

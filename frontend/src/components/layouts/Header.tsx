@@ -5,15 +5,21 @@ import {
   LogIn,
   Leaf,
   LogOut,
-  User as UserIcon,
   Users,
   MessageSquare,
   Menu,
   X,
+  Settings,
+  Moon,
+  Sun,
+  User,
 } from "lucide-react";
 import { RoundButton } from "@/components/ui/round-button";
 import { useAuthStore } from "@/stores/useAuthStore";
-import { useUserProfile } from "@/hooks/useUser";
+import { useUserProfile, useUpdateProfile } from "@/hooks/useUser";
+import { useTheme } from "next-themes";
+import { Switch } from "@/components/ui/switch";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,8 +34,11 @@ import { useEffect, useState } from "react";
 export const Header = () => {
   const { user: localUser, token, logout, setAuth } = useAuthStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { setTheme, resolvedTheme } = useTheme();
 
   const { data: serverUser } = useUserProfile();
+  const updateProfile = useUpdateProfile();
 
   const navigate = useNavigate();
 
@@ -48,181 +57,359 @@ export const Header = () => {
     navigate("/auth/login");
   };
 
+  // Toggle theme and persist to backend if logged in
+  const handleToggleTheme = () => {
+    const newTheme = resolvedTheme === "dark" ? "light" : "dark";
+    setTheme(newTheme);
+    
+    // If user is logged in, save preference to backend
+    if (user && token) {
+      updateProfile.mutate({ 
+        username: user.username,
+        dark_mode: newTheme === "dark" 
+      });
+    }
+  };
+
   const displayName = user?.username || "User";
   const firstLetter = displayName.charAt(0).toUpperCase();
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="mx-auto w-[90%] md:w-[80%] h-20 flex items-center justify-between">
+    <>
+      {/* Mobile Top Bar */}
+      <div className="md:hidden fixed top-0 z-50 w-full h-16 border-b bg-background/95 backdrop-blur flex items-center justify-between px-4">
+        <Link to="/" className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+            <Leaf className="text-white w-5 h-5 fill-white/20" />
+          </div>
+          <span className="text-xl font-black text-primary tracking-tighter">Y36</span>
+        </Link>
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="p-2 rounded-lg hover:bg-muted transition-colors"
+        >
+          {isMobileMenuOpen ? (
+            <X className="w-6 h-6 text-primary" />
+          ) : (
+            <Menu className="w-6 h-6 text-primary" />
+          )}
+        </button>
+      </div>
+
+      {/* Sidebar - Desktop */}
+      <aside 
+        className={cn(
+          "hidden md:flex sticky top-0 h-screen flex-col border-r border-border bg-card py-6 transition-all duration-300 ease-in-out",
+          isCollapsed ? "w-20 px-2" : "w-46 px-1"
+        )}
+      >
         {/* LOGO */}
-        <Link to="/" className="flex items-center gap-3 group">
-          <div className="relative w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg transition-transform group-hover:-translate-y-1">
+        <Link 
+          to="/" 
+          className={cn(
+             "flex items-center gap-3 mb-10 group",
+             isCollapsed ? "justify-center px-0" : "px-2"
+          )}
+        >
+          <div className="relative w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg transition-transform group-hover:-translate-y-1 shrink-0">
             <Leaf className="text-white w-7 h-7 fill-white/20" />
             <div className="absolute inset-0 bg-green-900/20 rounded-2xl -z-10 translate-y-1" />
           </div>
-          <div className="flex flex-col">
-            <span className="text-2xl font-black text-primary leading-none tracking-tighter">
-              Y36
-            </span>
-            <span className="text-[10px] font-bold text-muted-foreground tracking-[0.2em] uppercase mt-1">
-              Games Studio
-            </span>
-          </div>
+          {!isCollapsed && (
+            <div className="flex flex-col overflow-hidden">
+              <span className="text-2xl font-black text-primary leading-none tracking-tighter truncate">
+                Y36
+              </span>
+              <span className="text-[10px] font-bold text-muted-foreground tracking-[0.2em] uppercase mt-1 truncate">
+                Games Studio
+              </span>
+            </div>
+          )}
         </Link>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-10">
+        {/* Navigation */}
+        <nav className="flex-1 flex flex-col gap-2">
           <Link
             to="/"
-            className="flex items-center gap-2 font-bold text-muted-foreground hover:text-primary transition-all"
+            title="Trang chủ"
+            className={cn(
+               "flex items-center gap-4 py-3 rounded-xl font-bold text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all text-[15px]",
+               isCollapsed ? "justify-center px-0" : "px-4"
+            )}
           >
-            <Home className="w-5 h-5" />
-            <span>Trang chủ</span>
+            <Home className="w-6 h-6 shrink-0" />
+            {!isCollapsed && <span>Trang chủ</span>}
           </Link>
           <Link
             to="/ranking"
-            className="flex items-center gap-2 font-bold text-muted-foreground group hover:text-primary transition-all"
+            title="Xếp hạng"
+            className={cn(
+               "flex items-center gap-4 py-3 rounded-xl font-bold text-muted-foreground hover:text-primary hover:bg-primary/5 group transition-all text-[15px]",
+               isCollapsed ? "justify-center px-0" : "px-4"
+            )}
           >
-            <Trophy className="w-5 h-5 group-hover:text-yellow-500 transition-all" />
-            <span>Xếp hạng</span>
+            <Trophy className="w-6 h-6 shrink-0 group-hover:text-yellow-500 transition-all" />
+            {!isCollapsed && <span>Xếp hạng</span>}
           </Link>
           <Link
             to="/messages"
-            className="flex items-center gap-2 font-bold text-muted-foreground hover:text-primary transition-all"
+            title="Tin nhắn"
+            className={cn(
+               "flex items-center gap-4 py-3 rounded-xl font-bold text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all text-[15px]",
+               isCollapsed ? "justify-center px-0" : "px-4"
+            )}
           >
-            <MessageSquare className="w-5 h-5 group-hover:text-yellow-500 transition-all" />
-            <span>Tin nhắn</span>
+            <MessageSquare className="w-6 h-6 shrink-0" />
+            {!isCollapsed && <span>Tin nhắn</span>}
           </Link>
           <Link
             to="/profile?tab=friends"
-            className="flex items-center gap-2 font-bold text-muted-foreground hover:text-primary transition-all"
+            title="Bạn bè"
+            className={cn(
+               "flex items-center gap-4 py-3 rounded-xl font-bold text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all text-[15px]",
+               isCollapsed ? "justify-center px-0" : "px-4"
+            )}
           >
-            <Users className="w-5 h-5 group-hover:text-yellow-500 transition-all" />
-            <span>Bạn bè</span>
+            <Users className="w-6 h-6 shrink-0" />
+            {!isCollapsed && <span>Bạn bè</span>}
           </Link>
         </nav>
 
-        <div className="flex items-center gap-4">
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-muted transition-colors"
-            aria-label="Toggle menu"
-          >
-            {isMobileMenuOpen ? (
-              <X className="w-6 h-6 text-primary" />
-            ) : (
-              <Menu className="w-6 h-6 text-primary" />
-            )}
-          </button>
-
+        {/* User / Bottom Section */}
+        <div className={cn(
+          "border-t border-border flex items-center",
+           isCollapsed ? "flex-col justify-center" : "flex-row"
+        )}>
           {user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger className="outline-none">
-                <div className="flex items-center gap-3 pl-1 pr-2 py-1 rounded-full border border-transparent hover:bg-muted transition-colors cursor-pointer">
-                  <div className="hidden sm:flex flex-col items-start">
-                    <span className="text-sm font-bold">
-                      Xin chào, {displayName}
+            <>
+              {/* PROFILE LINK (Left) */}
+              <Link
+                to="/profile"
+                className={cn(
+                  "flex items-center rounded-xl hover:bg-muted transition-colors cursor-pointer overflow-hidden outline-none",
+                  isCollapsed ? "p-0 justify-center w-10 h-10" : "flex-1 gap-3 p-2 min-w-0"
+                )}
+                title={displayName}
+              >
+                <Avatar className="h-10 w-10 shrink-0 border-2 border-primary/20">
+                  <AvatarImage
+                    src={user?.avatar_url ?? undefined}
+                    alt={displayName}
+                  />
+                  <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                    {firstLetter}
+                  </AvatarFallback>
+                </Avatar>
+                
+                {!isCollapsed && (
+                  <div className="flex flex-col items-start min-w-0">
+                    <span className="text-sm font-bold truncate w-full">
+                      {displayName}
                     </span>
                   </div>
-                  <Avatar className="h-10 w-10 border-2 border-primary/20">
-                    <AvatarImage
-                      src={user?.avatar_url ?? undefined}
-                      alt={displayName}
-                    />
-                    <AvatarFallback className="bg-primary/10 text-primary font-bold">
-                      {firstLetter}
-                    </AvatarFallback>
-                  </Avatar>
-                </div>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="w-56 bg-background rounded-xl p-2"
-              >
-                <DropdownMenuLabel className="font-bold text-muted-foreground text-xs uppercase tracking-wider">
-                  Tài khoản
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer font-medium rounded-lg text-card-foreground focus:bg-primary/10 focus:text-primary">
-                  <UserIcon className="mr-2 h-4 w-4" />
-                  <Link to="/profile">Hồ sơ của tôi</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer font-medium rounded-lg text-card-foreground focus:bg-primary/10 focus:text-primary">
-                  <Users className="mr-2 h-4 w-4" />
-                  <Link to="/profile?tab=friends">Bạn bè</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer font-medium rounded-lg text-card-foreground focus:bg-primary/10 focus:text-primary">
-                  <MessageSquare className="mr-2 h-4 w-4" />
-                  <Link to="/messages">Tin nhắn</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-
-                <DropdownMenuItem
-                  onClick={handleLogout}
-                  className="cursor-pointer text-destructive font-medium focus:bg-destructive/10 focus:text-destructive rounded-lg"
+                )}
+              </Link>
+              
+              {/* SETTINGS DROPDOWN (Right) */}
+              <DropdownMenu>
+                <DropdownMenuTrigger className="outline-none">
+                   <div 
+                     className={cn(
+                        "rounded-xl hover:bg-muted text-muted-foreground hover:text-primary transition-colors flex items-center justify-center",
+                        isCollapsed ? "w-10 h-10 p-2" : "p-2"
+                     )}
+                     title="Cài đặt"
+                   >
+                     <Settings className={cn("shrink-0", isCollapsed ? "w-5 h-5" : "w-6 h-6")} />
+                   </div>
+                </DropdownMenuTrigger>
+                
+                <DropdownMenuContent
+                  align="start"
+                  side="right"
+                  className="w-60 bg-background rounded-xl p-2 ml-2 shadow-xl"
                 >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Đăng xuất</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  <DropdownMenuLabel className="font-bold text-muted-foreground text-xs uppercase tracking-wider px-2">
+                    Cài đặt
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+
+                  <div className="flex items-center justify-between px-2 py-2 rounded-lg hover:bg-muted/50 cursor-pointer" onClick={() => navigate("/profile")}>
+                     <div className="flex items-center gap-2 text-sm text-foreground font-medium">
+                       <User className="w-4 h-4" />
+                       <span>Hồ sơ người dùng</span>
+                     </div>
+                   </div>
+
+                  {/* Dark Mode Toggle */}
+                   <div 
+                     className="flex items-center justify-between px-2 py-2 rounded-lg hover:bg-muted/50 cursor-pointer"
+                     onClick={(e) => {
+                       e.preventDefault();
+                       e.stopPropagation();
+                       handleToggleTheme();
+                     }}
+                   >
+                     <div className="flex items-center gap-2 text-sm text-foreground font-medium">
+                       {resolvedTheme === "dark" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+                       <span>Giao diện tối</span>
+                     </div>
+                     <Switch 
+                        checked={resolvedTheme === "dark"}
+                        className="pointer-events-none"
+                     />
+                   </div>
+                   
+                   {/* Collapse Toggle */}
+                   <div className="flex items-center justify-between px-2 py-2 rounded-lg hover:bg-muted/50 cursor-pointer" onClick={() => setIsCollapsed(!isCollapsed)}>
+                     <div className="flex items-center gap-2 text-sm text-foreground font-medium">
+                       {isCollapsed ? <Menu className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+                       <span>{isCollapsed ? "Mở rộng menu" : "Thu gọn menu"}</span>
+                     </div>
+                     {/* Switch-like visual or just click the row */}
+                   </div>
+
+                  <DropdownMenuSeparator />
+
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    className="cursor-pointer text-destructive font-bold focus:bg-destructive/10 focus:text-destructive rounded-lg py-2"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Đăng xuất</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
           ) : (
-            <Link to="/auth/login">
-              <RoundButton
-                size="medium"
-                variant="primary"
-                className="flex items-center gap-2"
-              >
-                <LogIn className="w-4 h-4 shrink-0" />
-                <span className="whitespace-nowrap">Đăng nhập</span>
-              </RoundButton>
+            <Link to="/auth/login" className="w-full">
+               {isCollapsed ? (
+                  <div className="flex justify-center" title="Đăng nhập">
+                     <RoundButton size="medium" variant="primary" className="!p-2 w-10 h-10">
+                        <LogIn className="w-5 h-5" />
+                     </RoundButton>
+                  </div>
+               ) : (
+                  <RoundButton
+                    size="medium"
+                    variant="primary"
+                    className="w-full flex items-center justify-center"
+                  >
+                    <LogIn className="w-5 h-5 shrink-0" />
+                    <span className="text-sm">Đăng nhập</span>
+                  </RoundButton>
+               )}
             </Link>
           )}
         </div>
-      </div>
+      </aside>
 
-      {/* Mobile Navigation Menu */}
+      {/* Mobile Menu Drawer Overlay */}
       {isMobileMenuOpen && (
-        <div className="md:hidden border-t border-border bg-background">
-          <nav className="mx-auto w-[90%] py-4 flex flex-col gap-2">
-            <Link
-              to="/"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center gap-3 p-3 rounded-lg font-bold text-muted-foreground hover:text-primary hover:bg-muted transition-all"
-            >
-              <Home className="w-5 h-5" />
-              <span>Trang chủ</span>
+        <div 
+          className="md:hidden fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm animate-in fade-in duration-300"
+          onClick={() => setIsMobileMenuOpen(false)}
+        >
+          <div 
+            className="w-[280px] h-full bg-background border-r p-6 animate-in slide-in-from-left duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Link to="/" className="flex items-center gap-3 mb-10" onClick={() => setIsMobileMenuOpen(false)}>
+              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
+                <Leaf className="text-white w-6 h-6" />
+              </div>
+              <span className="text-2xl font-black text-primary tracking-tighter">Y36</span>
             </Link>
-            <Link
-              to="/ranking"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center gap-3 p-3 rounded-lg font-bold text-muted-foreground hover:text-primary hover:bg-muted transition-all"
-            >
-              <Trophy className="w-5 h-5" />
-              <span>Xếp hạng</span>
-            </Link>
-            <Link
-              to="/messages"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center gap-3 p-3 rounded-lg font-bold text-muted-foreground hover:text-primary hover:bg-muted transition-all"
-            >
-              <MessageSquare className="w-5 h-5" />
-              <span>Tin nhắn</span>
-            </Link>
-            <Link
-              to="/profile?tab=friends"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center gap-3 p-3 rounded-lg font-bold text-muted-foreground hover:text-primary hover:bg-muted transition-all"
-            >
-              <Users className="w-5 h-5" />
-              <span>Bạn bè</span>
-            </Link>
-          </nav>
+
+            <nav className="flex flex-col gap-4">
+              <Link
+                to="/"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-4 px-4 py-3 rounded-xl font-bold text-muted-foreground hover:text-primary hover:bg-primary/5"
+              >
+                <Home className="w-6 h-6" />
+                <span>Trang chủ</span>
+              </Link>
+              {/* ... Other mobile links ... */}
+              <Link
+                to="/ranking"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-4 px-4 py-3 rounded-xl font-bold text-muted-foreground hover:text-primary hover:bg-primary/5"
+              >
+                <Trophy className="w-6 h-6" />
+                <span>Xếp hạng</span>
+              </Link>
+              <Link
+                to="/messages"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-4 px-4 py-3 rounded-xl font-bold text-muted-foreground hover:text-primary hover:bg-primary/5"
+              >
+                <MessageSquare className="w-6 h-6" />
+                <span>Tin nhắn</span>
+              </Link>
+              <Link
+                to="/profile?tab=friends"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-4 px-4 py-3 rounded-xl font-bold text-muted-foreground hover:text-primary hover:bg-primary/5"
+              >
+                <Users className="w-6 h-6" />
+                <span>Bạn bè</span>
+              </Link>
+            </nav>
+
+            <div className="absolute bottom-6 left-6 right-6 pt-6 border-t space-y-4">
+               {user ? (
+                 <>
+                   <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={user?.avatar_url ?? undefined} />
+                          <AvatarFallback>{firstLetter}</AvatarFallback>
+                        </Avatar>
+                        <span className="font-bold truncate">{displayName}</span>
+                      </div>
+                      <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)}>
+                        <Settings className="w-5 h-5 text-muted-foreground" />
+                      </Link>
+                   </div>
+                   
+                   {/* Mobile Dark Mode Toggle */}
+                   <div 
+                     className="flex items-center justify-between px-1 py-2 cursor-pointer"
+                     onClick={() => handleToggleTheme()}
+                   >
+                      <span className="text-sm font-medium text-muted-foreground">Giao diện tối</span>
+                      <Switch 
+                        checked={resolvedTheme === "dark"}
+                        className="pointer-events-none"
+                      />
+                   </div>
+
+                   <RoundButton
+                     variant="danger"
+                     size="medium"
+                     className="w-full"
+                     onClick={handleLogout}
+                   >
+                     <LogOut className="mr-2 w-4 h-4" />
+                     <span>Đăng xuất</span>
+                   </RoundButton>
+                 </>
+               ) : (
+                 <RoundButton
+                   variant="primary"
+                   size="medium"
+                   className="w-full"
+                   onClick={() => navigate("/auth/login")}
+                 >
+                   <LogIn className="mr-2 w-4 h-4" />
+                   <span>Đăng nhập</span>
+                 </RoundButton>
+               )}
+            </div>
+          </div>
         </div>
       )}
-    </header>
+    </>
   );
 };

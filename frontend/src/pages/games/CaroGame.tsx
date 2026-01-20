@@ -17,10 +17,9 @@ import {
 
 import { cn } from "@/lib/utils";
 import { useGameSound } from "@/hooks/useGameSound";
-import { GameHeader } from "@/components/games/GameHeader";
 import useDocumentTitle from "@/hooks/useDocumentTitle";
 import { useGameSession } from "@/hooks/useGameSession";
-import { LoadGameDialog } from "./LoadGameDialog";
+import { LoadGameDialog } from "@/components/dialogs/LoadGameDialog";
 import { GameInstructions } from "@/components/games/GameInstructions";
 import { GameResultOverlay } from "@/components/games/GameResultOverlay";
 
@@ -38,11 +37,14 @@ import {
 } from "@/lib/AI/caroAI";
 
 import formatTime from "@/utils/formatTime";
+import axiosClient from "@/lib/axios";
+import { toast } from "sonner";
 import { GameLayout } from "@/components/layouts/GameLayout";
 
 interface CaroGameProps {
   gameId: number;
   winCondition: number;
+  onBack?: () => void;
 }
 
 const getDefaultSize = (gameId: number) => {
@@ -57,7 +59,7 @@ const getCellTextSize = (size: number) => {
   return "text-lg sm:text-xl";
 };
 
-export default function CaroGame({ gameId, winCondition }: CaroGameProps) {
+export default function CaroGame({ gameId, winCondition, onBack }: CaroGameProps) {
   useDocumentTitle(`Cờ Caro (${winCondition} ô)`);
 
   const initialSize = getDefaultSize(gameId);
@@ -132,6 +134,7 @@ export default function CaroGame({ gameId, winCondition }: CaroGameProps) {
     getBoardState,
     isPaused: isSettingsOpen || !!winner || isTimeOut,
     autoCreate: false,
+    onQuit: onBack,
   });
 
   const timeOptions = getTimeOptions(gameId);
@@ -378,6 +381,17 @@ export default function CaroGame({ gameId, winCondition }: CaroGameProps) {
     setShowLoadDialog(true);
   };
 
+  const handleDeleteGame = async (sessionId: string) => {
+    try {
+      await axiosClient.delete(`/sessions/${sessionId}`);
+      await fetchSavedSessions();
+      toast.success("Đã xóa ván chơi!");
+    } catch (error) {
+      console.error("Failed to delete session:", error);
+      toast.error("Xóa thất bại");
+    }
+  };
+
   const handleRestart = async (sizeOverride?: number) => {
     const sizeToUse = sizeOverride ?? boardSizeRef.current;
     setBoard(Array(sizeToUse * sizeToUse).fill(null));
@@ -417,71 +431,76 @@ export default function CaroGame({ gameId, winCondition }: CaroGameProps) {
   return (
     <GameLayout gameId={gameId}>
       <div className="flex flex-col items-center min-h-screen bg-background text-foreground transition-colors duration-300">
-        <GameHeader />
-        <div className="flex flex-col items-center justify-center py-4 px-4 w-full max-w-4xl">
-          {/* HEADER */}
-          <div className="text-center mb-4 space-y-2">
-            <h1 className="text-4xl sm:text-5xl font-black text-primary uppercase tracking-wider italic drop-shadow-[0_2px_10px_rgba(var(--primary),0.5)]">
-              CARO {winCondition}
-            </h1>
+        <div className="flex flex-col items-center justify-center pt-2 px-4 w-full max-w-4xl relative">
+          
+          <div className="w-full flex items-center justify-center mb-2">
+             <div className="flex flex-col items-center">
+                {/* Header Removed */}
+                
+                {/* TIMERS & STATUS ROW */}
+                <div className="h-8 flex items-center justify-center gap-4 mt-1">
+                  
+                  {/* Total Timer */}
+                  <div
+                    className={cn(
+                      "font-mono text-sm font-bold flex items-center gap-2 px-3 py-1 rounded-full border transition-colors",
+                      timeLimit > 0 && currentPlayTime > timeLimit * 0.8
+                        ? "bg-red-100 text-red-600 border-red-300 animate-pulse"
+                        : "bg-primary/10 text-primary border-primary/20",
+                    )}
+                  >
+                    <Clock className="w-3 h-3" /> {formatTime(currentPlayTime)}
+                    {timeLimit > 0 && (
+                      <span className="text-xs opacity-70">
+                        / {formatTime(timeLimit)}
+                      </span>
+                    )}
+                  </div>
 
-            <div className="h-8 flex items-center justify-center gap-4">
-              {/* Total Timer */}
-              <div
-                className={cn(
-                  "font-mono text-lg font-bold flex items-center gap-2 px-4 py-1.5 rounded-full border transition-colors",
-                  timeLimit > 0 && currentPlayTime > timeLimit * 0.8
-                    ? "bg-red-100 text-red-600 border-red-300 animate-pulse"
-                    : "bg-primary/10 text-primary border-primary/20",
-                )}
-              >
-                <Clock className="w-4 h-4" /> {formatTime(currentPlayTime)}
-                {timeLimit > 0 && (
-                  <span className="text-xs opacity-70">
-                    / {formatTime(timeLimit)}
-                  </span>
-                )}
-              </div>
-
-              {/* Turn Timer */}
-              {turnTimeLimit > 0 && !winner && !isTimeOut && (
-                <div
-                  className={cn(
-                    "font-mono text-lg font-bold flex items-center gap-2 px-4 py-1.5 rounded-full border transition-colors",
-                    currentTurnCountdown <= 5
-                      ? "bg-red-500 text-white animate-ping"
-                      : "bg-orange-100 text-orange-600 border-orange-300",
+                  {/* Turn Timer */}
+                  {turnTimeLimit > 0 && !winner && !isTimeOut && (
+                    <div
+                      className={cn(
+                        "font-mono text-sm font-bold flex items-center gap-2 px-3 py-1 rounded-full border transition-colors",
+                        currentTurnCountdown <= 5
+                          ? "bg-red-500 text-white animate-ping"
+                          : "bg-orange-100 text-orange-600 border-orange-300",
+                      )}
+                    >
+                      <Zap className="w-3 h-3 fill-current" />{" "}
+                      {currentTurnCountdown}s
+                    </div>
                   )}
-                >
-                  <Zap className="w-4 h-4 fill-current" />{" "}
-                  {currentTurnCountdown}s
+
+                  <div className="w-[1px] h-6 bg-border"></div>
+                  
+                  {/* Status Text */}
+                  {winner ? (
+                    <span
+                      className={cn(
+                        "text-sm font-bold animate-bounce",
+                        winner === playerPiece
+                          ? "text-primary"
+                          : "text-destructive",
+                      )}
+                    >
+                      {winner === playerPiece ? "🎉 BẠN THẮNG!" : "🤖 BOT THẮNG!"}
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground text-sm font-medium animate-pulse">
+                      {(board.filter((c) => c !== null).length % 2 === 0 &&
+                        playerPiece === "X") ||
+                      (board.filter((c) => c !== null).length % 2 !== 0 &&
+                        playerPiece === "O")
+                        ? "Lượt của bạn..."
+                        : `Bot (${difficulty}) đang tính...`}
+                    </span>
+                  )}
                 </div>
-              )}
-
-              <div className="w-[1px] h-6 bg-border"></div>
-              {winner ? (
-                <span
-                  className={cn(
-                    "text-xl font-bold animate-bounce",
-                    winner === playerPiece
-                      ? "text-primary"
-                      : "text-destructive",
-                  )}
-                >
-                  {winner === playerPiece ? "🎉 BẠN THẮNG!" : "🤖 BOT THẮNG!"}
-                </span>
-              ) : (
-                <span className="text-muted-foreground font-medium animate-pulse">
-                  {(board.filter((c) => c !== null).length % 2 === 0 &&
-                    playerPiece === "X") ||
-                  (board.filter((c) => c !== null).length % 2 !== 0 &&
-                    playerPiece === "O")
-                    ? "Lượt của bạn..."
-                    : `Bot (${difficulty}) đang tính...`}
-                </span>
-              )}
-            </div>
+             </div>
           </div>
+
+
 
           {/* CONTROLS */}
           <div className="flex flex-wrap gap-4 mb-6 justify-center items-center relative z-20">
@@ -506,6 +525,8 @@ export default function CaroGame({ gameId, winCondition }: CaroGameProps) {
               currentSessionId={session?.id}
               onLoadSession={loadGame}
               onNewGame={handleStandardNewGame}
+              onDeleteSession={handleDeleteGame}
+              onBack={onBack}
             >
               <RoundButton
                 variant="neutral"

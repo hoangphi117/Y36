@@ -1,36 +1,35 @@
-import { GameHeader } from "@/components/games/GameHeader";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { LevelModeCard, FreeModeCard } from "@/components/games/memory/GameModeCard";
-import { useNavigate } from "react-router-dom";
+import MemoryLevelGame from "./MemoryLevelGame";
+import MemoryFreeGame from "./MemoryFreeGame";
 
-export default function MemoryModeSelection() {
-  const navigate = useNavigate();
+export default function MemoryModeSelection({ onBack }: { onBack?: () => void }) {
+  const [mode, setMode] = useState<'menu' | 'level' | 'free'>('menu');
 
-  const startLevelMode = () => {
-    navigate("/memory-level");
-  };
+  if (mode === 'level') {
+    return <MemoryLevelGame onBack={() => setMode('menu')} onGoHome={onBack} />;
+  }
 
-  const startFreeMode = () => {
-    navigate("/memory-free");
-  };
+  if (mode === 'free') {
+    return <MemoryFreeGame onBack={() => setMode('menu')} />;
+  }
 
   return (
     <>
-      <GameHeader />
-      <div className="min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 pt-16 sm:pt-20 bg-[var(--background)]">
+      <div className="min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 pt-2 sm:pt-0 bg-[var(--background)]">
         <motion.div
           className="w-full max-w-2xl px-2 sm:px-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          {/* Title */}
-          <div className="text-center mb-6 sm:mb-12">
-            <h1 className="text-3xl sm:text-5xl font-black text-primary mb-1 sm:mb-2">CỜ TRÍ NHỚ</h1>
-            <p className="text-muted-foreground text-sm sm:text-lg">Chọn chế độ chơi</p>
+          {/* Header */}
+          <div className="flex flex-col items-center mb-6 sm:mb-12 px-4 relative">
+             <p className="text-xl font-bold text-primary">Chọn chế độ chơi</p>
           </div>
 
           {/* Level Mode Card */}
-          <LevelModeCard startLevelMode={startLevelMode} />
+          <LevelModeCard startLevelMode={() => setMode('level')} />
 
           {/* Divider */}
           <div className="relative mb-4 sm:mb-8">
@@ -44,7 +43,7 @@ export default function MemoryModeSelection() {
 
           {/* Free Mode Card */}
           <FreeModeCard 
-            startFreeMode={startFreeMode}
+            startFreeMode={() => setMode('free')}
           />
         </motion.div>
       </div>

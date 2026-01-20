@@ -16,8 +16,7 @@ import icon15 from "@/assets/memoryIcons/icon15.png";
 import icon16 from "@/assets/memoryIcons/icon16.png";
 import { useEffect, useState, memo, useRef } from "react";
 import { motion } from "framer-motion";
-import { GameHeader } from "@/components/games/GameHeader";
-import { AlarmClock, Pause, Download, RotateCcw, Loader2 } from "lucide-react";
+import { AlarmClock, Pause, Download, RotateCcw, Loader2, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BackToSelectionButton } from "@/components/games/memory/SettingButtons";
 import StatCard from "@/components/games/memory/StatCard";
@@ -70,7 +69,7 @@ interface Card {
 
 type GameStatus = "playing" | "completed" | "lost";
 
-export default function MemoryLevelGame() {
+export default function MemoryLevelGame({ onBack, onGoHome }: { onBack?: () => void, onGoHome?: () => void }) {
   const navigate = useNavigate(); 
 
   const [currentLevel, setCurrentLevel] = useState(0);
@@ -135,6 +134,7 @@ export default function MemoryLevelGame() {
     gameId: 6, // memory game id
     getBoardState: () => getCurrentSessionState(),
     autoCreate: false,
+    onQuit: onBack,
   });
 
   // start new game session
@@ -312,7 +312,8 @@ export default function MemoryLevelGame() {
 
   // Reset to mode selection
   const backToSelection = () => {
-    navigate("/memory");
+    if (onBack) onBack();
+    else navigate("/memory");
   };
 
   // Restart current level
@@ -438,7 +439,6 @@ export default function MemoryLevelGame() {
 
   return (
     <GameLayout gameId={6}>
-      <GameHeader />
       <div className="min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 pt-16 sm:pt-20 bg-[var(--background)]">
         <motion.div
           className="w-full max-w-3xl px-2 sm:px-4"
@@ -447,8 +447,7 @@ export default function MemoryLevelGame() {
         >
           {/* Game header */}
           <div className="text-center mb-4 sm:mb-8">
-            <h1 className="text-2xl sm:text-4xl font-black text-primary mb-1 sm:mb-2">CỜ TRÍ NHỚ</h1>
-            <p className="text-muted-foreground text-sm sm:text-lg">Level {currentLevel + 1} / {levelConfigs.length}</p>
+            <p className="text-xl font-bold text-primary">Level {currentLevel + 1} / {levelConfigs.length}</p>
           </div>
 
           {/* Game info cards */}
@@ -492,6 +491,22 @@ export default function MemoryLevelGame() {
                 </RoundButton>
               </>
             )}
+            {isStarted && gameStatus === "playing" && (
+            <RoundButton 
+              size="small" 
+              variant="primary" 
+              onClick={handleSaveAndExit}
+              className="text-[0.8rem] sm:py-2 rounded-md"
+              disabled={isSessionSaving}
+            >
+              {isSessionSaving ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Upload className="w-4 h-4" />
+              )}
+              <span className="hidden min-[375px]:inline ml-1">Lưu</span>
+            </RoundButton>
+            )}
             <LoadGameDialog
               open={showLoadDialog}
               onOpenChange={setShowLoadDialog}
@@ -499,6 +514,8 @@ export default function MemoryLevelGame() {
               onLoadSession={handleLoadGame}
               onDeleteSession={handleDeleteGame}
               onSaveSession={handleSaveCurrentSession}
+              onBack={onGoHome}
+              onNewGame={() => startGameSession()}
             >
               <RoundButton 
                 size="small" 
@@ -509,7 +526,7 @@ export default function MemoryLevelGame() {
                 }} 
                 className="text-xs py-1.5 px-3 rounded-lg"
             >
-              <Download className="w-3.5 h-3.5 mr-1.5" /> 
+              <Download className="mr-1.5" /> Tải
             </RoundButton>
             </LoadGameDialog> 
           </div>

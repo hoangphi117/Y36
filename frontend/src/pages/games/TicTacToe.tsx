@@ -7,19 +7,18 @@ import {
   Download,
   Upload,
   Clock,
-  Bot,
   User,
   Settings,
+  Bot,
 } from "lucide-react";
 import { RoundButton } from "@/components/ui/round-button";
 import { cn } from "@/lib/utils";
 import { useGameSound } from "@/hooks/useGameSound";
-import { GameHeader } from "@/components/games/GameHeader";
 import useDocumentTitle from "@/hooks/useDocumentTitle";
 import { useGameSession } from "@/hooks/useGameSession";
 import { GameInstructions } from "@/components/games/GameInstructions";
 import { GameResultOverlay } from "@/components/games/GameResultOverlay";
-import { LoadGameDialog } from "./LoadGameDialog";
+import { LoadGameDialog } from "@/components/dialogs/LoadGameDialog";
 
 import { getEasyMove, getMediumMove, getHardMove } from "@/lib/AI/tictactoeAI";
 import {
@@ -28,6 +27,8 @@ import {
 } from "@/components/dialogs/GameSettingsDialog";
 
 import { getTimeOptions } from "@/config/gameConfigs";
+import axiosClient from "@/lib/axios";
+import { toast } from "sonner";
 import formatTime from "@/utils/formatTime";
 import { GameLayout } from "@/components/layouts/GameLayout";
 
@@ -48,7 +49,7 @@ const WIN_LINES = [
 type SquareValue = "X" | "O" | null;
 type PlayerSymbol = "X" | "O";
 
-export default function TicTacToe() {
+export default function TicTacToe({ onBack }: { onBack?: () => void }) {
   useDocumentTitle("Tic Tac Toe");
 
   const [squares, setSquares] = useState<SquareValue[]>(Array(9).fill(null));
@@ -102,6 +103,7 @@ export default function TicTacToe() {
     getBoardState,
     isPaused: isManualPaused || isSettingsOpen,
     autoCreate: false,
+    onQuit: onBack,
   });
 
   const timeOptions = getTimeOptions(GAME_ID);
@@ -264,6 +266,17 @@ export default function TicTacToe() {
     setShowLoadDialog(true);
   };
 
+  const handleDeleteGame = async (sessionId: string) => {
+    try {
+      await axiosClient.delete(`/sessions/${sessionId}`);
+      await fetchSavedSessions();
+      toast.success("Đã xóa ván chơi!");
+    } catch (error) {
+      console.error("Failed to delete session:", error);
+      toast.error("Xóa thất bại");
+    }
+  };
+
   const handleRestart = async () => {
     setSquares(Array(9).fill(null));
     setXIsNext(true);
@@ -331,8 +344,9 @@ export default function TicTacToe() {
   }
   return (
     <GameLayout gameId={GAME_ID}>
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] p-4 relative">
-        <GameHeader />
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] p-2 relative">
+        
+        {/* HEADER REMOVED */}\n
 
         {/* Control Bar */}
         <div className="flex flex-wrap justify-center gap-4 mb-4 z-20">
@@ -363,6 +377,7 @@ export default function TicTacToe() {
             currentSessionId={session?.id}
             onLoadSession={loadGame}
             onNewGame={handleStandardNewGame}
+            onDeleteSession={handleDeleteGame}
           >
             <RoundButton
               variant="neutral"

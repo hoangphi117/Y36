@@ -16,7 +16,6 @@ import icon15 from "@/assets/memoryIcons/icon15.png";
 import icon16 from "@/assets/memoryIcons/icon16.png";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { GameHeader } from "@/components/games/GameHeader";
 import { Infinity as InfynityIcon, Play, Settings2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BackToSelectionButton, RefreshGameButton } from "@/components/games/memory/SettingButtons";
@@ -39,7 +38,7 @@ interface Card {
 
 type GameStatus = "playing" | "completed" | "lost";
 
-export default function MemoryFreeGame() {
+export default function MemoryFreeGame({ onBack }: { onBack?: () => void }) {
   const navigate = useNavigate();
 
   // Game state
@@ -140,7 +139,8 @@ export default function MemoryFreeGame() {
 
   // Reset to mode selection
   const backToSelection = () => {
-    navigate("/memory");
+    if (onBack) onBack();
+    else navigate("/memory");
   };
 
   // Restart free mode game
@@ -209,8 +209,7 @@ export default function MemoryFreeGame() {
   // Main Game Render
   return (
     <GameLayout gameId={6}>
-      <GameHeader />
-      <div className="min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 pt-16 sm:pt-20 bg-[var(--background)]">
+      <div className="min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 pt-2 sm:pt-2 bg-[var(--background)]">
         <motion.div
           className="w-full max-w-3xl px-2 sm:px-4"
           initial={{ opacity: 0, y: 20 }}
@@ -218,8 +217,7 @@ export default function MemoryFreeGame() {
         >
           {/* Game header */}
           <div className="text-center mb-4 sm:mb-8">
-            <h1 className="text-2xl sm:text-4xl font-black text-primary mb-1 sm:mb-2">CỜ TRÍ NHỚ</h1>
-            <p className="text-muted-foreground text-sm sm:text-lg">Chế độ tự do - Luyện tập</p>
+            <p className="text-xl font-bold text-primary">Chế độ tự do - Luyện tập</p>
           </div>
 
           {/* Game info cards */}

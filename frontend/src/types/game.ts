@@ -1,3 +1,16 @@
+// [THÊM MỚI] Interface cho Game từ API /api/games
+export interface Game {
+  id: number;
+  name: string;
+  code: string;
+  description: string;
+  image_url: string;
+  is_active: boolean;
+  help_content: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface GameInfo {
   id: number;
   code: string;

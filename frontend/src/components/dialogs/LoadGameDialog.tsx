@@ -6,13 +6,12 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Calendar, Clock, Trophy, Trash2, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { RoundButton } from "@/components/ui/round-button";
+import { Calendar, Clock, Play, Plus, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { type GameSession } from "@/types/game";
-import { RoundButton } from "../ui/round-button";
-import { DialogDescription } from "@radix-ui/react-dialog";
-import { useState } from "react";
-import { useGameSound } from "@/hooks/useGameSound";
+import { useNavigate } from "react-router-dom";
 
 interface LoadGameDialogProps {
   open: boolean;
@@ -20,8 +19,10 @@ interface LoadGameDialogProps {
   sessions: GameSession[];
   currentSessionId?: string;
   onLoadSession: (sessionId: string) => void;
-  onDeleteSession?: (sessionId: string) => void;
+  onNewGame: () => void;
+  onBack?: () => void;
   onSaveSession?: () => void;
+  onDeleteSession?: (sessionId: string) => void;
   children: React.ReactNode;
 }
 
@@ -31,12 +32,11 @@ export function LoadGameDialog({
   sessions,
   currentSessionId,
   onLoadSession,
+  onNewGame,
+  onBack,
   onDeleteSession,
-  onSaveSession,
   children,
 }: LoadGameDialogProps) {
-  const [isLoading, setIsLoading] = useState(false);
-
   const formatTime = (totalSeconds: number) => {
     const mins = Math.floor(totalSeconds / 60);
     const secs = totalSeconds % 60;
@@ -45,126 +45,100 @@ export function LoadGameDialog({
       .padStart(2, "0")}`;
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("vi-VN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-
-  const { playSound } = useGameSound(true);
-
-  const handleLoadSession = async (sessionId: string) => {
-    playSound("button");
-    try {
-      setIsLoading(true);
-      // Chỉ lưu session hiện tại nếu nó đã tồn tại trong danh sách sessions
-      if (onSaveSession && currentSessionId) {
-        const sessionExists = sessions.some(s => s.id === currentSessionId);
-        if (sessionExists) {
-          await onSaveSession();
-        }
-      }
-      onLoadSession(sessionId);
-      onOpenChange(false);
-    } finally {
-      setIsLoading(false);
-    }
-  }
+  const navigate = useNavigate();
 
   return (
-    <>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       {children}
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">
-              Game đã lưu!
-            </DialogTitle>
-            <DialogDescription className="mt-2 text-muted-foreground">
-              Chọn một ván đã lưu để tiếp tục chơi hoặc bắt đầu ván mới.
-            </DialogDescription>
-          </DialogHeader>
 
-          <div className="space-y-4">
-            <ScrollArea className="h-[300px] w-full rounded-md border p-4">
-              <div className="space-y-2">
-                {sessions.map((session) => (
-                  <div
-                    key={session.id}
-                    className={cn(
-                      "w-full p-4 rounded-lg border-2 transition-all",
-                      "hover:border-primary hover:bg-primary/5",
-                      "text-left",
-                      currentSessionId === session.id && "border-primary bg-primary/5"
-                    )}
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <button
-                        onClick={() => handleLoadSession(session.id)}
-                        disabled={isLoading}
-                        className="flex-1 text-left disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <Trophy className="w-4 h-4 text-yellow-500" />
-                            <span className="font-semibold">
-                              Điểm: {session.score || 0}
-                            </span>
-                            {isLoading && (
-                              <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                            )}
-                          </div>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                            <div className="flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              <span>{formatTime(session.play_time_seconds)}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Calendar className="w-3 h-3" />
-                              <span>{formatDate(session.updated_at)}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </button>
-                      {onDeleteSession && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            playSound("button2");
-                            onDeleteSession(session.id);
-                          }}
-                          className="p-2 rounded-md hover:bg-destructive/10 text-destructive transition-colors"
-                          title="Xóa ván chơi"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
+      <DialogContent
+        className="max-w-md [&>button]:hidden"
+        onInteractOutside={(e) => {
+          if (sessions) {
+            e.preventDefault();
+          }
+        }}
+      >
+        <DialogHeader>
+          <DialogTitle>Ván chơi đã lưu</DialogTitle>
+        </DialogHeader>
+
+        <ScrollArea className="h-[300px] mt-4 pr-4">
+          <div className="flex flex-col gap-2">
+            {sessions.length === 0 ? (
+              <div className="text-center text-muted-foreground py-8">
+                Chưa có ván nào lưu.
+              </div>
+            ) : (
+              sessions.map((s) => (
+                <Button
+                  key={s.id}
+                  variant="outline"
+                  className={cn(
+                    "flex justify-between items-center h-auto py-3 px-4",
+                    currentSessionId === s.id && "border-primary bg-primary/5",
+                  )}
+                  onClick={() => onLoadSession(s.id)}
+                >
+                  <div className="flex flex-col items-start gap-1">
+                    <span className="font-bold flex items-center gap-2">
+                      <Calendar className="w-3 h-3 text-muted-foreground" />
+                      {new Date(s.updated_at).toLocaleString("vi-VN")}
+                    </span>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />{" "}
+                        {formatTime(s.play_time_seconds)}s
+                      </span>
                     </div>
                   </div>
-                ))}
-              </div>
-            </ScrollArea>
+                  <div className="flex items-center gap-2">
+                    <Play className="w-4 h-4 text-primary" />
+                    {onDeleteSession && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteSession(s.id);
+                        }}
+                      >
+                        <Plus className="w-4 h-4 rotate-45" /> 
+                      </Button>
+                    )}
+                  </div>
+                </Button>
+              ))
+            )}
           </div>
+        </ScrollArea>
 
-          <DialogFooter className="flex flex-row gap-2 sm:gap-2 justify-end mt-2">
-            <RoundButton
-              onClick={() => onOpenChange(false)}
-              variant="accent"
-              size="small"
-              className="rounded-md"
-              disabled={isLoading}
-            >
-              hủy
-            </RoundButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+        <DialogFooter className="mt-4 pt-4 border-t flex flex-col sm:flex-row gap-2 items-center sm:justify-between">
+          <RoundButton
+            size="small"
+            variant="accent"
+            onClick={() => {
+              if (onBack) onBack();
+              else navigate("/");
+            }}
+            className="flex-1 sm:flex-none gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" /> Quay về Trang Chủ
+          </RoundButton>
+
+          <RoundButton
+            size="small"
+            onClick={() => {
+              onOpenChange(false);
+              onNewGame();
+            }}
+            className="flex-1 sm:flex-none gap-2"
+          >
+            <Plus className="w-4 h-4" /> Game Mới
+          </RoundButton>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

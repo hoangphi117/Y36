@@ -13,6 +13,7 @@ interface UseGameSessionProps {
   getBoardState: () => any;
   isPaused?: boolean;
   autoCreate?: boolean;
+  onQuit?: () => void;
 }
 
 export function useGameSession({
@@ -20,6 +21,7 @@ export function useGameSession({
   getBoardState,
   autoCreate = true,
   isPaused,
+  onQuit,
 }: UseGameSessionProps) {
   const navigate = useNavigate();
   const [session, setSession] = useState<GameSession | null>(null);
@@ -174,11 +176,9 @@ export function useGameSession({
           payload,
         );
 
-        const updatedSession = res.data.session;
-
         if (manual) {
           // Keep status as saved or whatever backend returned
-          // updatedSession.status = "playing"; 
+          // status = "playing"; 
         }
 
         setSession(res.data.session);
@@ -280,9 +280,11 @@ export function useGameSession({
         });
       } catch (e) {}
       setSession(null);
-      navigate("/");
+      if (onQuit) onQuit();
+      else navigate("/");
     } else {
-      navigate("/");
+      if (onQuit) onQuit();
+      else navigate("/");
     }
   };
 

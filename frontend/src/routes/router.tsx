@@ -4,13 +4,6 @@ import { useAuthStore } from "@/stores/useAuthStore";
 import { MainLayout } from "@/components/layouts/MainLayout";
 import HomePage from "../pages/home/HomePage";
 import NotFoundPage from "@/pages/NotFoundPage";
-import CaroGame from "@/pages/games/CaroGame";
-import TicTacToe from "@/pages/games/TicTacToe";
-import SnakeGame from "@/pages/games/Snake";
-import Match3Game from "@/pages/games/Match3Game";
-import MemoryModeSelection from "@/pages/games/MemoryModeSelection";
-import MemoryLevelGame from "@/pages/games/MemoryLevelGame";
-import MemoryFreeGame from "@/pages/games/MemoryFreeGame";
 import LoginPage from "@/pages/auth/LoginPage";
 import RegisterPage from "@/pages/auth/RegisterPage";
 import ProfilePage from "@/pages/user/profile/Profile";
@@ -25,7 +18,6 @@ import { AdminUsersPage } from "@/pages/admin/AdminUsersPage";
 import { AdminGamesPage } from "@/pages/admin/AdminGamesPage";
 import { AdminLoginPage } from "@/pages/admin/AdminLoginPage";
 import AdminStatsPage from "@/pages/admin/AdminStatsPage";
-import DrawingGame from "@/pages/games/DrawingGame";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { token } = useAuthStore();
@@ -66,42 +58,7 @@ const router = createBrowserRouter([
       },
     ],
   },
-  {
-    path: "/games/caro-5",
-    element: <CaroGame gameId={1} winCondition={5} />,
-  },
-  {
-    path: "/games/caro-4",
-    element: <CaroGame gameId={2} winCondition={4} />,
-  },
-  {
-    path: "/games/tic-tac-toe",
-    element: <TicTacToe />,
-  },
-  {
-    path: "/games/snake",
-    element: <SnakeGame />,
-  },
-  {
-    path: "/match-3",
-    element: <Match3Game />,
-  },
-  {
-    path: "/memory",
-    element: <MemoryModeSelection />,
-  },
-  {
-    path: "/memory-level",
-    element: <MemoryLevelGame />,
-  },
-  {
-    path: "/memory-free",
-    element: <MemoryFreeGame />,
-  },
-  {
-    path: "drawing",
-    element: <DrawingGame />,
-  },
+
   {
     path: "/auth/login",
     element: <LoginPage />,
