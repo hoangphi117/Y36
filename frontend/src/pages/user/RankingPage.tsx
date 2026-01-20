@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Globe, Users, Crown, Trophy } from "lucide-react";
+import { Loader2, Globe, Users, Crown, Trophy, User } from "lucide-react";
 import { GAMES_META } from "@/config/gameMeta";
 import { cn } from "@/lib/utils";
 import useDocumentTitle from "@/hooks/useDocumentTitle";
@@ -44,22 +44,25 @@ export default function RankingPage() {
   useDocumentTitle("Bảng Xếp Hạng");
 
   const [activeGame, setActiveGame] = useState(1);
-  const [scope, setScope] = useState<"global" | "friends">("global");
+  const [scope, setScope] = useState<"global" | "friends" | "mine">("global");
   const [page, setPage] = useState(1);
-
-  const { data, rankingType, loading, pagination } = useRanking(
+  
+  const { data, myRank: myRankData, rankingType, loading, pagination } = useRanking(
     activeGame,
     scope,
     page,
     10,
   );
+  
+  // Use generic loading state for both lists and single rank fetching
+  const loadingMyRank = scope === "mine" && loading;
 
   const handleGameChange = (id: number) => {
     setActiveGame(id);
     setPage(1);
   };
 
-  const handleScopeChange = (newScope: "global" | "friends") => {
+  const handleScopeChange = (newScope: "global" | "friends" | "mine") => {
     setScope(newScope);
     setPage(1);
   };
@@ -110,6 +113,17 @@ export default function RankingPage() {
             >
               <Users className="w-4 h-4" /> Bạn bè
             </button>
+            <button
+              onClick={() => handleScopeChange("mine")}
+              className={cn(
+                "px-4 py-1.5 rounded-full text-sm font-medium transition-all flex items-center gap-2",
+                scope === "mine"
+                  ? "bg-background shadow-sm text-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-background/50",
+              )}
+            >
+              <User className="w-4 h-4" /> Của tôi
+            </button>
           </div>
         </div>
       </div>
@@ -150,7 +164,7 @@ export default function RankingPage() {
             <Loader2 className="w-10 h-10 animate-spin text-primary" />
             <p className="text-muted-foreground text-sm">Đang tải dữ liệu...</p>
           </div>
-        ) : data.length === 0 ? (
+        ) : scope !== "mine" && data.length === 0 ? (
           <div className="text-center py-20 bg-muted/30 rounded-2xl border border-dashed">
             <Trophy className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
             <p className="text-muted-foreground font-medium">
@@ -228,14 +242,53 @@ export default function RankingPage() {
             </div>
 
             {/* 3. PAGINATION CONTROL */}
-            <div className="py-6">
-              <PaginationCustom
-                page={page}
-                totalPages={pagination.totalPages}
-                onPageChange={setPage}
-              />
-            </div>
+            {scope !== "mine" && (
+              <div className="py-6">
+                <PaginationCustom
+                  page={page}
+                  totalPages={pagination.totalPages}
+                  onPageChange={setPage}
+                />
+              </div>
+            )}
           </>
+        )}
+        
+        {/* MY RANK CONTENT */}
+        {scope === "mine" && (
+          <div className="flex flex-col items-center justify-center min-h-[300px]">
+             {loadingMyRank ? (
+                <div className="flex flex-col items-center gap-4">
+                  <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                  <p className="text-muted-foreground">Đang tải thứ hạng...</p>
+                </div>
+             ) : !myRankData ? (
+                <div className="text-center p-8 bg-muted/30 rounded-2xl border border-dashed">
+                  <p className="text-muted-foreground">Bạn chưa có xếp hạng trong game này.</p>
+                  <p className="text-sm text-muted-foreground mt-2">Hãy chơi vài ván để được xếp hạng nhé!</p>
+                </div>
+             ) : (
+                <div className="flex flex-col items-center animate-in fade-in zoom-in duration-300">
+                   <div className="relative mb-6">
+                      <div className="w-32 h-32 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border-4 border-primary/20 shadow-xl">
+                         <span className="text-5xl font-black text-primary">#{myRankData.rank}</span>
+                      </div>
+                      <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-sm font-bold px-4 py-1 rounded-full shadow-lg whitespace-nowrap">
+                        Thứ hạng của bạn
+                      </div>
+                   </div>
+                   
+                   <div className="mt-4 text-center">
+                     <div className="text-6xl font-black tracking-tighter mb-2">
+                       {myRankData.score?.toLocaleString()}
+                     </div>
+                     <span className="text-muted-foreground font-medium uppercase tracking-widest text-sm">
+                       {rankingType === "rank_points" ? "Điểm Elo" : "Điểm Cao Nhất"}
+                     </span>
+                   </div>
+                </div>
+             )}
+          </div>
         )}
       </div>
     </div>
