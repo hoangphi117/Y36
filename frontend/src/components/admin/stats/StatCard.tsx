@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, memo } from 'react';
 import { cn } from '@/lib/utils';
 import type { LucideProps } from 'lucide-react';
 
@@ -11,7 +11,7 @@ interface StatCardProps {
   formatter?: (val: number) => string;
 }
 
-export const StatCard = ({ icon: Icon, label, value, color, className, formatter }: StatCardProps) => {
+export const StatCard = memo(({ icon: Icon, label, value, color, className, formatter }: StatCardProps) => {
   const [displayValue, setDisplayValue] = useState(0);
 
   useEffect(() => {
@@ -79,4 +79,10 @@ export const StatCard = ({ icon: Icon, label, value, color, className, formatter
       </div>
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  return prevProps.value === nextProps.value && 
+         prevProps.color === nextProps.color &&
+         prevProps.label === nextProps.label;
+});
+
+StatCard.displayName = 'StatCard';

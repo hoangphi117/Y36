@@ -296,11 +296,30 @@
 @layer components {
   /* Admin Input/Select Style */
   .admin-input {
-    @apply w-full px-4 py-2.5 rounded-lg font-mono text-sm;
+    @apply w-full px-4 py-2.5 rounded-lg;
     @apply bg-input border border-border;
-    @apply text-foreground placeholder:text-muted-foreground;
+    @apply text-foreground;
+    @apply placeholder:text-muted-foreground placeholder:opacity-60;
     @apply focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20;
-    @apply transition-all duration-200;
+    @apply transition-[border-color,box-shadow] duration-200;
+    font-family: ui-monospace, monospace;
+    font-size: 0.875rem;
+    font-weight: 600 !important;
+    color: hsl(var(--foreground)) !important;
+  }
+
+  /* Ensure no background bleeds over icons */
+  .admin-input:focus {
+    @apply bg-input;
+    font-weight: 600 !important;
+    color: hsl(var(--foreground)) !important;
+  }
+
+  /* Admin Input Icon Wrapper - Ensure visibility */
+  .admin-input + .absolute,
+  .relative > .absolute {
+    color: hsl(var(--foreground));
+    opacity: 0.7;
   }
 
   /* Admin Card/Surface */
@@ -310,7 +329,8 @@
 
   /* Admin Glass Effect */
   .admin-glass {
-    @apply bg-card/50 backdrop-blur-xl border border-border/50;
+    @apply bg-card/50 border border-border/50;
+    contain: layout;
   }
 
   /* Primary Button */
@@ -353,4 +373,76 @@
     background-size: 200% auto;
     animation: gradient-x 3s ease infinite;
   }
+}
+
+/* GPU Acceleration for Admin Components */
+.admin-surface,
+.admin-glass,
+.admin-input {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Optimize Recharts Performance */
+.recharts-wrapper {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+.recharts-surface {
+  transform: translateZ(0);
+}
+
+/* ========================================
+   NATIVE DATE PICKER STYLING
+   ======================================== */
+
+/* Native Date Picker Calendar Icon */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.8;
+  padding: 4px;
+  transition: opacity 0.2s, filter 0.2s;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* Light mode: Invert icon to make it darker/visible (nền sáng cần icon tối) */
+.admin-light input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.2) brightness(0.8); /* Làm tối icon một chút */
+}
+
+/* Dark mode: Keep light icon (nền tối cần icon sáng) */
+.admin-dark input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: none; /* Icon mặc định của trình duyệt đã sáng */
+}
+
+input[type="date"]::-webkit-inner-spin-button,
+input[type="date"]::-webkit-clear-button {
+  display: none;
+}
+
+/* Firefox date input */
+input[type="date"]::-moz-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.8;
+  padding: 4px;
+}
+
+input[type="date"]::-moz-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+
+/* Ensure Recharts tooltip appears above all chart elements */
+.recharts-tooltip-wrapper {
+  z-index: 1000 !important;
+  pointer-events: none; /* Prevent tooltip from blocking interactions */
+}
+
+.recharts-default-tooltip,
+.recharts-tooltip-wrapper > div {
+  z-index: 1000 !important;
 }

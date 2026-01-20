@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react';
 import { Area, AreaChart, Bar, BarChart, Line, LineChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import type { DailyStats } from '@/services/admin/statsService';
 import { motion } from 'framer-motion';
@@ -8,43 +9,45 @@ interface DailyStatsChartProps {
   data: DailyStats;
 }
 
-export const DailyStatsChart = ({ data }: DailyStatsChartProps) => {
+export const DailyStatsChart = memo(({ data }: DailyStatsChartProps) => {
   const { theme } = useAdminTheme();
   const isDark = theme === 'dark';
-
+  
   // Prepare chart data
-  const allDates = new Set([
-    ...Object.keys(data.newUsers || {}),
-    ...Object.keys(data.newGameSessions || {}),
-    ...Object.keys(data.totalPlayTime || {}),
-  ]);
+  const chartData = useMemo(() => {
+    const allDates = new Set([
+      ...Object.keys(data.newUsers || {}),
+      ...Object.keys(data.newGameSessions || {}),
+      ...Object.keys(data.totalPlayTime || {}),
+    ]);
 
-  const sortedDates = Array.from(allDates).sort();
+    const sortedDates = Array.from(allDates).sort();
 
-  const chartData = sortedDates.map((date) => {
-    const dateObj = new Date(date);
-    return {
-      date: dateObj.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }),
-      fullDate: dateObj.toLocaleDateString('vi-VN', { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      }),
-      newUsers: data.newUsers[date] || 0,
-      newSessions: data.newGameSessions[date] || 0,
-      playTime: Math.round((data.totalPlayTime[date] || 0) / 60),
-    };
-  });
+    return sortedDates.map((date) => {
+      const dateObj = new Date(date);
+      return {
+        date: dateObj.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }),
+        fullDate: dateObj.toLocaleDateString('vi-VN', { 
+          weekday: 'long', 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        }),
+        newUsers: data.newUsers[date] || 0,
+        newSessions: data.newGameSessions[date] || 0,
+        playTime: Math.round((data.totalPlayTime[date] || 0) / 60),
+      };
+    });
+  }, [data]);
 
   // Theme-aware colors
-  const colors = {
+  const colors = useMemo(() => ({
     users: isDark ? '#06B6D4' : '#2DB5A3',
     sessions: isDark ? '#22C55E' : '#43A047',
     playTime: isDark ? '#EC4899' : '#E9714D',
     grid: isDark ? '#333' : '#D3CFC7',
     text: isDark ? '#F2F4F7' : '#1D2430',
-  };
+  }), [isDark]);
 
   // Custom Tooltip
   const CustomTooltip = ({ active, payload }: any) => {
@@ -85,35 +88,17 @@ export const DailyStatsChart = ({ data }: DailyStatsChartProps) => {
     );
   }
 
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { duration: 0.6, ease: "easeOut" }
-    }
-  };
-
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
+    <div
       className="space-y-6"
+      style={{ 
+        transform: 'translateZ(0)',
+      }}
     >
       {/* Chart 1: Người dùng mới */}
-      <motion.div variants={itemVariants}>
+      <div 
+        style={{ transform: 'translateZ(0)' }}
+      >
         <div className="admin-glass p-6 rounded-2xl hover:border-primary/40 transition-all duration-300">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
@@ -129,7 +114,7 @@ export const DailyStatsChart = ({ data }: DailyStatsChartProps) => {
             </div>
           </div>
 
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={300} key="users-chart">
             <AreaChart data={chartData}>
               <defs>
                 <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
@@ -161,10 +146,12 @@ export const DailyStatsChart = ({ data }: DailyStatsChartProps) => {
             </AreaChart>
           </ResponsiveContainer>
         </div>
-      </motion.div>
+      </div>
 
       {/* Chart 2: Phiên chơi mới */}
-      <motion.div variants={itemVariants}>
+      <div 
+        style={{ transform: 'translateZ(0)' }}
+      >
         <div className="admin-glass p-6 rounded-2xl hover:border-green-500/40 transition-all duration-300">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center">
@@ -180,7 +167,7 @@ export const DailyStatsChart = ({ data }: DailyStatsChartProps) => {
             </div>
           </div>
 
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={300} key="sessions-chart">
             <BarChart data={chartData}>
               <defs>
                 <linearGradient id="colorSessions" x1="0" y1="0" x2="0" y2="1">
@@ -208,10 +195,12 @@ export const DailyStatsChart = ({ data }: DailyStatsChartProps) => {
             </BarChart>
           </ResponsiveContainer>
         </div>
-      </motion.div>
+      </div>
 
       {/* Chart 3: Thời gian chơi */}
-      <motion.div variants={itemVariants}>
+      <div 
+        style={{ transform: 'translateZ(0)' }}
+      >
         <div className="admin-glass p-6 rounded-2xl hover:border-accent/40 transition-all duration-300">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center">
@@ -227,7 +216,7 @@ export const DailyStatsChart = ({ data }: DailyStatsChartProps) => {
             </div>
           </div>
 
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={300} key="playtime-chart">
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} opacity={0.3} />
               <XAxis 
@@ -252,7 +241,9 @@ export const DailyStatsChart = ({ data }: DailyStatsChartProps) => {
             </LineChart>
           </ResponsiveContainer>
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
-};
+});
+
+DailyStatsChart.displayName = 'DailyStatsChart';

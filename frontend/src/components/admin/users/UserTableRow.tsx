@@ -46,14 +46,17 @@ export const UserTableRow = ({ user, index, onUpdateStatus, onDelete, isProcessi
               whileHover={{ scale: 1.1 }}
               className="w-11 h-11 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center font-black text-lg text-cyan-300 border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.2)]"
             >
-              {user.username.charAt(0).toUpperCase()}
+              {user.avatar_url ? (
+                <img
+                  src={user.avatar_url}
+                  alt={`${user.username}'s avatar`}
+                  className="w-11 h-11 rounded-full object-cover"
+                />
+              ) : (
+                user.username.charAt(0).toUpperCase()
+              )}
             </motion.div>
-            <div>
-              <p className="font-bold text-foreground font-mono">{user.username}</p>
-              <p className="text-xs text-muted-foreground font-mono truncate max-w-[180px]">
-                ID: {user.id.slice(0, 8)}...
-              </p>
-            </div>
+            <p className="font-bold text-foreground font-mono">{user.username}</p>
           </div>
         </td>
 

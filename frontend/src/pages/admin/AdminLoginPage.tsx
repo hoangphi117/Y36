@@ -6,6 +6,8 @@ import { useAdminTheme } from '@/hooks/admin/useAdminTheme';
 import { Eye, EyeOff, Lock, Mail, Shield, LogIn, KeyRound } from 'lucide-react';
 import { useGameSound } from '@/hooks/useGameSound';
 import { motion, AnimatePresence } from 'framer-motion';
+import { AdminInput } from '@/components/admin/ui/AdminInput';
+import { Toaster } from 'react-hot-toast';
 
 export const AdminLoginPage = () => {
   const [email, setEmail] = useState('');
@@ -73,7 +75,21 @@ export const AdminLoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+    <>
+      <Toaster 
+        position="top-center"
+        containerStyle={{
+          top: 20,
+          zIndex: 99999,
+        }}
+        toastOptions={{
+          style: {
+            background: 'transparent',
+            boxShadow: 'none',
+          },
+        }}
+      />
+      <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
         {/* Animated Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-background via-primary/5 to-accent/10" />
         
@@ -157,21 +173,18 @@ export const AdminLoginPage = () => {
                 <label className="block text-sm font-bold text-foreground mb-2 font-mono uppercase tracking-wider">
                   Email
                 </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 admin-primary" />
-                  <input
-                    ref={emailInputRef}
-                    type="email"
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      setErrors(prev => ({ ...prev, email: undefined }));
-                    }}
-                    disabled={loginMutation.isPending}
-                    className="admin-input pl-11 pr-4"
-                    placeholder="admin@example.com"
-                  />
-                </div>
+                <AdminInput
+                  ref={emailInputRef}
+                  type="email"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setErrors(prev => ({ ...prev, email: undefined }));
+                  }}
+                  disabled={loginMutation.isPending}
+                  placeholder="admin@example.com"
+                  icon={<Mail className="w-5 h-5 text-foreground opacity-60" strokeWidth={2.5} />}
+                />
                 <AnimatePresence>
                   {errors.email && (
                     <motion.p
@@ -196,7 +209,9 @@ export const AdminLoginPage = () => {
                   Mật khẩu
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 admin-primary" />
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
+                    <Lock className="w-5 h-5 text-foreground opacity-60" strokeWidth={2.5} />
+                  </div>
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
@@ -208,7 +223,7 @@ export const AdminLoginPage = () => {
                       if (e.key === 'Enter') handleSubmit(e);
                     }}
                     disabled={loginMutation.isPending}
-                    className="admin-input pl-11 pr-12"
+                    className="admin-input pl-10 pr-12"
                     placeholder="••••••••"
                   />
                   <motion.button
@@ -216,12 +231,12 @@ export const AdminLoginPage = () => {
                     whileTap={{ scale: 0.9 }}
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded-lg transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-muted/50 rounded-lg transition-colors z-10"
                   >
                     {showPassword ? (
-                      <EyeOff className="w-4 h-4 text-muted-foreground" />
+                      <EyeOff className="w-5 h-5 text-foreground opacity-60" strokeWidth={2.5} />
                     ) : (
-                      <Eye className="w-4 h-4 text-muted-foreground" />
+                      <Eye className="w-5 h-5 text-foreground opacity-60" strokeWidth={2.5} />
                     )}
                   </motion.button>
                 </div>
@@ -281,5 +296,6 @@ export const AdminLoginPage = () => {
           </div>
         </motion.div>
       </div>
+    </>
   );
 };
