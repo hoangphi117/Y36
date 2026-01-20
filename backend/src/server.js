@@ -22,8 +22,6 @@ app.get("/", (req, res) => {
 });
 
 
-
-
 app.use((err, req, res, next) => {
   console.error("ERROR:", err);
 
@@ -31,3 +29,5 @@ app.use((err, req, res, next) => {
     message: err.message || "Something went wrong",
   });
 });
+
+module.exports = app;
