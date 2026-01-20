@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, memo } from 'react';
 import { createPortal } from 'react-dom';
 import { Download, FileJson, FileSpreadsheet } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -9,7 +9,7 @@ interface ExportButtonProps {
   disabled?: boolean;
 }
 
-export const ExportButton = ({ onExportCSV, onExportJSON, disabled }: ExportButtonProps) => {
+export const ExportButton = memo(({ onExportCSV, onExportJSON, disabled }: ExportButtonProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState({ top: 0, right: 0 });
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -109,4 +109,6 @@ export const ExportButton = ({ onExportCSV, onExportJSON, disabled }: ExportButt
       )}
     </div>
   );
-};
+});
+
+ExportButton.displayName = 'ExportButton';

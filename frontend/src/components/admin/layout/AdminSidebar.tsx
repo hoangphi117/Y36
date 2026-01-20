@@ -30,8 +30,14 @@ export const AdminSidebar = memo(({ collapsed, onToggle }: AdminSidebarProps) =>
   return (
     <motion.aside
       initial={false}
-      animate={{ width: collapsed ? 80 : 256 }}
-      transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+      animate={{ 
+        transform: collapsed ? 'translateX(0)' : 'translateX(0)',
+      }}
+      transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
+      style={{
+        width: collapsed ? 80 : 256,
+        willChange: 'transform',
+      }}
       className="fixed left-0 top-0 h-screen border-r border-border bg-card/50 backdrop-blur-xl z-50 hidden lg:block"
     >
       {/* Toggle Button */}
@@ -44,7 +50,7 @@ export const AdminSidebar = memo(({ collapsed, onToggle }: AdminSidebarProps) =>
         <motion.div
           initial={false}
           animate={{ rotate: collapsed ? 0 : 180 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
         >
           <ChevronRight className="w-4 h-4" />
         </motion.div>

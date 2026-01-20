@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { Calendar } from 'lucide-react';
+import { useState, memo } from 'react';
 import { cn } from '@/lib/utils';
 
 interface DateRangePickerProps {
@@ -15,8 +14,15 @@ const PRESETS = [
   { label: '90 ngày qua', days: 90 },
 ];
 
-export const DateRangePicker = ({ startDate, endDate, onRangeChange, className }: DateRangePickerProps) => {
+export const DateRangePicker = memo(({ startDate, endDate, onRangeChange, className }: DateRangePickerProps) => {
   const [activePreset, setActivePreset] = useState<number | null>(null);
+
+  const formatDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
 
   const handlePreset = (days: number, index: number) => {
     const end = new Date();
@@ -24,19 +30,17 @@ export const DateRangePicker = ({ startDate, endDate, onRangeChange, className }
     start.setDate(end.getDate() - days);
     
     setActivePreset(index);
-    onRangeChange(
-      start.toISOString().split('T')[0],
-      end.toISOString().split('T')[0]
-    );
+    onRangeChange(formatDate(start), formatDate(end));
   };
 
-  const handleCustomChange = (type: 'start' | 'end', value: string) => {
+  const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setActivePreset(null);
-    if (type === 'start') {
-      onRangeChange(value, endDate);
-    } else {
-      onRangeChange(startDate, value);
-    }
+    onRangeChange(e.target.value, endDate);
+  };
+
+  const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setActivePreset(null);
+    onRangeChange(startDate, e.target.value);
   };
 
   return (
@@ -64,35 +68,31 @@ export const DateRangePicker = ({ startDate, endDate, onRangeChange, className }
           <label className="text-sm font-mono text-muted-foreground uppercase tracking-wider font-bold">
             Ngày bắt đầu
           </label>
-          <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 admin-primary" />
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => handleCustomChange('start', e.target.value)}
-              max={endDate}
-              className="admin-input pl-10"
-            />
-          </div>
+          <input
+            type="date"
+            value={startDate}
+            onChange={handleStartDateChange}
+            max={endDate}
+            className="admin-input"
+          />
         </div>
 
         <div className="space-y-2">
           <label className="text-sm font-mono text-muted-foreground uppercase tracking-wider font-bold">
             Ngày kết thúc
           </label>
-          <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 admin-primary" />
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => handleCustomChange('end', e.target.value)}
-              min={startDate}
-              max={new Date().toISOString().split('T')[0]}
-              className="admin-input pl-10"
-            />
-          </div>
+          <input
+            type="date"
+            value={endDate}
+            onChange={handleEndDateChange}
+            min={startDate}
+            max={new Date().toISOString().split('T')[0]}
+            className="admin-input"
+          />
         </div>
       </div>
     </div>
   );
-};
+});
+
+DateRangePicker.displayName = 'DateRangePicker';

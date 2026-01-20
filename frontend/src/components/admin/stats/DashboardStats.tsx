@@ -1,10 +1,11 @@
+import { memo } from 'react';
 import { Users, Gamepad2, Swords, Clock } from 'lucide-react';
 import { useDashboardStats } from '@/hooks/admin/useStats';
 import { StatCard } from './StatCard';
 import { StatsLoader } from './StatsLoader';
 import { formatPlayTime } from '@/lib/admin/statsUtils';
 
-export const DashboardStats = () => {
+export const DashboardStats = memo(() => {
   const { data: stats, isLoading, error } = useDashboardStats();
 
   if (isLoading) return <StatsLoader />;
@@ -48,4 +49,6 @@ export const DashboardStats = () => {
       />
     </div>
   );
-};
+});
+
+DashboardStats.displayName = 'DashboardStats';

@@ -3,11 +3,13 @@ import { Toaster } from 'react-hot-toast';
 import { AdminSidebar } from './AdminSidebar';
 import { AdminHeader } from './AdminHeader';
 import { useAdminTheme } from '@/hooks/admin/useAdminTheme';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 
 export const AdminLayout = () => {
   const { theme } = useAdminTheme();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   // Force apply admin theme on mount
   useEffect(() => {
@@ -28,12 +30,6 @@ export const AdminLayout = () => {
       root.classList.add(customerTheme);
     };
   }, [theme]);
-
-  // Memoize padding class to prevent re-calculation
-  const mainPaddingClass = useMemo(
-    () => `transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'}`,
-    [sidebarCollapsed]
-  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -61,15 +57,25 @@ export const AdminLayout = () => {
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
       />
       
-      <div className={mainPaddingClass}>
+      <motion.div
+        initial={false}
+        animate={{
+          marginLeft: sidebarCollapsed ? 80 : 256,
+        }}
+        transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
+        onAnimationStart={() => setIsAnimating(true)}
+        onAnimationComplete={() => setIsAnimating(false)}
+        style={{ willChange: 'margin-left' }}
+        className="min-h-screen"
+      >
         <AdminHeader />
         
         <main className="p-6 lg:p-8">
           <div className="max-w-7xl mx-auto">
-            <Outlet />
+            <Outlet context={{ isAnimating }} />
           </div>
         </main>
-      </div>
+      </motion.div>
     </div>
   );
 };

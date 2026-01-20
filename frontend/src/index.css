@@ -310,7 +310,8 @@
 
   /* Admin Glass Effect */
   .admin-glass {
-    @apply bg-card/50 backdrop-blur-xl border border-border/50;
+    @apply bg-card/50 border border-border/50;
+    contain: layout;
   }
 
   /* Primary Button */
@@ -353,4 +354,40 @@
     background-size: 200% auto;
     animation: gradient-x 3s ease infinite;
   }
+}
+
+/* GPU Acceleration for Admin Components */
+.admin-surface,
+.admin-glass,
+.admin-input {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Optimize Recharts Performance */
+.recharts-wrapper {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+.recharts-surface {
+  transform: translateZ(0);
+}
+
+/* Style native date picker icon to match theme */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(0.5); /* Make it neutral */
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+input[type="date"]:hover::-webkit-calendar-picker-indicator {
+  opacity: 1;
+}
+
+/* Dark mode specific adjustment for calendar icon */
+.dark input[type="date"]::-webkit-calendar-picker-indicator,
+.admin-dark input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
 }
