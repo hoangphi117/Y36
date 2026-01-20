@@ -1,5 +1,5 @@
 const db = require('../config/db');
-const APIFeatures = require('../utils/apiFeatures');
+const APIFeatures = require('../utils/APIFeatures');
 
 class User {
   // Tìm user theo email

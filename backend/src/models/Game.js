@@ -1,5 +1,5 @@
 const db = require('../config/db');
-const APIFeatures = require('../utils/apiFeatures');
+const APIFeatures = require('../utils/APIFeatures');
 
 class Game {
   static async getAll(queryString) {
@@ -32,9 +32,7 @@ class Game {
   }
 
   static async getAllActive({ search }) {
-    const query = db("games")
-      .where({ is_active: true });
-
+    const query = db("games");
     if (search) {
       query.andWhere((qb) => {
         qb.whereILike("name", `%${search}%`)
