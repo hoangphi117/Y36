@@ -374,20 +374,59 @@
   transform: translateZ(0);
 }
 
-/* Style native date picker icon to match theme */
+/* ========================================
+   NATIVE DATE PICKER STYLING
+   ======================================== */
+
+/* Native Date Picker Calendar Icon */
 input[type="date"]::-webkit-calendar-picker-indicator {
   cursor: pointer;
-  filter: invert(0.5); /* Make it neutral */
-  opacity: 0.6;
-  transition: opacity 0.2s;
+  opacity: 0.8;
+  padding: 4px;
+  transition: opacity 0.2s, filter 0.2s;
 }
 
-input[type="date"]:hover::-webkit-calendar-picker-indicator {
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
   opacity: 1;
 }
 
-/* Dark mode specific adjustment for calendar icon */
-.dark input[type="date"]::-webkit-calendar-picker-indicator,
+/* Light mode: Invert icon to make it darker/visible (nền sáng cần icon tối) */
+.admin-light input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.2) brightness(0.8); /* Làm tối icon một chút */
+}
+
+/* Dark mode: Keep light icon (nền tối cần icon sáng) */
 .admin-dark input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(1);
+  filter: none; /* Icon mặc định của trình duyệt đã sáng */
+}
+
+input[type="date"]::-webkit-inner-spin-button,
+input[type="date"]::-webkit-clear-button {
+  display: none;
+}
+
+/* Firefox date input */
+input[type="date"]::-moz-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.8;
+  padding: 4px;
+}
+
+input[type="date"]::-moz-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* ========================================
+   RECHARTS TOOLTIP Z-INDEX FIX
+   ======================================== */
+
+/* Ensure Recharts tooltip appears above all chart elements */
+.recharts-tooltip-wrapper {
+  z-index: 1000 !important;
+  pointer-events: none; /* Prevent tooltip from blocking interactions */
+}
+
+.recharts-default-tooltip,
+.recharts-tooltip-wrapper > div {
+  z-index: 1000 !important;
 }

@@ -68,27 +68,31 @@ export const DateRangePicker = memo(({ startDate, endDate, onRangeChange, classN
           <label className="text-sm font-mono text-muted-foreground uppercase tracking-wider font-bold">
             Ngày bắt đầu
           </label>
-          <input
-            type="date"
-            value={startDate}
-            onChange={handleStartDateChange}
-            max={endDate}
-            className="admin-input"
-          />
+          <div className="relative">
+            <input
+              type="date"
+              value={startDate}
+              onChange={handleStartDateChange}
+              max={endDate}
+              className="admin-input"
+            />
+          </div>
         </div>
 
         <div className="space-y-2">
           <label className="text-sm font-mono text-muted-foreground uppercase tracking-wider font-bold">
             Ngày kết thúc
           </label>
-          <input
-            type="date"
-            value={endDate}
-            onChange={handleEndDateChange}
-            min={startDate}
-            max={new Date().toISOString().split('T')[0]}
-            className="admin-input"
-          />
+          <div className="relative">
+            <input
+              type="date"
+              value={endDate}
+              onChange={handleEndDateChange}
+              min={startDate}
+              max={new Date().toISOString().split('T')[0]}
+              className="admin-input"
+            />
+          </div>
         </div>
       </div>
     </div>
