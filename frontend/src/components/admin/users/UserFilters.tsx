@@ -1,5 +1,7 @@
 import { Search } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { AdminInput } from '@/components/admin/ui/AdminInput';
+import { AdminSelect } from '@/components/admin/ui/AdminSelect';
 
 interface UserFiltersProps {
   filters: any;
@@ -16,41 +18,41 @@ export const UserFilters = ({ filters, onChange }: UserFiltersProps) => {
     >
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
         {/* Search Input - Chiếm 6 cột (50%) */}
-        <div className="relative md:col-span-6">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 admin-primary" />
-          <input
+        <div className="md:col-span-6">
+          <AdminInput
             type="text"
             placeholder="Tìm kiếm theo tên hoặc email..."
             value={filters.search || ''}
             onChange={(e) => onChange('search', e.target.value)}
-            className="admin-input pl-12 h-11"
+            icon={<Search className="w-5 h-5 text-foreground opacity-60" strokeWidth={2.5} />}
+            className="h-11"
           />
         </div>
         
         {/* Role Filter - Chiếm 3 cột (25%) */}
         <div className="md:col-span-3">
-          <select
+          <AdminSelect
             value={filters.role || ''}
             onChange={(e) => onChange('role', e.target.value)}
-            className="admin-input cursor-pointer h-11"
+            className="h-11"
           >
             <option value="">Tất cả vai trò</option>
             <option value="admin">Quản trị viên</option>
             <option value="customer">Người dùng</option>
-          </select>
+          </AdminSelect>
         </div>
 
         {/* Status Filter - Chiếm 3 cột (25%) */}
         <div className="md:col-span-3">
-          <select
+          <AdminSelect
             value={filters.status || ''}
             onChange={(e) => onChange('status', e.target.value)}
-            className="admin-input cursor-pointer h-11"
+            className="h-11"
           >
             <option value="">Tất cả trạng thái</option>
             <option value="active">Hoạt động</option>
             <option value="banned">Bị khóa</option>
-          </select>
+          </AdminSelect>
         </div>
       </div>
     </motion.div>
