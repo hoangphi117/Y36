@@ -298,17 +298,21 @@
   .admin-input {
     @apply w-full px-4 py-2.5 rounded-lg;
     @apply bg-input border border-border;
-    @apply text-foreground font-semibold;
+    @apply text-foreground;
     @apply placeholder:text-muted-foreground placeholder:opacity-60;
     @apply focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20;
-    @apply transition-all duration-200;
+    @apply transition-[border-color,box-shadow] duration-200;
     font-family: ui-monospace, monospace;
     font-size: 0.875rem;
+    font-weight: 600 !important;
+    color: hsl(var(--foreground)) !important;
   }
 
   /* Ensure no background bleeds over icons */
   .admin-input:focus {
     @apply bg-input;
+    font-weight: 600 !important;
+    color: hsl(var(--foreground)) !important;
   }
 
   /* Admin Input Icon Wrapper - Ensure visibility */
