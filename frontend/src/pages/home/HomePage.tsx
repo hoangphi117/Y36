@@ -67,11 +67,7 @@ export default function HomePage() {
   const { playSound } = useGameSound();
 
   const handleGameClick = (url: string) => {
-    playSound("button2");
-
-    setTimeout(() => {
-      navigate(url);
-    }, 400);
+    navigate(url);
   };
 
   return (

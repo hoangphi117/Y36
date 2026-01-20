@@ -13,7 +13,10 @@ const login = async (req, res) => {
     if (!validPass)
       return res.status(400).json({ message: "Invalid password" });
 
-    // 3. Tạo Token
+    if (user.status === "banned") {
+      return res.status(403).json({ message: "Tài khoản đã bị cấm" });
+    }
+
     const token = jwt.sign(
       { id: user.id, role: user.role },
       process.env.JWT_SECRET || "secret_key",

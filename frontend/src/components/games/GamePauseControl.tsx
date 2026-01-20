@@ -71,6 +71,7 @@ export function GamePauseControl({
                   size="lg"
                   className="w-full gap-2 font-bold text-lg h-12 rounded-xl"
                   onClick={onTogglePause}
+                  sound={true}
                 >
                   <Play className="w-5 h-5 fill-current" /> Tiếp tục chơi
                 </Button>
@@ -80,6 +81,7 @@ export function GamePauseControl({
                   size="lg"
                   className="w-full gap-2 h-12 rounded-xl hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50 transition-colors"
                   onClick={onQuit}
+                  sound={true}
                 >
                   <LogOut className="w-5 h-5" /> Thoát game
                 </Button>

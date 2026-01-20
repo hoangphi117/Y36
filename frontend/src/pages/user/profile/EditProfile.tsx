@@ -16,7 +16,13 @@ import {
 
 import { useUnsavedChanges } from "@/hooks/useUnsavedForm";
 import { UnsavedChangesDialog } from "@/components/dialogs/UnsavedChangesDialog";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -159,27 +165,24 @@ const EditProfileView = ({
   return (
     <>
       <div className="min-h-screen bg-background p-4 md:p-8 flex justify-center">
-        <Card className="w-full max-w-2xl border-none shadow-none bg-transparent animate-in slide-in-from-right-10 duration-300">
-          {/* HEADER */}
-          <div className="flex items-center gap-4 mb-8">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => confirmNavigation(onBack ?? (() => navigate(-1)))}
-              className="rounded-full"
-            >
-              <ArrowLeft className="h-6 w-6" />
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold">Chỉnh sửa hồ sơ</h1>
-              <p className="text-sm text-muted-foreground">
-                Cập nhật thông tin cá nhân của bạn
-              </p>
-            </div>
-          </div>
-
-          {/* CONTENT */}
+        <div className="w-full max-w-2xl animate-in slide-in-from-right-10 duration-300">
           <Card className="border shadow-sm">
+            <CardHeader className="flex flex-row items-center gap-4 py-6 border-b">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => confirmNavigation(onBack ?? (() => navigate(-1)))}
+                className="rounded-full shrink-0"
+              >
+                <ArrowLeft className="h-6 w-6" />
+              </Button>
+              <div className="space-y-1">
+                <CardTitle className="text-2xl font-bold">Chỉnh sửa hồ sơ</CardTitle>
+                <CardDescription>
+                  Cập nhật thông tin cá nhân của bạn
+                </CardDescription>
+              </div>
+            </CardHeader>
             <CardContent className="p-6 md:p-8 space-y-8">
               {/* AVATAR SECTION */}
               <div className="flex flex-col items-center gap-3">
@@ -348,7 +351,7 @@ const EditProfileView = ({
               </Form>
             </CardContent>
           </Card>
-        </Card>
+        </div>
       </div>
 
       {/* DIALOG UNSAVED */}

@@ -33,7 +33,6 @@ import { LoadGameDialog } from "@/components/dialogs/LoadGameDialog";
 import { toast } from "react-hot-toast";
 import axiosClient from "@/lib/axios";
 import { GameLayout } from "@/components/layouts/GameLayout";
-import { triggerWinEffects } from "@/lib/fireworks";
 
 const ICONS = [icon1, icon2, icon3, icon4, icon5, icon6, icon7, icon8, icon9, icon10, icon11, icon12, icon13, icon14, icon15, icon16];
 
@@ -123,6 +122,7 @@ export default function MemoryLevelGame() {
   // useGameSession hook to manage game session
   const {
     session, savedSessions,
+    currentPlayTime,
     fetchSavedSessions,
     isLoading: isSessionLoading,
     isSaving: isSessionSaving,
@@ -279,10 +279,7 @@ export default function MemoryLevelGame() {
       setTotalScore(prev => prev + levelScore);
       setGameStatus("completed");
       
-      // Hiệu ứng pháo hoa khi hoàn thành level
-      setTimeout(() => {
-        triggerWinEffects();
-      }, 300);
+      // triggerWinEffects moved to overlay
     }
   }, [matched, currentLevel, gameStatus, timeLeft, levelConfigs]);
 
@@ -555,6 +552,7 @@ export default function MemoryLevelGame() {
                   action={gameStatus === "completed" && currentLevel < levelConfigs.length - 1 ? nextLevel : handlePlayAgain}
                   currentLevel={currentLevel}
                   totalLevels={levelConfigs.length}
+                  playTime={currentPlayTime}
                 />
               </motion.div>
             )}

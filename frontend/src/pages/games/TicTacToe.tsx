@@ -250,6 +250,7 @@ export default function TicTacToe() {
   };
 
   const handleSwitchSide = (symbol: PlayerSymbol) => {
+    playSound("button");
     setUserSymbol(symbol);
     setSquares(Array(9).fill(null));
     setXIsNext(true);
@@ -526,6 +527,7 @@ export default function TicTacToe() {
                 gameType="tictactoe"
                 onRestart={handleRestart}
                 onQuit={quitGame}
+                playTime={currentPlayTime}
               />
             )}
           </AnimatePresence>

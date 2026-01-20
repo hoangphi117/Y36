@@ -67,6 +67,115 @@ const getNeighborEmptyCells = (board: (string | null)[], size: number) => {
   return Array.from(neighbors);
 };
 
+const evaluateMove = (
+  board: (string | null)[],
+  index: number,
+  player: string,
+  opponent: string,
+  winCondition: number,
+  size: number
+) => {
+  let score = 0;
+  const directions = [
+    [0, 1],
+    [1, 0],
+    [1, 1],
+    [1, -1],
+  ];
+  const row = Math.floor(index / size);
+  const col = index % size;
+
+  for (const [dx, dy] of directions) {
+    let playerCount = 1;
+    let opponentCount = 0;
+    let playerOpenEnds = 0;
+    let opponentOpenEnds = 0;
+
+    // Check player potential at this spot
+    // Forward
+    for (let i = 1; i < winCondition; i++) {
+      const r = row + i * dx;
+      const c = col + i * dy;
+      if (r < 0 || r >= size || c < 0 || c >= size) break;
+      const cell = board[r * size + c];
+      if (cell === player) playerCount++;
+      else if (cell === null) {
+        playerOpenEnds++;
+        break;
+      } else break;
+    }
+    // Backward
+    for (let i = 1; i < winCondition; i++) {
+      const r = row - i * dx;
+      const c = col - i * dy;
+      if (r < 0 || r >= size || c < 0 || c >= size) break;
+      const cell = board[r * size + c];
+      if (cell === player) playerCount++;
+      else if (cell === null) {
+        playerOpenEnds++;
+        break;
+      } else break;
+    }
+
+    // Check opponent threat at this spot
+    let oCountForward = 0;
+    let oOpenForward = false;
+    for (let i = 1; i < winCondition; i++) {
+      const r = row + i * dx;
+      const c = col + i * dy;
+      if (r < 0 || r >= size || c < 0 || c >= size) break;
+      const cell = board[r * size + c];
+      if (cell === opponent) oCountForward++;
+      else if (cell === null) {
+        oOpenForward = true;
+        break;
+      } else break;
+    }
+    let oCountBackward = 0;
+    let oOpenBackward = false;
+    for (let i = 1; i < winCondition; i++) {
+      const r = row - i * dx;
+      const c = col - i * dy;
+      if (r < 0 || r >= size || c < 0 || c >= size) break;
+      const cell = board[r * size + c];
+      if (cell === opponent) oCountBackward++;
+      else if (cell === null) {
+        oOpenBackward = true;
+        break;
+      } else break;
+    }
+    opponentCount = oCountForward + oCountBackward;
+    if (oOpenForward) opponentOpenEnds++;
+    if (oOpenBackward) opponentOpenEnds++;
+
+    // Scoring Player Patterns
+    if (playerCount >= winCondition) score += 100000;
+    else if (playerCount === winCondition - 1 && playerOpenEnds === 2)
+      score += 10000;
+    else if (playerCount === winCondition - 1 && playerOpenEnds === 1)
+      score += 1000;
+    else if (playerCount === winCondition - 2 && playerOpenEnds === 2)
+      score += 500;
+    else if (playerCount === winCondition - 2 && playerOpenEnds === 1)
+      score += 100;
+
+    // Scoring Opponent Patterns (Blocking)
+    if (opponentCount >= winCondition - 1) score += 20000;
+    else if (opponentCount === winCondition - 2 && opponentOpenEnds === 2)
+      score += 5000;
+    else if (opponentCount === winCondition - 2 && opponentOpenEnds === 1)
+      score += 800;
+    else if (opponentCount === winCondition - 3 && opponentOpenEnds === 2)
+      score += 400;
+  }
+
+  // Slight preference for center
+  const distToCenter = Math.abs(row - size / 2) + Math.abs(col - size / 2);
+  score -= distToCenter;
+
+  return score;
+};
+
 export const getEasyMove = (board: (string | null)[], size: number) => {
   const candidates = getNeighborEmptyCells(board, size);
   if (candidates.length === 0) return Math.floor((size * size) / 2);
@@ -83,23 +192,21 @@ export const getMediumMove = (
   const candidates = getNeighborEmptyCells(board, size);
   if (candidates.length === 0) return Math.floor((size * size) / 2);
 
+  let bestScore = -Infinity;
+  let move = -1;
+
   for (const idx of candidates) {
-    board[idx] = botPiece;
-    if (checkWin(board, idx, winCondition, size)) {
-      board[idx] = null;
-      return idx;
+    // Basic randomness for medium
+    const score =
+      evaluateMove(board, idx, botPiece, playerPiece, winCondition, size) +
+      Math.random() * 20;
+    if (score > bestScore) {
+      bestScore = score;
+      move = idx;
     }
-    board[idx] = null;
   }
-  for (const idx of candidates) {
-    board[idx] = playerPiece;
-    if (checkWin(board, idx, winCondition, size)) {
-      board[idx] = null;
-      return idx;
-    }
-    board[idx] = null;
-  }
-  return candidates[Math.floor(Math.random() * candidates.length)];
+
+  return move !== -1 ? move : candidates[Math.floor(Math.random() * candidates.length)];
 };
 
 export const getHardMove = (
@@ -109,36 +216,27 @@ export const getHardMove = (
   playerPiece: string,
   size: number
 ) => {
-  if (board.every((cell) => cell === null))
-    return Math.floor((size * size) / 2);
   const candidates = getNeighborEmptyCells(board, size);
   if (candidates.length === 0) return Math.floor((size * size) / 2);
 
   let bestScore = -Infinity;
   let move = -1;
 
-  for (const i of candidates) {
-    let score = 0;
-    const r = Math.floor(i / size);
-    const c = i % size;
-
-    board[i] = botPiece;
-    if (checkWin(board, i, winCondition, size)) score += 10000;
-    else if (checkWin(board, i, winCondition - 1, size)) score += 100;
-    board[i] = null;
-
-    board[i] = playerPiece;
-    if (checkWin(board, i, winCondition, size)) score += 5000;
-    else if (checkWin(board, i, winCondition - 1, size)) score += 80;
-    board[i] = null;
-
-    score +=
-      Math.random() * 5 - (Math.abs(r - size / 2) + Math.abs(c - size / 2));
-
+  for (const idx of candidates) {
+    // More precise evaluation for hard
+    const score = evaluateMove(
+      board,
+      idx,
+      botPiece,
+      playerPiece,
+      winCondition,
+      size
+    );
     if (score > bestScore) {
       bestScore = score;
-      move = i;
+      move = idx;
     }
   }
-  return move;
+  return move !== -1 ? move : candidates[Math.floor(Math.random() * candidates.length)];
 };
+

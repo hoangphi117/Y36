@@ -17,7 +17,6 @@ import {
 
 import { cn } from "@/lib/utils";
 import { useGameSound } from "@/hooks/useGameSound";
-import { triggerWinEffects } from "@/lib/fireworks";
 import { GameHeader } from "@/components/games/GameHeader";
 import useDocumentTitle from "@/hooks/useDocumentTitle";
 import { useGameSession } from "@/hooks/useGameSession";
@@ -249,6 +248,7 @@ export default function CaroGame({ gameId, winCondition }: CaroGameProps) {
   };
 
   const handleSwitchSide = (p: "X" | "O") => {
+    playSound("button");
     setPlayerPiece(p);
     setBoard(Array(boardSizeRef.current ** 2).fill(null));
     setWinner(null);
@@ -359,7 +359,6 @@ export default function CaroGame({ gameId, winCondition }: CaroGameProps) {
       if (winner) {
         if (winner === playerPiece) {
           playSound("win");
-          triggerWinEffects();
           completeGame(1);
         } else {
           playSound("lose");
@@ -647,6 +646,7 @@ export default function CaroGame({ gameId, winCondition }: CaroGameProps) {
                     onRestart={() => handleRestart()}
                     onQuit={quitGame}
                     reason={timeOutReason}
+                    playTime={currentPlayTime}
                   />
                 )}
               </AnimatePresence>

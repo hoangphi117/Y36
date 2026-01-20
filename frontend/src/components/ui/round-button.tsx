@@ -1,19 +1,33 @@
 import React from "react";
 import { cn } from "@/lib/utils";
+import { useGameSound } from "@/hooks/useGameSound";
 
 interface RoundButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "accent" | "danger" | "neutral";
   size?: "small" | "medium" | "large" | "mobile";
+  sound?: boolean | "button" | "button1" | "button2";
 }
 
 export const RoundButton = ({
   className,
   variant = "primary",
   size = "medium",
+  sound = true,
   children,
+  onClick,
   ...props
 }: RoundButtonProps) => {
+  const { playSound } = useGameSound(true);
+
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (sound) {
+      const soundType = typeof sound === "string" ? sound : "button";
+      playSound(soundType);
+    }
+    if (onClick) onClick(e);
+  };
+
   const variants = {
     primary:
       "bg-primary text-primary-foreground border-black/30 hover:bg-primary/90 shadow-[0_0_15px_rgba(var(--primary),0.2)]",
@@ -55,6 +69,7 @@ export const RoundButton = ({
 
         className
       )}
+      onClick={handleClick}
       {...props}
     >
       <span className="relative z-10 flex items-center gap-2">{children}</span>

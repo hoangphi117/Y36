@@ -12,6 +12,7 @@ import { type GameSession } from "@/types/game";
 import { RoundButton } from "../ui/round-button";
 import { DialogDescription } from "@radix-ui/react-dialog";
 import { useState } from "react";
+import { useGameSound } from "@/hooks/useGameSound";
 
 interface LoadGameDialogProps {
   open: boolean;
@@ -56,7 +57,10 @@ export function LoadGameDialog({
   };
 
 
+  const { playSound } = useGameSound(true);
+
   const handleLoadSession = async (sessionId: string) => {
+    playSound("button");
     try {
       setIsLoading(true);
       // Chỉ lưu session hiện tại nếu nó đã tồn tại trong danh sách sessions
@@ -80,7 +84,7 @@ export function LoadGameDialog({
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold">
-              Bạn có ván đã lưu!
+              Game đã lưu!
             </DialogTitle>
             <DialogDescription className="mt-2 text-muted-foreground">
               Chọn một ván đã lưu để tiếp tục chơi hoặc bắt đầu ván mới.
@@ -132,6 +136,7 @@ export function LoadGameDialog({
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
+                            playSound("button2");
                             onDeleteSession(session.id);
                           }}
                           className="p-2 rounded-md hover:bg-destructive/10 text-destructive transition-colors"

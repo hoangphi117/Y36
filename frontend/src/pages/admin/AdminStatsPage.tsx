@@ -8,12 +8,14 @@ import { DateRangePicker } from '@/components/admin/stats/DateRangePicker';
 import { ExportButton } from '@/components/admin/stats/ExportButton';
 import { useDailyStats } from '@/hooks/admin/useStats';
 import { exportToCSV, exportToJSON } from '@/lib/admin/statsUtils';
+import useDocumentTitle from '@/hooks/useDocumentTitle';
 
 interface AdminLayoutContext {
   isAnimating: boolean;
 }
 
 const AdminStatsPage = () => {
+  useDocumentTitle("Thống kê");
   const { isAnimating } = useOutletContext<AdminLayoutContext>();
   const [dateRange, setDateRange] = useState({
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],

@@ -1,6 +1,9 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { RoundButton } from "@/components/ui/round-button";
-import { Trophy, Frown, RefreshCcw, LogOut, Minus, AlertTriangle } from "lucide-react";
+import { Trophy, Frown, RefreshCcw, LogOut, Minus, AlertTriangle, Clock } from "lucide-react";
+import { triggerWinEffects } from "@/lib/fireworks";
+import { useEffect } from "react";
+import formatTime from "@/utils/formatTime";
 
 type Winner = "user" | "bot" | null;
 type GameType = "snake" | "caro" | "tictactoe";
@@ -9,6 +12,7 @@ interface GameResultOverlayProps {
   status: string; // or more specific GameStatus type if possible to enforce
   winner?: Winner;
   score?: number;
+  playTime?: number;
   onRestart: () => void;
   onQuit: () => void;
   gameType: GameType;
@@ -23,7 +27,14 @@ export function GameResultOverlay({
   onQuit,
   gameType,
   reason,
+  playTime,
 }: GameResultOverlayProps) {
+  useEffect(() => {
+    if (status === "win" || (status === "playing" && winner === "user")) {
+      triggerWinEffects();
+    }
+  }, [status, winner]);
+
   // Only show overlay if game is essentially "over" in some way that requires user action
   // For snake, "lose" is game over.
   // For others, win/lose/draw/timeout are game over states.
@@ -66,13 +77,6 @@ export function GameResultOverlay({
               <p className="text-sm text-muted-foreground">+0 Điểm</p>
             </>
           ) : status === "win" || (status === "playing" && winner === "user") ? ( 
-             // Logic: TicTacToe/Caro usually set status to 'playing' but have a 'winner'. 
-             // WE SHOULD NORMALIZE THIS in the parent components to pass strict 'win'/'lose' via props,
-             // OR handle it here. 
-             // Better to assume parent calculates true status. 
-             // IF parent passes 'win', it means USER won.
-             // IF parent passes 'lose', it means USER lost.
-             // Snake only has 'lose' (game over).
              <>
                <Trophy className="w-16 h-16 text-yellow-500 mx-auto animate-bounce" />
                <h2 className="text-2xl font-bold uppercase">
@@ -99,6 +103,13 @@ export function GameResultOverlay({
                )}
               {gameType !== "snake" && <p className="text-sm text-muted-foreground">-1 Điểm</p>}
             </>
+          )}
+
+          {playTime !== undefined && (
+            <div className="flex items-center justify-center gap-2 text-muted-foreground bg-muted/30 py-1.5 rounded-lg border border-border/50">
+              <Clock className="w-4 h-4" />
+              <span className="text-sm font-medium">Thời gian: {formatTime(playTime)}</span>
+            </div>
           )}
 
           <div className="flex gap-2 justify-center pt-2">

@@ -1,4 +1,3 @@
-import { useRef, useEffect } from "react";
 import { Howl } from "howler";
 
 import pop from "@/assets/sounds/pop.mp3";
@@ -20,39 +19,36 @@ type SoundType =
   | "button2"
   | "steam";
 
+const globalSounds: Partial<Record<SoundType, Howl>> = {};
+
+const getSound = (type: SoundType, src: string, options: { volume?: number } = {}): Howl => {
+  if (!globalSounds[type]) {
+    globalSounds[type] = new Howl({
+      src: [src],
+      volume: options.volume ?? 0.5,
+      preload: true,
+    });
+  }
+  return globalSounds[type]!;
+};
+
 export const useGameSound = (enabled: boolean = true) => {
-  const sounds = useRef<Record<SoundType, Howl | null>>({
-    pop: null,
-    win: null,
-    lose: null,
-    button: null,
-    button1: null,
-    button2: null,
-    draw: null,
-    steam: null,
-  });
-
-  useEffect(() => {
-    sounds.current = {
-      pop: new Howl({ src: [pop], volume: 0.5, preload: true }),
-      win: new Howl({ src: [win], volume: 0.5, preload: true }),
-      lose: new Howl({ src: [lose], volume: 0.5, preload: true }),
-      button: new Howl({ src: [button], volume: 1.0, preload: true }),
-      button1: new Howl({ src: [button1], volume: 1.0, preload: true }),
-      button2: new Howl({ src: [button2], volume: 0.4, preload: true }),
-      draw: new Howl({ src: [draw], volume: 0.5, preload: true }),
-      steam: new Howl({ src: [steam], volume: 0.5, preload: true }),
-    };
-
-    return () => {
-      Object.values(sounds.current).forEach((sound) => sound?.unload());
-    };
-  }, []);
-
   const playSound = (type: SoundType) => {
     if (!enabled) return;
 
-    const sound = sounds.current[type];
+    let sound: Howl | undefined;
+    
+    switch (type) {
+      case "pop": sound = getSound("pop", pop); break;
+      case "win": sound = getSound("win", win); break;
+      case "lose": sound = getSound("lose", lose); break;
+      case "button": sound = getSound("button", button, { volume: 1.0 }); break;
+      case "button1": sound = getSound("button1", button1, { volume: 1.0 }); break;
+      case "button2": sound = getSound("button2", button2, { volume: 0.4 }); break;
+      case "draw": sound = getSound("draw", draw); break;
+      case "steam": sound = getSound("steam", steam); break;
+    }
+
     if (sound) {
       sound.play();
     }

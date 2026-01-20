@@ -101,15 +101,6 @@ export default function LoginPage() {
               )}
             />
 
-            <div className="flex justify-end">
-              <Link
-                to="/forgot-password"
-                className="text-xs font-bold text-muted-foreground hover:text-primary"
-              >
-                Quên mật khẩu?
-              </Link>
-            </div>
-
             {isError && (
               <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2">
                 <p className="text-xs font-bold text-destructive text-center">

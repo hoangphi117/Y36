@@ -319,6 +319,7 @@ export default function MemoryFreeGame() {
                   totalScore={freeGameStatus === "completed" ? 100 + freeTimeLeft : 0} 
                   gameStatus={freeGameStatus === "completed" ? "freeCompleted" : freeGameStatus} 
                   action={initializeFreeGame} 
+                  playTime={freeTime - freeTimeLeft}
                 />
               </motion.div>
             )}

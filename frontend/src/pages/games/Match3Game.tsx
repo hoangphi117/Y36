@@ -37,7 +37,7 @@ import type { board_state } from "@/types/match3Game";
 import { toast } from "sonner";
 import axiosClient from "@/lib/axios";
 import { GameLayout } from "@/components/layouts/GameLayout";
-import { triggerWinEffects } from "@/lib/fireworks";
+
 import { useGameSound } from "@/hooks/useGameSound";
 
 
@@ -398,8 +398,9 @@ export default function Match3Game() {
           clearInterval(timer);
           setShowGameOver(true);
 
-          if(score >= targetScore)
-            triggerWinEffects();
+          if(score >= targetScore) {
+            // triggerWinEffects moved to overlay
+          }
           else {
             playSound("lose");
           }
@@ -426,8 +427,9 @@ export default function Match3Game() {
       const completeGame = async () => {
         setShowGameOver(true);
 
-        if(score >= targetScore)
-          triggerWinEffects();
+        if(score >= targetScore) {
+          // triggerWinEffects moved to overlay
+        }
         else {
           playSound("lose");
         }
@@ -749,6 +751,7 @@ export default function Match3Game() {
             targetScore={targetScore}
             onRestart={handlePlayAgain}
             onExit={() => navigate("/")}
+            playTime={gameSession.currentPlayTime}
           />
         )}
       </div>

@@ -36,17 +36,31 @@ const buttonVariants = cva(
   }
 )
 
+import { useGameSound } from "@/hooks/useGameSound"
+
 function Button({
   className,
   variant = "default",
   size = "default",
   asChild = false,
+  sound = false,
+  onClick,
   ...props
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean
+    sound?: boolean | "button" | "button1" | "button2"
   }) {
+  const { playSound } = useGameSound(true);
   const Comp = asChild ? Slot : "button"
+
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (sound) {
+      const soundType = typeof sound === "string" ? sound : "button";
+      playSound(soundType);
+    }
+    if (onClick) onClick(e);
+  };
 
   return (
     <Comp
@@ -54,6 +68,7 @@ function Button({
       data-variant={variant}
       data-size={size}
       className={cn(buttonVariants({ variant, size, className }))}
+      onClick={handleClick}
       {...props}
     />
   )

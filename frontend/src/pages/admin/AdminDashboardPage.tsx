@@ -4,10 +4,12 @@ import { Users, Gamepad2, Trophy, Clock, TrendingUp, Activity } from 'lucide-rea
 import { motion } from 'framer-motion';
 import { formatPlayTime } from '@/lib/admin/statsUtils';
 import { useNavigate } from 'react-router-dom';
+import useDocumentTitle from '@/hooks/useDocumentTitle';
 
 export const AdminDashboardPage = () => {
   const { data, isLoading, error } = useDashboardStats();
   const navigate = useNavigate();
+  useDocumentTitle("Dashboard");
 
   // Get current time for greeting
   const hour = new Date().getHours();

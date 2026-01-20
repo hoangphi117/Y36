@@ -1,6 +1,9 @@
 import { RoundButton } from '@/components/ui/round-button';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Pause, Play, RotateCcw, Star, ChevronLeft } from 'lucide-react';
+import { ArrowLeft, Pause, Play, RotateCcw, Star, ChevronLeft, Clock } from 'lucide-react';
+import formatTime from '@/utils/formatTime';
+import { triggerWinEffects } from '@/lib/fireworks';
+import { useEffect } from 'react';
 
 interface CandyType {
     id: string;
@@ -83,9 +86,10 @@ interface GameOverOverlayProps {
     targetScore: number;
     onRestart: () => void;
     onExit: () => void;
+    playTime?: number;
 }
 
-const GameOverOverlay = ({ score, targetScore, onRestart, onExit }: GameOverOverlayProps) => {
+const GameOverOverlay = ({ score, targetScore, onRestart, onExit, playTime }: GameOverOverlayProps) => {
   const calculateStars = (score: number, targetScore: number) => {
     if (score < targetScore) return 0
     if (score >= targetScore * 2.5) return 3
@@ -96,6 +100,12 @@ const GameOverOverlay = ({ score, targetScore, onRestart, onExit }: GameOverOver
   const starsEarned = calculateStars(score, targetScore)
   const isWin = score >= targetScore
   const scoreRatio = Math.min((score / targetScore) * 100, 100)
+
+  useEffect(() => {
+    if (isWin) {
+      triggerWinEffects();
+    }
+  }, [isWin]);
 
   const starVariants = {
     hidden: { scale: 0, rotate: -180 },
@@ -222,6 +232,16 @@ const GameOverOverlay = ({ score, targetScore, onRestart, onExit }: GameOverOver
             </div>
           </div>
         </motion.div>
+
+        {playTime !== undefined && (
+          <motion.div
+            variants={itemVariants}
+            className="relative z-10 mb-6 flex items-center justify-center gap-2 text-muted-foreground bg-muted/30 py-2 rounded-xl border border-border/50"
+          >
+            <Clock className="w-4 h-4" />
+            <span className="text-sm font-bold uppercase italic">Thời gian: {formatTime(playTime)}</span>
+          </motion.div>
+        )}
 
         {/* Action Buttons */}
         <motion.div

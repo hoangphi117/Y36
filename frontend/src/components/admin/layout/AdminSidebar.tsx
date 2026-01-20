@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, Gamepad2, BarChart3, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Users, Gamepad2, BarChart3, LogOut, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useGameSound } from '@/hooks/useGameSound';
 import { memo } from 'react';
@@ -24,7 +24,7 @@ export const AdminSidebar = memo(({ collapsed, onToggle }: AdminSidebarProps) =>
     playSound('button1');
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
-    window.location.href = '/auth/login';
+    window.location.href = '/admin/login';
   };
 
   return (

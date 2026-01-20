@@ -26,7 +26,7 @@ router.use("/admin/stats", verifyToken, isAdmin, adminStatsRoute);
 //CUSTOMER ROUTES
 
 router.use('/users', verifyToken, userRoute);
-router.use('/games', verifyToken, customerGameRoute);
+router.use('/games', customerGameRoute);
 router.use('/sessions', verifyToken, customerGameSessionRoute);
 router.use('/friends', verifyToken, friendRoute);
 router.use('/messages',verifyToken,messageRoute);

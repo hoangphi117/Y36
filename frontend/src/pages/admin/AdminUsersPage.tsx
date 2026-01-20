@@ -8,8 +8,10 @@ import { UserTable } from '@/components/admin/users/UserTable';
 import { Pagination } from '@/components/admin/users/Pagination';
 import { useDebounce } from '@/hooks/useDebounce';
 import type { UserFilters as UserFiltersType } from '@/services/admin/userService';
+import useDocumentTitle from '@/hooks/useDocumentTitle';
 
 export const AdminUsersPage = () => {
+  useDocumentTitle("Quản lý người dùng");
   const [filters, setFilters] = useState<UserFiltersType>({
     page: 1,
     limit: 8,

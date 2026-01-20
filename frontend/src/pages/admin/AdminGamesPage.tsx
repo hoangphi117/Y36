@@ -7,6 +7,7 @@ import { GameConfigModal } from '@/components/admin/games/GameConfigModal';
 import { GameFilters } from '@/components/admin/games/GameFilters';
 import { useDebounce } from '@/hooks/useDebounce';
 import type { Game, GameFilters as GameFiltersType } from '@/services/admin/gameService';
+import useDocumentTitle from '@/hooks/useDocumentTitle';
 
 export const AdminGamesPage = () => {
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
@@ -25,6 +26,8 @@ export const AdminGamesPage = () => {
 
   const { data, isLoading, isError, error } = useGames(queryFilters);
   const updateMutation = useUpdateGame();
+
+  useDocumentTitle("Games");
 
   // Memoize games to prevent unnecessary re-renders
   const games = useMemo(() => {

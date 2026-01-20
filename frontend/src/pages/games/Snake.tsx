@@ -514,6 +514,7 @@ export default function SnakeGame() {
                   score={score}
                   onRestart={handleRestart}
                   onQuit={quitGame}
+                  playTime={currentPlayTime}
                 />
               )}
             </AnimatePresence>

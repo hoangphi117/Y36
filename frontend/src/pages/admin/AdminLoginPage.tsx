@@ -8,8 +8,10 @@ import { useGameSound } from '@/hooks/useGameSound';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AdminInput } from '@/components/admin/ui/AdminInput';
 import { Toaster } from 'react-hot-toast';
+import useDocumentTitle from '@/hooks/useDocumentTitle';
 
 export const AdminLoginPage = () => {
+  useDocumentTitle("Login");
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
