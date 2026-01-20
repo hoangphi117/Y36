@@ -34,7 +34,7 @@ export const GameConfigModal = ({ game, isOpen, onClose, onSubmit }: GameConfigM
               className="w-full max-w-2xl max-h-[90vh] overflow-auto bg-card/95 backdrop-blur-xl border border-border/50 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] pointer-events-auto"
             >
               {/* Header */}
-              <div className="sticky top-0 bg-gradient-to-r from-card/95 via-card/98 to-card/95 backdrop-blur-xl border-b border-primary/20 p-6 flex items-center justify-between relative overflow-hidden">
+              <div className="sticky top-0 z-10 bg-gradient-to-r from-card/95 via-card/98 to-card/95 backdrop-blur-xl border-b border-primary/20 p-6 flex items-center justify-between relative overflow-hidden">
                 {/* Animated gradient line */}
                 <motion.div
                   initial={{ scaleX: 0 }}
@@ -87,7 +87,7 @@ export const GameConfigModal = ({ game, isOpen, onClose, onSubmit }: GameConfigM
               </div>
 
               {/* Form */}
-              <div className="p-6">
+              <div className="p-6 relative z-0">
                 <GameConfigForm
                   game={game}
                   onSubmit={onSubmit}
