@@ -8,6 +8,9 @@ import {
   Users,
   Gamepad2,
   Trophy,
+  CalendarDays,
+  Award,
+  TrendingUp,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -23,6 +26,7 @@ import {
 } from "@/components/ui/card";
 
 import { useUserProfile, useUpdateProfile } from "@/hooks/useUser";
+import { useProfileStats } from "@/hooks/useProfileStats";
 import EditProfileView from "./EditProfile";
 import ChangePasswordView from "./ChangePassword";
 import { GameHistory } from "./GameHistory";
@@ -31,6 +35,8 @@ import useDocumentTitle from "@/hooks/useDocumentTitle";
 import type { UpdateProfileValues } from "@/lib/schemas";
 import { StatsTab } from "./StatsTab";
 import { AchievementsTab } from "./AchievementsTab";
+import { format } from "date-fns";
+import { vi } from "date-fns/locale";
 
 type ViewMode = "view" | "edit" | "password";
 
@@ -42,6 +48,9 @@ const ProfilePage = () => {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState("overview");
+
+  // Fetch statistics for overview using custom hook
+  const profileStats = useProfileStats();
 
   useEffect(() => {
     const tabFromUrl = searchParams.get("tab");
@@ -210,22 +219,82 @@ const ProfilePage = () => {
           </div>
 
           {/* ===== CONTENT ===== */}
-          {/* Các phần TabsContent giữ nguyên không cần sửa đổi */}
           <TabsContent value="overview" className="mt-6">
             <Card>
               <CardHeader className="pb-2 md:pb-4">
                 <CardTitle className="flex items-center gap-2 text-base md:text-lg">
                   <LayoutDashboard className="h-5 w-5 text-primary" />
-                  Thông tin chung
+                  Tổng quan
                 </CardTitle>
                 <CardDescription className="text-sm">
-                  Thông tin cơ bản về tài khoản
+                  Thống kê tổng quan về tài khoản của bạn
                 </CardDescription>
               </CardHeader>
 
-              <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <InfoBox label="User ID" value={user.user_id} mono />
-                <InfoBox label="Trạng thái" value={user.status} />
+              <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Friends Count */}
+                <StatBox
+                  icon={Users}
+                  label="Bạn bè"
+                  value={profileStats.friendsCount}
+                  color="blue"
+                />
+
+                {/* Achievements Count */}
+                <StatBox
+                  icon={Trophy}
+                  label="Thành tựu"
+                  value={profileStats.achievementsCount}
+                  color="yellow"
+                />
+
+                {/* Total Games Played */}
+                <StatBox
+                  icon={Gamepad2}
+                  label="Tổng số trận"
+                  value={profileStats.totalGamesPlayed}
+                  color="purple"
+                />
+
+                {/* Best Rank */}
+                <StatBox
+                  icon={TrendingUp}
+                  label="Hạng cao nhất"
+                  value={
+                    profileStats.statsLoading
+                      ? "..."
+                      : profileStats.bestRank
+                        ? `#${profileStats.bestRank}`
+                        : "Chưa xếp hạng"
+                  }
+                  color="green"
+                />
+
+                {/* Account Creation Date */}
+                <StatBox
+                  icon={CalendarDays}
+                  label="Ngày tham gia"
+                  value={
+                    user?.created_at
+                      ? format(new Date(user.created_at), "dd/MM/yyyy", {
+                          locale: vi,
+                        })
+                      : "N/A"
+                  }
+                  color="indigo"
+                />
+
+                {/* Total Games with Ranks */}
+                <StatBox
+                  icon={Award}
+                  label="Trò chơi đã chơi"
+                  value={
+                    profileStats.statsLoading
+                      ? "..."
+                      : `${profileStats.gamesPlayed.withRank}/${profileStats.gamesPlayed.total}`
+                  }
+                  color="pink"
+                />
               </CardContent>
             </Card>
           </TabsContent>
@@ -250,14 +319,47 @@ const ProfilePage = () => {
   );
 };
 
-const InfoBox = ({ label, value, mono }: any) => (
-  <div className="p-4 rounded-lg border bg-muted/40">
-    <p className="text-xs text-muted-foreground">{label}</p>
-    <p className={`mt-1 ${mono ? "font-mono text-sm" : "font-medium"}`}>
-      {value}
-    </p>
-  </div>
-);
+// StatBox component for displaying statistics
+interface StatBoxProps {
+  icon: React.ElementType;
+  label: string;
+  value: string | number;
+  color: "blue" | "yellow" | "purple" | "green" | "indigo" | "pink";
+}
+
+const StatBox = ({ icon: Icon, label, value, color }: StatBoxProps) => {
+  const colorClasses = {
+    blue: "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800",
+    yellow: "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800",
+    purple: "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800",
+    green: "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800",
+    indigo: "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800",
+    pink: "bg-pink-50 dark:bg-pink-900/20 border-pink-200 dark:border-pink-800",
+  };
+
+  const iconColorClasses = {
+    blue: "text-blue-600 dark:text-blue-400",
+    yellow: "text-yellow-600 dark:text-yellow-400",
+    purple: "text-purple-600 dark:text-purple-400",
+    green: "text-green-600 dark:text-green-400",
+    indigo: "text-indigo-600 dark:text-indigo-400",
+    pink: "text-pink-600 dark:text-pink-400",
+  };
+
+  return (
+    <div className={`p-4 rounded-lg border ${colorClasses[color]} transition-all hover:shadow-md`}>
+      <div className="flex items-center gap-3">
+        <div className="p-2 rounded-full bg-background/50">
+          <Icon className={`h-5 w-5 ${iconColorClasses[color]}`} />
+        </div>
+        <div className="flex-1">
+          <p className="text-xs text-muted-foreground font-medium">{label}</p>
+          <p className="text-xl font-bold mt-0.5">{value}</p>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const ProfileSkeleton = () => (
   <div className="p-8">

@@ -1,7 +1,6 @@
 import { useRef, useEffect } from "react";
-import { Howl } from "howler"; // Import Howler
+import { Howl } from "howler";
 
-// Import file âm thanh (Vite sẽ xử lý đường dẫn này)
 import pop from "@/assets/sounds/pop.mp3";
 import win from "@/assets/sounds/win.mp3";
 import lose from "@/assets/sounds/lose.mp3";
@@ -9,6 +8,7 @@ import button from "@/assets/sounds/button.mp3";
 import button1 from "@/assets/sounds/button1.mp3";
 import button2 from "@/assets/sounds/button2.mp3";
 import draw from "@/assets/sounds/draw.mp3";
+import steam from "@/assets/sounds/achievement.mp3";
 
 type SoundType =
   | "pop"
@@ -17,11 +17,10 @@ type SoundType =
   | "draw"
   | "button"
   | "button1"
-  | "button2";
+  | "button2"
+  | "steam";
 
 export const useGameSound = (enabled: boolean = true) => {
-  // Sử dụng useRef để lưu trữ các instance của Howl
-  // Không dùng HTMLAudioElement nữa mà dùng Howl
   const sounds = useRef<Record<SoundType, Howl | null>>({
     pop: null,
     win: null,
@@ -30,9 +29,9 @@ export const useGameSound = (enabled: boolean = true) => {
     button1: null,
     button2: null,
     draw: null,
+    steam: null,
   });
 
-  // Khởi tạo âm thanh MỘT LẦN DUY NHẤT khi component mount
   useEffect(() => {
     sounds.current = {
       pop: new Howl({ src: [pop], volume: 0.5, preload: true }),
@@ -42,9 +41,9 @@ export const useGameSound = (enabled: boolean = true) => {
       button1: new Howl({ src: [button1], volume: 1.0, preload: true }),
       button2: new Howl({ src: [button2], volume: 0.4, preload: true }),
       draw: new Howl({ src: [draw], volume: 0.5, preload: true }),
+      steam: new Howl({ src: [steam], volume: 0.5, preload: true }),
     };
 
-    // Cleanup: Giải phóng bộ nhớ khi unmount (quan trọng để tránh memory leak)
     return () => {
       Object.values(sounds.current).forEach((sound) => sound?.unload());
     };
@@ -55,7 +54,6 @@ export const useGameSound = (enabled: boolean = true) => {
 
     const sound = sounds.current[type];
     if (sound) {
-      // Howler tự động xử lý việc phát chồng (overlap), không cần cloneNode
       sound.play();
     }
   };

@@ -2,19 +2,15 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { RoundButton } from "@/components/ui/round-button";
 import {
-  RefreshCcw,
+  Loader2,
   Volume2,
   VolumeX,
-  Trophy,
-  Frown,
-  Loader2,
   Upload,
   Download,
   Clock,
   LogOut,
   User,
   Bot,
-  AlertTriangle,
   Zap,
   Settings,
 } from "lucide-react";
@@ -26,6 +22,8 @@ import { GameHeader } from "@/components/games/GameHeader";
 import useDocumentTitle from "@/hooks/useDocumentTitle";
 import { useGameSession } from "@/hooks/useGameSession";
 import { LoadGameDialog } from "./LoadGameDialog";
+import { GameInstructions } from "@/components/games/GameInstructions";
+import { GameResultOverlay } from "@/components/games/GameResultOverlay";
 
 import {
   GameSettingsDialog,
@@ -182,7 +180,7 @@ export default function CaroGame({ gameId, winCondition }: CaroGameProps) {
     let interval: number;
 
     if (
-      session?.status === "playing" &&
+      (session?.status === "playing" || session?.status === "saved") &&
       !winner &&
       !isTimeOut &&
       turnTimeLimit > 0 &&
@@ -266,7 +264,8 @@ export default function CaroGame({ gameId, winCondition }: CaroGameProps) {
         board[index] ||
         winner ||
         isTimeOut ||
-        session?.status !== "playing" ||
+        isTimeOut ||
+        (session?.status !== "playing" && session?.status !== "saved") ||
         isSettingsOpen
       )
         return;
@@ -304,7 +303,7 @@ export default function CaroGame({ gameId, winCondition }: CaroGameProps) {
   useEffect(() => {
     if (
       !session ||
-      session.status !== "playing" ||
+      (session.status !== "playing" && session.status !== "saved") ||
       winner ||
       isTimeOut ||
       isSettingsOpen
@@ -356,7 +355,7 @@ export default function CaroGame({ gameId, winCondition }: CaroGameProps) {
   ]);
 
   useEffect(() => {
-    if (session?.status === "playing" && !isTimeOut) {
+    if ((session?.status === "playing" || session?.status === "saved") && !isTimeOut) {
       if (winner) {
         if (winner === playerPiece) {
           playSound("win");
@@ -399,9 +398,7 @@ export default function CaroGame({ gameId, winCondition }: CaroGameProps) {
     setIsSettingsOpen(true);
   };
 
-  const handleRestartClick: React.MouseEventHandler<HTMLButtonElement> = () => {
-    handleRestart();
-  };
+
 
   const isInitialSetup =
     (!session || (session.play_time_seconds === 0 && !session.board_state)) &&
@@ -491,7 +488,7 @@ export default function CaroGame({ gameId, winCondition }: CaroGameProps) {
           <div className="flex flex-wrap gap-4 mb-6 justify-center items-center relative z-20">
             <RoundButton
               onClick={handleManualSave}
-              disabled={isSaving || !!winner || session?.status !== "playing"}
+              disabled={isSaving || !!winner || (session?.status !== "playing" && session?.status !== "saved")}
               variant="primary"
               className="flex items-center gap-2 px-4"
             >
@@ -522,7 +519,7 @@ export default function CaroGame({ gameId, winCondition }: CaroGameProps) {
 
 
             {/* Switch Side */}
-            {isBoardEmpty && session?.status === "playing" && (
+            {isBoardEmpty && (session?.status === "playing" || session?.status === "saved") && (
               <div className="flex bg-muted p-1 rounded-full border border-border">
                 <button
                   onClick={() => handleSwitchSide("X")}
@@ -560,6 +557,9 @@ export default function CaroGame({ gameId, winCondition }: CaroGameProps) {
                 <VolumeX className="w-4 h-4" />
               )}
             </RoundButton>
+
+            <GameInstructions gameType="caro"/>
+
             <RoundButton
               size="small"
               variant="neutral"
@@ -595,7 +595,8 @@ export default function CaroGame({ gameId, winCondition }: CaroGameProps) {
                       !!cell ||
                       !!winner ||
                       isTimeOut ||
-                      session?.status !== "playing"
+                      isTimeOut ||
+                      (session?.status !== "playing" && session?.status !== "saved")
                     }
                     onClick={() => handleMove(index, playerPiece)}
                     className={cn(
@@ -630,55 +631,23 @@ export default function CaroGame({ gameId, winCondition }: CaroGameProps) {
               </div>
 
               <AnimatePresence>
-                {(winner || isTimeOut) && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
-                  >
-                    <motion.div
-                      initial={{ scale: 0.5, y: 50 }}
-                      animate={{ scale: 1, y: 0 }}
-                      className="bg-card p-6 md:p-8 rounded-[2rem] text-center shadow-2xl border-4 border-accent w-[90%] max-w-sm"
-                    >
-                      {isTimeOut ? (
-                        <>
-                          <AlertTriangle className="w-16 h-16 text-destructive mx-auto mb-2 animate-bounce" />
-                          <h2 className="text-2xl md:text-3xl font-black mb-4 uppercase text-card-foreground">
-                            {timeOutReason === "turn"
-                              ? "HẾT GIỜ LƯỢT!"
-                              : "HẾT GIỜ CHƠI!"}
-                          </h2>
-                        </>
-                      ) : winner === playerPiece ? (
-                        <>
-                          <Trophy className="w-16 h-16 text-accent mx-auto mb-2 animate-bounce" />
-                          <h2 className="text-2xl md:text-3xl font-black mb-4 uppercase text-card-foreground">
-                            <span className="text-primary">XUẤT SẮC!</span>
-                          </h2>
-                        </>
-                      ) : (
-                        <>
-                          <Frown className="w-16 h-16 text-destructive mx-auto mb-2" />
-                          <h2 className="text-2xl md:text-3xl font-black mb-4 uppercase text-card-foreground">
-                            <span className="text-destructive">THUA RỒI!</span>
-                          </h2>
-                        </>
-                      )}
-                      <div className="flex gap-3 justify-center">
-                        <RoundButton variant="neutral" onClick={quitGame}>
-                          Thoát
-                        </RoundButton>
-                        <RoundButton
-                          variant="accent"
-                          onClick={handleRestartClick}
-                        >
-                          <RefreshCcw className="w-4 h-4 mr-2" /> Chơi Lại
-                        </RoundButton>
-                      </div>
-                    </motion.div>
-                  </motion.div>
+                {(winner || isTimeOut || (board.every((c) => c !== null) && !winner)) && (
+                  <GameResultOverlay
+                    status={
+                      isTimeOut
+                        ? "timeout"
+                        : winner === playerPiece
+                          ? "win"
+                          : winner
+                            ? "lose"
+                            : "draw"
+                    }
+                    winner={winner === playerPiece ? "user" : "bot"}
+                    gameType="caro"
+                    onRestart={() => handleRestart()}
+                    onQuit={quitGame}
+                    reason={timeOutReason}
+                  />
                 )}
               </AnimatePresence>
 
@@ -694,7 +663,7 @@ export default function CaroGame({ gameId, winCondition }: CaroGameProps) {
                   timeOptions={timeOptions}
                   boardSizeOptions={boardSizeOptions}
                   onSave={handleSaveSettings}
-                  disabled={session?.status !== "playing"}
+                  disabled={session?.status !== "playing" && session?.status !== "saved"}
                   preventClose={isInitialSetup}
                   inline
                 />

@@ -226,7 +226,7 @@ const EditProfileView = ({
                     <Label className="flex items-center gap-2 text-muted-foreground">
                       User ID
                       <Badge variant="outline" className="text-[10px] h-4">
-                        Locked
+                        Đã khoá
                       </Badge>
                     </Label>
                     <Input
@@ -241,7 +241,7 @@ const EditProfileView = ({
                     <Label className="flex items-center gap-2 text-muted-foreground">
                       <Mail className="h-4 w-4" /> Email
                       <Badge variant="outline" className="text-[10px] h-4">
-                        Locked
+                        Đã khoá
                       </Badge>
                     </Label>
                     <div className="relative">

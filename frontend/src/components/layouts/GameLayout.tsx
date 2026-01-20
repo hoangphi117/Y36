@@ -1,6 +1,7 @@
 // src/components/layouts/GameLayout.tsx
 import { GameRating } from "@/components/ratings/GameRating";
 import { GameComments } from "@/components/comments/GameComments";
+import { AchievementPopup } from "../dialogs/AchievementPopup";
 
 interface GameLayoutProps {
   gameId: number;
@@ -18,6 +19,7 @@ export function GameLayout({ gameId, children }: GameLayoutProps) {
       {/* Phần hiển thị Game */}
       <div className="w-full">
         {children}
+        <AchievementPopup />
       </div>
 
       {/* Phần Rating và Comments */}

@@ -6,6 +6,7 @@ import { type GameSession } from "@/types/game";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { triggerWinEffects } from "@/lib/fireworks";
 import { useAchievementStore } from "@/stores/useAchievementStore";
+import { useGameSound } from "@/hooks/useGameSound";
 
 interface UseGameSessionProps {
   gameId: number;
@@ -30,10 +31,13 @@ export function useGameSession({
   const sessionRef = useRef<GameSession | null>(null);
   const startTimeRef = useRef<number>(0);
   const pauseStartTimeRef = useRef<number | null>(null);
+  const wasLoadedOrSavedRef = useRef<boolean>(false);
 
   const [currentPlayTime, setCurrentPlayTime] = useState(0);
 
   const addAchievement = useAchievementStore((s) => s.addAchievement);
+
+  const { playSound } = useGameSound();
 
   useEffect(() => {
     sessionRef.current = session;
@@ -116,6 +120,7 @@ export function useGameSession({
         const newSession = res.data.session;
 
         setSession(newSession);
+        wasLoadedOrSavedRef.current = false;
         setShowLoadDialog(false);
         pauseStartTimeRef.current = null;
       } catch (error: any) {
@@ -134,6 +139,7 @@ export function useGameSession({
       const loadedSession = res.data.session;
 
       setSession(loadedSession);
+      wasLoadedOrSavedRef.current = true;
       setShowLoadDialog(false);
       startTimeRef.current =
         Date.now() - loadedSession.play_time_seconds * 1000;
@@ -171,7 +177,8 @@ export function useGameSession({
         const updatedSession = res.data.session;
 
         if (manual) {
-          updatedSession.status = "playing";
+          // Keep status as saved or whatever backend returned
+          // updatedSession.status = "playing"; 
         }
 
         setSession(res.data.session);
@@ -207,11 +214,13 @@ export function useGameSession({
         const newAchievements = res.data.newAchievements;
         if (newAchievements && newAchievements.length > 0) {
           newAchievements.forEach((ach: any) => {
-            addAchievement(ach); // Đẩy vào store thay vì dùng toast
+            addAchievement(ach);
+            playSound("steam");
           });
           triggerWinEffects();
         }
         setSession(null);
+        wasLoadedOrSavedRef.current = false;
       } catch (error) {
         console.error("Complete error", error);
       }
@@ -228,6 +237,7 @@ export function useGameSession({
     };
 
     const handlePageHide = () => {
+      // If status is "saved", we don't need to do anything (it's already a checkpoint)
       if (sessionRef.current && sessionRef.current.status === "playing") {
         const sessionId = sessionRef.current.id;
         const url = `${
@@ -262,6 +272,7 @@ export function useGameSession({
   }, []);
 
   const quitGame = async () => {
+    // Only abandon if we are strictly "playing" (meaning NO checkpoint/save)
     if (sessionRef.current && sessionRef.current.status === "playing") {
       try {
         await axiosClient.put(`/sessions/${sessionRef.current.id}/save`, {

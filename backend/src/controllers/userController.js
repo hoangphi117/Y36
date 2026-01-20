@@ -45,6 +45,7 @@ const profile = async (req, res) => {
       email: user.email,
       avatar_url: user.avatar_url,
       dark_mode: user.dark_mode,
+      created_at: user.created_at,
     });
   } catch (error) {
     return res.status(500).json({
