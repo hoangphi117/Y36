@@ -164,7 +164,8 @@ class GameSessionController {
       }
 
       const [updatedSession] = await GameSession.updateById(id, {
-        status: "playing",
+        // Just touch updated_at, don't change status to playing
+        // status: "playing",
       });
 
       return res.status(200).json({

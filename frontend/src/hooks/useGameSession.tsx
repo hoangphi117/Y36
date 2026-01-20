@@ -31,6 +31,7 @@ export function useGameSession({
   const sessionRef = useRef<GameSession | null>(null);
   const startTimeRef = useRef<number>(0);
   const pauseStartTimeRef = useRef<number | null>(null);
+  const wasLoadedOrSavedRef = useRef<boolean>(false);
 
   const [currentPlayTime, setCurrentPlayTime] = useState(0);
 
@@ -119,6 +120,7 @@ export function useGameSession({
         const newSession = res.data.session;
 
         setSession(newSession);
+        wasLoadedOrSavedRef.current = false;
         setShowLoadDialog(false);
         pauseStartTimeRef.current = null;
       } catch (error: any) {
@@ -137,6 +139,7 @@ export function useGameSession({
       const loadedSession = res.data.session;
 
       setSession(loadedSession);
+      wasLoadedOrSavedRef.current = true;
       setShowLoadDialog(false);
       startTimeRef.current =
         Date.now() - loadedSession.play_time_seconds * 1000;
@@ -174,7 +177,8 @@ export function useGameSession({
         const updatedSession = res.data.session;
 
         if (manual) {
-          updatedSession.status = "playing";
+          // Keep status as saved or whatever backend returned
+          // updatedSession.status = "playing"; 
         }
 
         setSession(res.data.session);
@@ -216,6 +220,7 @@ export function useGameSession({
           triggerWinEffects();
         }
         setSession(null);
+        wasLoadedOrSavedRef.current = false;
       } catch (error) {
         console.error("Complete error", error);
       }
@@ -232,6 +237,7 @@ export function useGameSession({
     };
 
     const handlePageHide = () => {
+      // If status is "saved", we don't need to do anything (it's already a checkpoint)
       if (sessionRef.current && sessionRef.current.status === "playing") {
         const sessionId = sessionRef.current.id;
         const url = `${
@@ -266,6 +272,7 @@ export function useGameSession({
   }, []);
 
   const quitGame = async () => {
+    // Only abandon if we are strictly "playing" (meaning NO checkpoint/save)
     if (sessionRef.current && sessionRef.current.status === "playing") {
       try {
         await axiosClient.put(`/sessions/${sessionRef.current.id}/save`, {

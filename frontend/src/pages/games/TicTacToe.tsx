@@ -1,21 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Trophy,
-  Minus,
+  Loader2,
   Volume2,
   VolumeX,
-  Loader2,
-  LogOut,
   Download,
   Upload,
   Clock,
   Bot,
   User,
-  RefreshCcw,
-  AlertTriangle,
-  HelpCircle,
-  X,
   Settings,
 } from "lucide-react";
 import { RoundButton } from "@/components/ui/round-button";
@@ -24,6 +17,8 @@ import { useGameSound } from "@/hooks/useGameSound";
 import { GameHeader } from "@/components/games/GameHeader";
 import useDocumentTitle from "@/hooks/useDocumentTitle";
 import { useGameSession } from "@/hooks/useGameSession";
+import { GameInstructions } from "@/components/games/GameInstructions";
+import { GameResultOverlay } from "@/components/games/GameResultOverlay";
 import { LoadGameDialog } from "./LoadGameDialog";
 
 import { getEasyMove, getMediumMove, getHardMove } from "@/lib/AI/tictactoeAI";
@@ -70,9 +65,7 @@ export default function TicTacToe() {
 
   const [isManualPaused, setIsManualPaused] = useState(false);
 
-  const [showInstructions, setShowInstructions] = useState(false);
-
-  const isGamePaused = isManualPaused || showInstructions || isSettingsOpen;
+  const isGamePaused = isManualPaused || isSettingsOpen;
 
   const ignoreConfigSyncRef = useRef(false);
   const squaresRef = useRef(squares);
@@ -107,7 +100,7 @@ export default function TicTacToe() {
   } = useGameSession({
     gameId: GAME_ID,
     getBoardState,
-    isPaused: showInstructions || isManualPaused || isSettingsOpen,
+    isPaused: isManualPaused || isSettingsOpen,
     autoCreate: false,
   });
 
@@ -149,7 +142,7 @@ export default function TicTacToe() {
   useEffect(() => {
     if (
       timeLimit > 0 &&
-      session?.status === "playing" &&
+      (session?.status === "playing" || session?.status === "saved") &&
       currentPlayTime >= timeLimit &&
       !winner &&
       !isDraw &&
@@ -164,7 +157,7 @@ export default function TicTacToe() {
   useEffect(() => {
     if (
       !session ||
-      session.status !== "playing" ||
+      session.status !== "playing" && session.status !== "saved" ||
       winner ||
       isDraw ||
       isTimeOut ||
@@ -203,17 +196,16 @@ export default function TicTacToe() {
     isDraw,
     isTimeOut,
     difficulty,
-    showInstructions,
   ]);
 
   useEffect(() => {
-    if (session?.status === "playing" && !isTimeOut && !showInstructions) {
+    if ((session?.status === "playing" || session?.status === "saved") && !isTimeOut) {
       if (winner) {
         if (winner === userSymbol) {
           playSound("win");
           completeGame(1);
         } else {
-          playSound("win");
+          playSound("lose");
           completeGame(-1);
         }
       } else if (isDraw) {
@@ -227,7 +219,6 @@ export default function TicTacToe() {
     session?.status,
     userSymbol,
     isTimeOut,
-    showInstructions,
   ]);
 
   const handleMove = (i: number) => {
@@ -236,8 +227,8 @@ export default function TicTacToe() {
       winner ||
       isDraw ||
       isTimeOut ||
-      session?.status !== "playing" ||
-      showInstructions
+      isTimeOut ||
+      (session?.status !== "playing" && session?.status !== "saved")
     )
       return;
 
@@ -246,12 +237,11 @@ export default function TicTacToe() {
 
     setSquares(nextSquares);
     setXIsNext(!xIsNext);
-    playSound("move");
+    playSound("pop");
   };
 
   const handleUserClick = (i: number) => {
     if (isGamePaused || winner || isDraw || isTimeOut) return;
-    if (showInstructions) return;
 
     const isBotTurn =
       (xIsNext && userSymbol === "O") || (!xIsNext && userSymbol === "X");
@@ -278,7 +268,6 @@ export default function TicTacToe() {
     setXIsNext(true);
     setUserSymbol("X");
     setIsTimeOut(false);
-    setShowInstructions(false);
     resetTimer();
     setIsSettingsOpen(true);
   };
@@ -319,7 +308,7 @@ export default function TicTacToe() {
 
   const movesCount = squares.filter((s) => s !== null).length;
   const canSwitchSide =
-    session?.status === "playing" &&
+    (session?.status === "playing" || session?.status === "saved") &&
     !winner &&
     !isDraw &&
     !isTimeOut &&
@@ -353,8 +342,8 @@ export default function TicTacToe() {
               !!winner ||
               !!isDraw ||
               isTimeOut ||
-              session?.status !== "playing" ||
-              showInstructions
+              isTimeOut ||
+              (session?.status !== "playing" && session?.status !== "saved")
             }
             variant="primary"
             className="flex items-center gap-2 px-6"
@@ -378,7 +367,6 @@ export default function TicTacToe() {
               variant="neutral"
               className="flex items-center gap-2 px-4"
               onClick={handleOpenSavedGames}
-              disabled={showInstructions}
             >
               <Download className="w-4 h-4" /> Tải
             </RoundButton>
@@ -416,14 +404,18 @@ export default function TicTacToe() {
           </div>
 
           {/* Nút Hướng Dẫn */}
+          <GameInstructions gameType="tictactoe" />
+          
           <RoundButton
             size="small"
             variant="neutral"
-            onClick={() => setShowInstructions(true)}
-            title="Hướng dẫn"
-            disabled={!!winner || !!isDraw || isTimeOut}
+            onClick={() => setSoundEnabled(!soundEnabled)}
           >
-            <HelpCircle className="w-5 h-5" />
+            {soundEnabled ? (
+              <Volume2 className="w-5 h-5" />
+            ) : (
+              <VolumeX className="w-5 h-5" />
+            )}
           </RoundButton>
 
           {/* Nút Cài Đặt */}
@@ -437,7 +429,7 @@ export default function TicTacToe() {
             <Settings className="w-5 h-5" />
           </RoundButton>
 
-          {canSwitchSide && !showInstructions && (
+          {canSwitchSide && (
             <div className="flex items-center bg-muted rounded-full p-1 border border-border">
               <button
                 onClick={() => handleSwitchSide("X")}
@@ -465,7 +457,7 @@ export default function TicTacToe() {
           )}
         </div>
 
-        {!winner && !isDraw && !isTimeOut && !showInstructions && (
+        {!winner && !isDraw && !isTimeOut && (
           <div className="mb-2 text-sm text-muted-foreground animate-pulse">
             {(xIsNext && userSymbol === "X") || (!xIsNext && userSymbol === "O")
               ? "Lượt của bạn..."
@@ -487,8 +479,8 @@ export default function TicTacToe() {
                   !!winner ||
                   !!isDraw ||
                   isTimeOut ||
-                  session?.status !== "playing" ||
-                  showInstructions
+                  isTimeOut ||
+                  (session?.status !== "playing" && session?.status !== "saved")
                 }
                 className={cn(
                   "w-20 h-20 md:w-24 md:h-24 bg-surface rounded-xl text-5xl font-extrabold flex items-center justify-center shadow-sm border border-border/20 transition-colors",
@@ -498,7 +490,6 @@ export default function TicTacToe() {
                   !square &&
                     !winner &&
                     !isTimeOut &&
-                    !showInstructions &&
                     "hover:bg-accent/10 cursor-pointer",
                 )}
               >
@@ -518,115 +509,24 @@ export default function TicTacToe() {
             ))}
           </div>
 
-          {/* Modal Hướng Dẫn */}
-          <AnimatePresence>
-            {showInstructions && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm rounded-2xl p-4"
-              >
-                <motion.div
-                  initial={{ scale: 0.8, y: 10 }}
-                  animate={{ scale: 1, y: 0 }}
-                  exit={{ scale: 0.8, opacity: 0 }}
-                  className="bg-card border-2 border-primary/20 p-6 rounded-2xl shadow-2xl w-full max-w-[320px] relative"
-                >
-                  <button
-                    onClick={() => setShowInstructions(false)}
-                    className="absolute top-2 right-2 p-1 rounded-full hover:bg-muted transition-colors"
-                  >
-                    <X className="w-5 h-5 text-muted-foreground" />
-                  </button>
-
-                  <div className="text-center mb-4">
-                    <h3 className="text-xl font-bold text-primary flex items-center justify-center gap-2">
-                      <HelpCircle className="w-6 h-6" /> Hướng dẫn
-                    </h3>
-                  </div>
-
-                  <div className="space-y-3 text-sm text-left text-foreground/90">
-                    <p>
-                      <span className="font-bold text-primary">Mục tiêu:</span>{" "}
-                      Tạo ra một hàng gồm 3 ký hiệu của bạn (Ngang, Dọc, hoặc
-                      Chéo).
-                    </p>
-                    <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
-                      <li>Bạn và Máy sẽ lần lượt đánh vào các ô trống.</li>
-                      <li>Người đi trước thường là X.</li>
-                      <li>
-                        Trò chơi kết thúc khi có người thắng hoặc bàn cờ đầy
-                        (Hòa).
-                      </li>
-                    </ul>
-                    <div className="p-2 bg-muted/50 rounded-lg text-xs italic text-center mt-2 border border-border">
-                      Game đang tạm dừng...
-                    </div>
-                  </div>
-
-                  <div className="mt-6 flex justify-center">
-                    <RoundButton
-                      onClick={() => setShowInstructions(false)}
-                      variant="primary"
-                      className="w-full"
-                    >
-                      Đã hiểu & Tiếp tục
-                    </RoundButton>
-                  </div>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
           {/* End Game Overlay */}
           <AnimatePresence>
-            {(winner || isDraw || isTimeOut) && !showInstructions && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="absolute inset-0 z-10 flex items-center justify-center bg-background/60 backdrop-blur-sm rounded-2xl"
-              >
-                <motion.div
-                  initial={{ scale: 0.8, y: 20 }}
-                  animate={{ scale: 1, y: 0 }}
-                  className="bg-card border-2 border-primary/20 p-6 rounded-2xl shadow-2xl text-center space-y-4 w-[90%]"
-                >
-                  {isTimeOut ? (
-                    <>
-                      <AlertTriangle className="w-16 h-16 text-destructive mx-auto animate-bounce" />
-                      <h2 className="text-2xl font-bold">Hết giờ!</h2>
-                      <p className="text-sm text-muted-foreground">-1 Điểm</p>
-                    </>
-                  ) : winner ? (
-                    <>
-                      <Trophy className="w-16 h-16 text-yellow-500 mx-auto animate-bounce" />
-                      <h2 className="text-2xl font-bold">
-                        {winner === userSymbol ? "Bạn Thắng!" : "Bạn Thua!"}
-                      </h2>
-                      <p className="text-sm text-muted-foreground">
-                        {winner === userSymbol ? "+1 Điểm" : "-1 Điểm"}
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <Minus className="w-16 h-16 text-muted-foreground mx-auto" />
-                      <h2 className="text-2xl font-bold">Hòa!</h2>
-                      <p className="text-sm text-muted-foreground">+0 Điểm</p>
-                    </>
-                  )}
-
-                  <div className="flex gap-2 justify-center pt-2">
-                    <RoundButton variant="neutral" onClick={quitGame}>
-                      Thoát
-                    </RoundButton>
-                    <RoundButton variant="primary" onClick={handleRestart}>
-                      <RefreshCcw className="w-4 h-4 mr-1" /> Chơi lại
-                    </RoundButton>
-                  </div>
-                </motion.div>
-              </motion.div>
+            {(winner || isDraw || isTimeOut) && (
+              <GameResultOverlay
+                status={
+                  isTimeOut
+                    ? "timeout"
+                    : winner === userSymbol
+                      ? "win"
+                      : winner
+                        ? "lose"
+                        : "draw"
+                }
+                winner={winner === userSymbol ? "user" : "bot"}
+                gameType="tictactoe"
+                onRestart={handleRestart}
+                onQuit={quitGame}
+              />
             )}
           </AnimatePresence>
 
@@ -639,33 +539,11 @@ export default function TicTacToe() {
               currentTimeLimit={timeLimit}
               onSave={handleSaveSettings}
               timeOptions={timeOptions}
-              disabled={session?.status !== "playing" || showInstructions}
+              disabled={session?.status !== "playing" && session?.status !== "saved"}
               preventClose={isInitialSetup}
               inline
             />
           )}
-        </div>
-
-        <div className="flex gap-4 mt-8 z-20">
-          <RoundButton
-            size="small"
-            variant="neutral"
-            onClick={() => setSoundEnabled(!soundEnabled)}
-          >
-            {soundEnabled ? (
-              <Volume2 className="w-5 h-5" />
-            ) : (
-              <VolumeX className="w-5 h-5" />
-            )}
-          </RoundButton>
-          <RoundButton
-            size="small"
-            variant="neutral"
-            onClick={quitGame}
-            title="Thoát Game"
-          >
-            <LogOut className="w-5 h-5" />
-          </RoundButton>
         </div>
       </div>
     </GameLayout>

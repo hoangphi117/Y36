@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { GameInstructions } from "@/components/games/GameInstructions";
+import { GameResultOverlay } from "@/components/games/GameResultOverlay";
 import { AnimatePresence } from "framer-motion";
 import { RoundButton } from "@/components/ui/round-button";
 import {
-  Frown,
   ChevronUp,
   ChevronDown,
   ChevronLeft,
@@ -207,13 +208,13 @@ export default function SnakeGame() {
   const handleGameOver = useCallback(() => {
     setIsGameOver(true);
     playSound("lose");
-    if (session?.status === "playing") {
+    if (session?.status === "playing" || session?.status === "saved") {
       completeGame(scoreRef.current);
     }
   }, [session?.status, completeGame, playSound]);
 
   const moveSnake = useCallback(() => {
-    if (isGameOver || isPaused || !session || session.status !== "playing")
+    if (isGameOver || isPaused || !session || (session.status !== "playing" && session.status !== "saved"))
       return;
 
     setSnake((prevSnake) => {
@@ -266,7 +267,7 @@ export default function SnakeGame() {
 
   useEffect(() => {
     if (
-      session?.status === "playing" &&
+      (session?.status === "playing" || session?.status === "saved") &&
       !isGameOver &&
       !isPaused &&
       !isSettingsOpen
@@ -343,15 +344,19 @@ export default function SnakeGame() {
       if (isPaused || isGameOver) return;
       switch (e.key) {
         case "ArrowUp":
+          e.preventDefault();
           if (direction.y === 0) setDirection({ x: 0, y: -1 });
           break;
         case "ArrowDown":
+          e.preventDefault();
           if (direction.y === 0) setDirection({ x: 0, y: 1 });
           break;
         case "ArrowLeft":
+          e.preventDefault();
           if (direction.x === 0) setDirection({ x: -1, y: 0 });
           break;
         case "ArrowRight":
+          e.preventDefault();
           if (direction.x === 0) setDirection({ x: 1, y: 0 });
           break;
       }
@@ -390,7 +395,7 @@ export default function SnakeGame() {
         <div className="flex flex-wrap gap-4 mb-6 justify-center items-center">
           <RoundButton
             onClick={handleManualSave}
-            disabled={isSaving || isGameOver || session?.status !== "playing"}
+            disabled={isSaving || isGameOver || (session?.status !== "playing" && session?.status !== "saved")}
             variant="primary"
             className="flex items-center gap-2 px-4"
           >
@@ -418,6 +423,8 @@ export default function SnakeGame() {
               <Download className="w-4 h-4" /> Tải
             </RoundButton>
           </LoadGameDialog>
+
+          <GameInstructions gameType="snake" />
 
           {/* Settings Button */}
           <RoundButton
@@ -501,15 +508,13 @@ export default function SnakeGame() {
                 </div>
               )}
               {isGameOver && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm rounded-[1rem]">
-                  <Frown className="w-16 h-16 text-destructive mb-4" />
-                  <h2 className="text-white text-2xl font-bold mb-4">
-                    THUA RỒI!
-                  </h2>
-                  <RoundButton variant="primary" onClick={handleRestart}>
-                    Chơi lại
-                  </RoundButton>
-                </div>
+                <GameResultOverlay
+                  status="lose"
+                  gameType="snake"
+                  score={score}
+                  onRestart={handleRestart}
+                  onQuit={quitGame}
+                />
               )}
             </AnimatePresence>
 
@@ -525,7 +530,7 @@ export default function SnakeGame() {
                 speedOptions={speedOptions}
                 incrementOptions={incrementOptions}
                 onSave={handleSaveSettings}
-                disabled={session?.status !== "playing"}
+                disabled={session?.status !== "playing" && session?.status !== "saved"}
                 preventClose={isInitialSetup}
                 inline
               />
