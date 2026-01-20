@@ -17,7 +17,7 @@ import icon16 from "@/assets/memoryIcons/icon16.png";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { GameHeader } from "@/components/games/GameHeader";
-import { Infinity as InfynityIcon, Play, Settings2, Pause } from "lucide-react";
+import { Infinity as InfynityIcon, Play, Settings2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BackToSelectionButton, RefreshGameButton } from "@/components/games/memory/SettingButtons";
 import StatCard from "@/components/games/memory/StatCard";
@@ -25,8 +25,6 @@ import { GameStatusOverlay } from "@/components/games/memory/GameBoardOverlay";
 import { useNavigate } from "react-router-dom";
 import { RoundButton } from "@/components/ui/round-button";
 import SettingDialog from "@/components/games/memory/SettingDialog";
-import { convertCardsToBoardState, createSessionSave } from "@/utils/memorySessionHelper";
-import type { MemorySessionSave } from "@/types/memoryGame";
 import { PauseMenu } from "@/components/games/memory/PauseMenu";
 import { GameLayout } from "@/components/layouts/GameLayout";
 
@@ -83,27 +81,6 @@ export default function MemoryFreeGame() {
     setFreeTimeLeft(freeTime);
     setIsStarted(true);
   };
-
-  // Get current game session state
-  // const getCurrentSessionState = (): MemorySessionSave => {
-  //   const board = convertCardsToBoardState(cards, flipped, matched);
-  //   return createSessionSave(
-  //     board,
-  //     freeTimeLeft,
-  //     0,
-  //     0,
-  //     totalScore,
-  //   );
-  // };
-
-  // Save game (can be called to send to API)
-  // const saveGameSession = () => {
-  //   const sessionData = getCurrentSessionState();
-  //   console.log("Game session to save:", sessionData);
-  //   // TODO: Send to API with PUT request
-  //   // await api.put('/memory/save', sessionData);
-  //   return sessionData;
-  // };
 
   // Handle card flip
   const handleFreeCardFlip = (cardId: number) => {
@@ -186,12 +163,6 @@ export default function MemoryFreeGame() {
     // Navigate back to selection
     navigate("/memory");
   };
-
-  // Handle restart from pause menu
-  // const handleRestartFromPause = () => {
-  //   setIsPaused(false);
-  //   restartFreeGame();
-  // };
 
   // Calculate responsive columns
   const getResponsiveColumns = (totalCards: number): number => {
@@ -278,16 +249,6 @@ export default function MemoryFreeGame() {
           <div className="flex flex-row gap-2 sm:gap-3 items-center justify-start mb-3">
             <BackToSelectionButton backToSelection={backToSelection} />
             { isStarted &&  freeGameStatus === "playing" && <RefreshGameButton restartGame={initializeFreeGame} />}
-            {/* {isStarted && freeGameStatus === "playing" && (
-              <RoundButton 
-                size="small"
-                className="rounded-md"
-                onClick={() => setIsPaused(true)}
-              >
-                <Pause className="w-5 h-5" />
-                <span className="hidden min-[375px]:inline ml-1">Tạm dừng</span>
-              </RoundButton>
-            )} */}
             <RoundButton 
                 size="small"
                 className="rounded-md"
@@ -303,7 +264,7 @@ export default function MemoryFreeGame() {
 
           {/* Game board */}
           <motion.div
-            className="bg-card rounded-2xl p-2 sm:p-6 shadow-lg border-2 border-primary/10 mb-4 sm:mb-8 flex justify-center overflow-x-auto relative min-h-[500px]"
+            className="bg-card rounded-2xl p-2 sm:p-6 shadow-lg border-2 border-primary/10 mb-4 sm:mb-8 flex justify-center overflow-x-auto relative"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
           >
@@ -361,30 +322,29 @@ export default function MemoryFreeGame() {
                 />
               </motion.div>
             )}
-
-            {/* Configuration Dialog (inline mode) */}
-            {isConfigDialogOpen && (
-              <SettingDialog 
-                setFreePairs={setFreePairs}
-                setFreeTime={setFreeTime}
-                setFreeTimeLeft={setFreeTimeLeft}
-                setFreeCards={setFreeCards}
-                setFreeFlipped={setFreeFlipped}
-                setFreeMatched={setFreeMatched}
-                setFreeGameStatus={setFreeGameStatus}
-                setIsConfigDialogOpen={setIsConfigDialogOpen}
-                setIsStarted={setIsStarted}
-                generateCards={generateCards}
-                freePairs={freePairs}
-                freeTime={freeTime}
-                open={isConfigDialogOpen}
-                inline
-              />
-            )}
           </motion.div>
 
         </motion.div>
       </div>
+
+      {/* Configuration Dialog */}
+      {isConfigDialogOpen && (
+        <SettingDialog 
+          setFreePairs={setFreePairs}
+          setFreeTime={setFreeTime}
+          setFreeTimeLeft={setFreeTimeLeft}
+          setFreeCards={setFreeCards}
+          setFreeFlipped={setFreeFlipped}
+          setFreeMatched={setFreeMatched}
+          setFreeGameStatus={setFreeGameStatus}
+          setIsConfigDialogOpen={setIsConfigDialogOpen}
+          setIsStarted={setIsStarted}
+          generateCards={generateCards}
+          freePairs={freePairs}
+          freeTime={freeTime}
+          open={isConfigDialogOpen}
+        />
+      )}
 
       {/* Pause Menu */}
       {isPaused && (

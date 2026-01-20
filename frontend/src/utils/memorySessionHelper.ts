@@ -6,14 +6,6 @@ const ICONS = [
   "icon13", "icon14", "icon15", "icon16"
 ];
 
-/**
- * Convert game cards to board state for saving
- * @param cards - Array of cards with id and iconIndex
- * @param flipped - Array of flipped card indices
- * @param matched - Array of matched card indices
- * @returns Array of BoardCard objects
- */
-
 interface Card {
   id: number;
   iconIndex: number;
@@ -37,16 +29,11 @@ export const convertCardsToBoardState = (
   }));
 };
 
-/**
- * Restore cards from board state when loading saved session
- * @param boardCards - Array of BoardCard from saved session
- * @returns Object containing cards, flipped, and matched arrays
- */
 export const restoreBoardState = (
   boardCards: BoardCard[]
 ): { cards: Card[], flipped: number[], matched: number[] } => {
   const cards: Card[] = boardCards.map((boardCard) => {
-    // Parse iconIndex từ value (icon1 -> 0, icon2 -> 1, ...)
+    // Parse iconIndex 
     const iconIndex = ICONS.indexOf(boardCard.value);
     
     return {
@@ -68,17 +55,7 @@ export const restoreBoardState = (
   return { cards, flipped, matched };
 };
 
-/**
- * Create a session save object from game state
- * @param board - Current board state
- * @param gameStatus - Current game status
- * @param timeLeft - Remaining time
- * @param currentLevel - Current level
- * @param moves - Number of moves
- * @param totalScore - Total score
- * @param mode - Game mode
- * @returns MemorySessionSave object ready to send to API
- */
+
 export const createSessionSave = (
   board: BoardCard[],
   timeLeft: number,

@@ -14,10 +14,10 @@ import icon13 from "@/assets/memoryIcons/icon13.png";
 import icon14 from "@/assets/memoryIcons/icon14.png";
 import icon15 from "@/assets/memoryIcons/icon15.png";
 import icon16 from "@/assets/memoryIcons/icon16.png";
-import React, { useEffect, useState, useCallback, memo } from "react";
+import { useEffect, useState, memo, useRef } from "react";
 import { motion } from "framer-motion";
 import { GameHeader } from "@/components/games/GameHeader";
-import { AlarmClock, History, Play, Pause, Download, RotateCcw } from "lucide-react";
+import { AlarmClock, Pause, Download, RotateCcw, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BackToSelectionButton } from "@/components/games/memory/SettingButtons";
 import StatCard from "@/components/games/memory/StatCard";
@@ -27,13 +27,13 @@ import calcLevelScore from "@/utils/clacScoreMemoryGame";
 import { RoundButton } from "@/components/ui/round-button";
 import { convertCardsToBoardState, createSessionSave, restoreBoardState } from "@/utils/memorySessionHelper";
 import type { MemorySessionSave } from "@/types/memoryGame";
-import memoryApi from "@/services/memoryApi";
 import { PauseMenu } from "@/components/games/memory/PauseMenu";
-import SessionHistoryDialog from "@/components/games/memory/SessionHistoryDialog";
 import { useGameSession } from "@/hooks/useGameSession";
 import { LoadGameDialog } from "@/components/dialogs/LoadGameDialog";
-import { useAuthStore } from "@/stores/useAuthStore";
+import { toast } from "react-hot-toast";
+import axiosClient from "@/lib/axios";
 import { GameLayout } from "@/components/layouts/GameLayout";
+import { triggerWinEffects } from "@/lib/fireworks";
 
 const ICONS = [icon1, icon2, icon3, icon4, icon5, icon6, icon7, icon8, icon9, icon10, icon11, icon12, icon13, icon14, icon15, icon16];
 
@@ -84,12 +84,14 @@ export default function MemoryLevelGame() {
   const [moves, setMoves] = useState(0);
   const [isStarted, setIsStarted] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [levelConfigs, setLevelConfigs] = useState<MemoryLevelConfig[]>([]);
   const [isRestoringSession, setIsRestoringSession] = useState(false);
 
   //session id for saving
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  
+  // Ref to store timeout ID for clearing
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Generate shuffled cards
   const generateCards = (pairs: number): Card[] => {
@@ -132,6 +134,7 @@ export default function MemoryLevelGame() {
   } = useGameSession({
     gameId: 6, // memory game id
     getBoardState: () => getCurrentSessionState(),
+    autoCreate: false,
   });
 
   // start new game session
@@ -196,7 +199,7 @@ export default function MemoryLevelGame() {
         setMoves(0);
         setTotalScore(0);
         setCurrentLevel(0);
-        setIsStarted(true); // Bắt đầu game ngay lập tức
+        setIsStarted(true); 
       }
 
     }catch (error) {
@@ -210,15 +213,17 @@ export default function MemoryLevelGame() {
       return;
     }
 
-    // Nếu đang có 2 thẻ mở và không khớp, đóng chúng ngay lập tức khi click thẻ mới
+    // Clear any pending timeout to prevent unwanted state changes
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+
+    // if have 2 cards flipped, close them and open new card
     if (flipped.length === 2) {
-      const [first, second] = flipped;
-      // Kiểm tra xem 2 thẻ có khớp không
-      if (cards[first].iconIndex !== cards[second].iconIndex) {
-        // Không khớp, đóng ngay và mở thẻ mới
-        setFlipped([cardId]);
-        return;
-      }
+      // Always open the new card when 2 cards are already flipped
+      setFlipped([cardId]);
+      return;
     }
 
     const newFlipped = [...flipped, cardId];
@@ -231,7 +236,10 @@ export default function MemoryLevelGame() {
         setMatched([...matched, first, second]);
         setFlipped([]);
       } else {
-        setTimeout(() => setFlipped([]), 400);
+        closeTimeoutRef.current = setTimeout(() => {
+          setFlipped([]);
+          closeTimeoutRef.current = null;
+        }, 400);
       }
     }
   };
@@ -270,18 +278,22 @@ export default function MemoryLevelGame() {
 
       setTotalScore(prev => prev + levelScore);
       setGameStatus("completed");
+      
+      // Hiệu ứng pháo hoa khi hoàn thành level
+      setTimeout(() => {
+        triggerWinEffects();
+      }, 300);
     }
   }, [matched, currentLevel, gameStatus, timeLeft, levelConfigs]);
 
   // Auto complete game when lost or completed
   useEffect(() => {
     if (gameStatus === "lost" || (gameStatus === "completed" && currentLevel === levelConfigs.length - 1)) {
-      // Gọi complete game với điểm hiện tại
       completeGameSession(totalScore);
     }
   }, [gameStatus, currentLevel, totalScore, levelConfigs.length]);
 
-  // Initialize game when level changes (chỉ khi chuyển level, không phải khi load session)
+  // Initialize game when level changes 
   useEffect(() => {
     if (levelConfigs.length === 0 || !isStarted || isRestoringSession) return;
     const levelConfig = levelConfigs[currentLevel];
@@ -304,14 +316,6 @@ export default function MemoryLevelGame() {
   // Reset to mode selection
   const backToSelection = () => {
     navigate("/memory");
-  };
-
-  // restart level 1
-  const restartGame = () => {
-    setIsStarted(false);
-    setTotalScore(0);
-    setCurrentLevel(0);
-    setIsPaused(false);
   };
 
   // Restart current level
@@ -341,12 +345,6 @@ export default function MemoryLevelGame() {
     }
   };
 
-  // Handle restart from pause menu
-  const handleRestartFromPause = () => {
-    setIsPaused(false);
-    restartGame();
-  };
-
   // load saved game
   const handleLoadGame = async (sessionId: string) => {
     await loadGameSession(sessionId);
@@ -354,8 +352,9 @@ export default function MemoryLevelGame() {
 
   // delete saved game
   const handleDeleteGame = async (sessionId: string) => {
-    await memoryApi.deleteSession(sessionId);
+    await axiosClient.delete(`/sessions/${sessionId}`);
     await fetchSavedSessions();
+    toast.success("Đã xóa ván chơi!");
   }
 
   // play again
@@ -398,12 +397,12 @@ export default function MemoryLevelGame() {
         whileHover={!isDisabled ? { scale: 1.05 } : undefined}
         whileTap={!isDisabled ? { scale: 0.95 } : undefined}
         className={cn(
-          "relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-lg transition-all",
+          "relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-lg",
           "flex items-center justify-center font-bold text-sm sm:text-xl md:text-2xl",
           "border-2 border-primary/30",
           isDisabled ? "cursor-not-allowed" : "cursor-pointer",
           isMatched 
-            ? "opacity-40 bg-muted" 
+            ? "bg-muted" 
             : isFlipped
             ? "bg-primary text-white shadow-lg"
             : "bg-gradient-to-br from-accent via-accent/80 to-accent/60 text-primary hover:shadow-xl"
@@ -427,14 +426,14 @@ export default function MemoryLevelGame() {
     );
   });
 
-  if (levelConfigs.length === 0) {
+  if (levelConfigs.length === 0 || isSessionLoading) {
     return (
-      <>
-        <GameHeader />
-        <div className="min-h-screen flex items-center justify-center">
-          <p>Đang tải...</p>
-        </div>
-      </>
+      <div className="flex h-[80vh] flex-col items-center justify-center gap-4">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="animate-pulse font-medium text-muted-foreground">
+          Đang tải dữ liệu...
+        </p>
+      </div>
     );
   }
 
@@ -515,7 +514,7 @@ export default function MemoryLevelGame() {
             >
               <Download className="w-3.5 h-3.5 mr-1.5" /> 
             </RoundButton>
-            </LoadGameDialog>
+            </LoadGameDialog> 
           </div>
 
           {/* Game board */}
@@ -560,6 +559,12 @@ export default function MemoryLevelGame() {
               </motion.div>
             )}
           </motion.div>
+
+          <div className="mt-8 px-4 max-w-2xl text-center">
+            <p className="text-muted-foreground text-sm font-medium animate-pulse">
+              Tìm và ghép các cặp biểu tượng giống nhau để ghi điểm cao nhất!
+            </p>
+          </div>
         </motion.div>
       </div>
 
@@ -569,15 +574,6 @@ export default function MemoryLevelGame() {
           onContinue={() => setIsPaused(false)}
           onSaveAndExit={handleSaveAndExit}
           onRestart={handlePlayAgain}
-        />
-      )}
-
-      {isHistoryOpen && (
-        <SessionHistoryDialog 
-          isOpen={isHistoryOpen}
-          onClose={() => setIsHistoryOpen(false)}
-          sessions={[]} 
-          onLoadSession={() => {}}
         />
       )}
     </GameLayout>

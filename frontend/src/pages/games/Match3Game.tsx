@@ -9,6 +9,7 @@ import {
   Settings,
   RotateCcw,
   Download,
+  Loader2,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -27,7 +28,6 @@ import iceBorder from "@/assets/candyIcons/iceBorder.png"
 import calcTargetScore from "@/utils/calcScoreMatch3Game";
 import { GameOverOverlay } from "@/components/games/match3/GameBoardOverlay";
 import { SettingsDialog } from "@/components/games/match3/SettingsDialog";
-import match3Api from "@/services/match3Api";
 import { PauseMenu } from "@/components/games/memory/PauseMenu";
 import { convertBoard, restoreBoard } from "@/utils/match3SessionHelper";
 import { useNavigate } from "react-router-dom";
@@ -35,7 +35,10 @@ import { LoadGameDialog } from "@/components/dialogs/LoadGameDialog";
 import { useGameSession } from "@/hooks/useGameSession";
 import type { board_state } from "@/types/match3Game";
 import { toast } from "sonner";
+import axiosClient from "@/lib/axios";
 import { GameLayout } from "@/components/layouts/GameLayout";
+import { triggerWinEffects } from "@/lib/fireworks";
+import { useGameSound } from "@/hooks/useGameSound";
 
 
 const BOARD_SIZE = 6;
@@ -61,7 +64,7 @@ export default function Match3Game() {
   const navigate = useNavigate();
   
   // Game states
-  const [gameMode, setGameMode] = useState<"time" | "rounds" | "endless">("time");
+  const [gameMode, setGameMode] = useState<"time" | "rounds" | "endless">("rounds");
   const [timeLimit, setTimeLimit] = useState(30); 
   const [targetMatches, setTargetMatches] = useState(10); 
   const [matchesCount, setMatchesCount] = useState(0);
@@ -70,16 +73,19 @@ export default function Match3Game() {
   const [showGameOver, setShowGameOver] = useState(false);
   const [targetScore, setTargetScore] = useState(500);
   
+  // game sounds
+  const { playSound } = useGameSound(true);
+  
   // Session state
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [hasStarted, setHasStarted] = useState(false);
   
   // Dialog states
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
 
   const activeCandies = useMemo(() => CANDY_TYPES.slice(0, numCandyTypes), [numCandyTypes]);
 
-  // getBoardState để truyền cho useGameSession
   const getBoardState = useCallback(() => {
     const matrix = convertBoard(board, boardSize);
     const boardState: board_state = {
@@ -94,10 +100,18 @@ export default function Match3Game() {
     };
   }, [board, boardSize, score, gameMode, targetMatches, matchesCount, timeRemaining]);
 
-  // Tích hợp useGameSession (chỉ dùng để load saved sessions, không auto-start)
-  const gameSession = useGameSession({ gameId: 5, getBoardState });
+  const gameSession = useGameSession({ gameId: 5, getBoardState, autoCreate: false });
 
-  // Hàm tạo random board (đảm bảo không có matches ban đầu)
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    // Set isInitializing to false after a short delay to show loading
+    const timer = setTimeout(() => {
+      setIsInitializing(false);
+    }, 200);
+    return () => clearTimeout(timer);
+  }, []);
+
   const createRandomBoard = useCallback((size: number, candyTypes: number): string[] => {
     const randomBoard: string[] = [];
     const activeCandies = CANDY_TYPES.slice(0, candyTypes);
@@ -124,12 +138,33 @@ export default function Match3Game() {
     
     return randomBoard;
   }, []);
-
   useEffect(() => {
-    gameSession.startGame();
+    const getDefaultConfig = async () => {
+      try {
+        const response = await axiosClient.get(`/games/5`);
+        const defaultConfig = response.data.data.default_config;
+        setBoardSize(defaultConfig.cols);
+        setNumCandyTypes(defaultConfig.candy_types);
+        setTimeLimit(defaultConfig.time_limit);
+        setTargetScore(defaultConfig.target_score);
+        if(defaultConfig.time_limit && defaultConfig.time_limit > 0) {
+          setGameMode("time");
+          setTimeRemaining(defaultConfig.time_limit);
+        } else if(defaultConfig.moves_limit && defaultConfig.moves_limit > 0) {
+          setGameMode("rounds");
+          setTargetMatches(defaultConfig.moves_limit);
+          setTimeRemaining(0);
+        }
+
+      } catch (error) {
+        console.error("Error fetching default config:", error);
+      }
+    };
+    getDefaultConfig();
   }, []);
 
-  // Xử lý khi session được tạo/load từ useGameSession
+
+  // Handle when session is created/loaded from useGameSession
   useEffect(() => {
     try {
       if (!gameSession.session) return;
@@ -137,7 +172,7 @@ export default function Match3Game() {
       const newSession = gameSession.session;
       setCurrentSessionId(newSession.id);
       
-      // Lấy config từ session - có thể ở default_config hoặc trực tiếp
+      // Get config from session - may be in default_config or directly
       const rawConfig = newSession.session_config;
       const config = rawConfig.default_config || rawConfig;
       
@@ -150,12 +185,12 @@ export default function Match3Game() {
       setTimeLimit(config.time_limit);
       setTargetScore(config.target_score);
 
-      // Kiểm tra board_state có dữ liệu không
+      // Check if board_state has data
       const sessionData = newSession.board_state as { score?: number; board_state?: board_state } | null;
       const hasBoardState = sessionData && sessionData.board_state && sessionData.board_state.matrix;
 
       if (hasBoardState) {
-        // Restore board từ saved board_state
+        // Restore board from saved board_state
         const boardState = sessionData.board_state!;
         const restoredBoard = restoreBoard(boardState.matrix);
         setBoard(restoredBoard);
@@ -165,26 +200,35 @@ export default function Match3Game() {
           setScore(sessionData.score);
         }
         
-        // Restore game mode và progress
-        if (config.moves_limit && config.moves_limit > 0) {
+        // Restore game mode and progress based on what's in board_state
+        if (boardState.time_remaining !== undefined) {
+          setGameMode("time");
+          setTimeRemaining(boardState.time_remaining);
+          setTimeLimit(config.time_limit || 30);
+        } else if (boardState.moves_remaining !== undefined) {
           setGameMode("rounds");
           setTargetMatches(config.moves_limit);
-          const movesRemaining = boardState.moves_remaining ?? config.moves_limit;
-          setMatchesCount(config.moves_limit - movesRemaining);
+          setMatchesCount(config.moves_limit - boardState.moves_remaining);
           setTimeRemaining(0);
-        } else if (config.time_limit && config.time_limit > 0) {
-          setGameMode("time");
-          const timeRemaining = boardState.time_remaining ?? config.time_limit;
-          setTimeRemaining(timeRemaining);
+        } else {
+          // Fallback to config
+          if (config.moves_limit && config.moves_limit > 0) {
+            setGameMode("rounds");
+            setTargetMatches(config.moves_limit);
+            setMatchesCount(0);
+            setTimeRemaining(0);
+          } else if (config.time_limit && config.time_limit > 0) {
+            setGameMode("time");
+            setTimeRemaining(config.time_limit);
+          }
         }
       } else {
-        // Tạo board mới bằng random (session mới hoặc chưa có board_state)
+        // Create new board by randomization
         const randomBoard = createRandomBoard(config.cols, config.candy_types);
         setBoard(randomBoard);
         setScore(0);
         setMatchesCount(0);
         
-        // Xác định game mode dựa trên moves_limit
         if(config.moves_limit && config.moves_limit > 0) {
           setGameMode("rounds");
           setTargetMatches(config.moves_limit);
@@ -193,7 +237,6 @@ export default function Match3Game() {
           setGameMode("time");
           setTimeRemaining(config.time_limit);
         } else {
-          // Default to time mode nếu cả 2 đều là 0
           setGameMode("time");
           setTimeRemaining(30);
         }
@@ -202,12 +245,14 @@ export default function Match3Game() {
       setIsPaused(false);
       setShowGameOver(false);
       setIsInitializing(false);
+      setHasStarted(true);
     } catch (error) {
       console.error("Error loading session:", error);
+      setIsInitializing(false);
     }
   }, [gameSession.session, createRandomBoard]);
 
-  // Hàm restart game với settings mới
+  // Restart game with new settings
   const restartGameWithSettings = useCallback(async (newSettings?: {
     gameMode: "time" | "rounds" | "endless";
     timeLimit: number;
@@ -216,19 +261,13 @@ export default function Match3Game() {
     boardSize: number;
   }) => {
     try {
-      // Reset game over state ngay lập tức
+      // Reset game over state immediately
       setShowGameOver(false);
       setIsPaused(false);
       
-      if (currentSessionId) {
-        await gameSession.saveGame(true);
-        setCurrentSessionId(null);
-      }
-      
-      // Sử dụng settings mới nếu có, nếu không dùng giá trị hiện tại
+      // Use new settings if available, otherwise use current values
       const settings = newSettings || { gameMode, timeLimit, targetMatches, numCandyTypes, boardSize };
       
-      // Tính target score dựa trên settings
       let target = 500;
       if(settings.gameMode === "time") {
         target = calcTargetScore(settings.gameMode, settings.boardSize, settings.numCandyTypes, settings.timeLimit);
@@ -237,7 +276,7 @@ export default function Match3Game() {
         target = calcTargetScore(settings.gameMode, settings.boardSize, settings.numCandyTypes, settings.targetMatches);
       }
       
-      // Tạo sessionConfig từ settings
+      // Create sessionConfig from settings
       const sessionConfig = {
         mode: "vs_ai",
         ai_level: "easy",
@@ -252,18 +291,22 @@ export default function Match3Game() {
         }
       };
 
-      console.log("check session config: ", sessionConfig);
-
-      // Tạo session mới với custom config
+      // Create new session with custom config
       await gameSession.startGame(sessionConfig);
     } catch (error) {
       console.error("Error restarting game:", error);
     }
   }, [currentSessionId, gameMode, timeLimit, boardSize, numCandyTypes, targetMatches, gameSession]);
 
-  // Hàm restart game nhanh (không thay đổi settings, không tạo session mới)
+  // Start game for the first time
+  const handleStartGame = async () => {
+    setIsInitializing(true);
+    await gameSession.startGame();
+  };
+
+  // Quick restart game (without changing settings or creating new session)
   const quickRestart = useCallback(() => {
-    // Reset board với config hiện tại
+    // Reset board with current config
     const randomBoard = createRandomBoard(boardSize, numCandyTypes);
     setBoard(randomBoard);
     setScore(0);
@@ -273,12 +316,12 @@ export default function Match3Game() {
     setShowGameOver(false);
   }, [boardSize, numCandyTypes, createRandomBoard, gameMode, timeLimit]);
 
-  // check match 3, 4, 5
+  // Check for matches (3, 4, 5)
   const checkForMatches = useCallback(() => {
     const newBoard = [...board];
     let foundMatch = false;
 
-    // Check row
+    // Check rows
     for (let i = 0; i < boardSize * boardSize; i++) {
       if (i % boardSize < boardSize - 2) {
         const match = [i, i + 1, i + 2];
@@ -290,7 +333,7 @@ export default function Match3Game() {
       }
     }
 
-    // Check col
+    // Check columns
     for (let i = 0; i < boardSize * boardSize; i++) {
       const match = [i, i + boardSize, i + boardSize * 2];
       const color = board[i];
@@ -303,12 +346,12 @@ export default function Match3Game() {
     if (foundMatch) {
       const emptyCount = newBoard.filter(cell => cell === "").length;
       setScore(prev => prev + emptyCount * 10);
+      playSound("pop");
       setBoard(newBoard);
     }
     return foundMatch;
-  }, [board, boardSize]);
-
-  // handle move into square below
+  }, [board, boardSize, playSound]);
+  // Handle moving candies into empty squares below
   const moveIntoSquareBelow = useCallback(() => {
     const newBoard = [...board];
     let moved = false;
@@ -333,7 +376,7 @@ export default function Match3Game() {
   }, [board, boardSize, activeCandies]); 
 
   useEffect(() => {
-    if (isInitializing || showGameOver) return;
+    if (!hasStarted || isInitializing || showGameOver) return;
     
     const timer = setInterval(() => {
       const matched = checkForMatches();
@@ -342,12 +385,11 @@ export default function Match3Game() {
       }
     }, 150);
     return () => clearInterval(timer);
-  }, [checkForMatches, moveIntoSquareBelow, isInitializing, showGameOver]);
+  }, [hasStarted, checkForMatches, moveIntoSquareBelow, isInitializing, showGameOver]);
 
-  // Timer effect
+  // Timer countdown effect
   useEffect(() => {
-    // Chỉ chạy timer khi đang ở mode time, có thời gian còn lại, và game đang active
-    if (isInitializing || isPaused || gameMode !== "time" || showGameOver || timeRemaining <= 0) return;
+    if (!hasStarted || isInitializing || isPaused || gameMode !== "time" || showGameOver || timeRemaining <= 0) return;
 
     const timer = setInterval(() => {
       setTimeRemaining(prev => {
@@ -355,7 +397,13 @@ export default function Match3Game() {
         if (newTime <= 0) {
           clearInterval(timer);
           setShowGameOver(true);
-          // Complete session
+
+          if(score >= targetScore)
+            triggerWinEffects();
+          else {
+            playSound("lose");
+          }
+          
           setTimeout(async () => {
             if (currentSessionId) {
               gameSession.completeGame(score);
@@ -368,14 +416,22 @@ export default function Match3Game() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isInitializing, isPaused, gameMode, showGameOver, timeRemaining, currentSessionId, score, timeLimit]);
+  }, [hasStarted, isInitializing, isPaused, gameMode, showGameOver, timeRemaining, currentSessionId, score, timeLimit]);
 
-  // Check for target matches
+  // Check if target matches reached
   useEffect(() => {
+    if (!hasStarted) return;
     if (gameMode === "rounds" && matchesCount >= targetMatches && !showGameOver) {
       // Complete session
       const completeGame = async () => {
         setShowGameOver(true);
+
+        if(score >= targetScore)
+          triggerWinEffects();
+        else {
+          playSound("lose");
+        }
+
         if (currentSessionId) {
           gameSession.completeGame(score);
         }
@@ -384,9 +440,9 @@ export default function Match3Game() {
       const timer = setTimeout(completeGame, 500);
       return () => clearTimeout(timer);
     }
-  }, [matchesCount, targetMatches, gameMode, showGameOver, currentSessionId, score]);
+  }, [hasStarted, matchesCount, targetMatches, gameMode, showGameOver, currentSessionId, score]);
 
-  // handle swap
+  // Handle candy swap
   const handleSquareClick = (idx: number) => {
     if (selectedSquare === null) {
       setSelectedSquare(idx);
@@ -410,7 +466,7 @@ export default function Match3Game() {
     }
   };
 
-  // Save game
+  // Save game session
   const handleSaveGame = async () => {
     if (!gameSession.session) {
       console.error("No active session to save.");
@@ -425,38 +481,39 @@ export default function Match3Game() {
     }
   };
 
-  // load saved game
+  // Load saved game session
   const handleLoadGame = async (sessionId: string) => {
-    gameSession.loadGame(sessionId);
+    setIsInitializing(true);
+    await gameSession.loadGame(sessionId);
   }
 
-  // delete saved game
+  // Delete saved game session
   const handleDeleteGame = async (sessionId: string) => {
-    await match3Api.deleteSession(sessionId);
+    await axiosClient.delete(`/sessions/${sessionId}`);
     await gameSession.fetchSavedSessions();
     toast.success("Đã xóa ván chơi!");
   }
 
-  // play again
+  // Play again (restart with same settings)
   const handlePlayAgain = async () => {
     await restartGameWithSettings();
   }
 
-  // handle save currrent session before loading another session
+  // Save current session before loading another session
   const handleSaveCurrentSession = async () => {
     if (currentSessionId) {
       await gameSession.saveGame(true);
     }
   }
 
-  // Hiển thị loading
+  // Show loading screen
   if (isInitializing) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-background text-foreground">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground">Đang khởi tạo game...</p>
-        </div>
+      <div className="flex h-[80vh] flex-col items-center justify-center gap-4">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="animate-pulse font-medium text-muted-foreground">
+          Đang tải dữ liệu...
+        </p>
       </div>
     );
   }
@@ -502,9 +559,11 @@ export default function Match3Game() {
       {/* Controls */}
       <div className="w-full max-w-6xl px-4 mb-8">
         <div className="flex gap-2 justify-center mb-4 flex-wrap">
-          <RoundButton size="small" variant="primary" onClick={quickRestart} className="text-xs py-1.5 px-3">
-            <RotateCcw className="w-3.5 h-3.5 mr-1.5" /> Chơi lại
-          </RoundButton>
+          {hasStarted && (
+            <RoundButton size="small" variant="primary" onClick={quickRestart} className="text-xs py-1.5 px-3">
+              <RotateCcw className="w-3.5 h-3.5 mr-1.5" /> Chơi lại
+            </RoundButton>
+          )}
           
           <LoadGameDialog
             open={gameSession.showLoadDialog}
@@ -529,22 +588,25 @@ export default function Match3Game() {
             
           </LoadGameDialog>
           
-          <RoundButton 
-            size="small" 
-            variant="accent" 
-            onClick={() => setIsPaused(!isPaused)}
-            className="text-xs py-1.5 px-3"
-          >
-            {isPaused ? (
-              <>
-                <PlayCircle className="w-3.5 h-3.5 mr-1.5" /> TIẾP TỤC
-              </>
-            ) : (
-              <>
-                <Pause className="w-3.5 h-3.5 mr-1.5" /> TẠM DỪNG
-              </>
-            )}
-          </RoundButton>
+          {hasStarted && (
+            <RoundButton 
+              size="small" 
+              variant="accent" 
+              onClick={() => setIsPaused(!isPaused)}
+              className="text-xs py-1.5 px-3"
+
+            >
+              {isPaused ? (
+                <>
+                  <PlayCircle className="w-3.5 h-3.5 mr-1.5" /> TIẾP TỤC
+                </>
+              ) : (
+                <>
+                  <Pause className="w-3.5 h-3.5 mr-1.5" /> TẠM DỪNG
+                </>
+              )}
+            </RoundButton>
+          )}
           <RoundButton size="small" variant="neutral" onClick={() => setShowSettingsDialog(true)} className="text-xs py-1.5 px-3">
             <Settings className="w-3.5 h-3.5 mr-1.5" /> CÀI ĐẶT
           </RoundButton>
@@ -565,26 +627,27 @@ export default function Match3Game() {
               gap: `${boardSize <= 6 ? '0.5rem' : '0.375rem'}`
             }}
           >
-            {board.map((typeId, index) => {
+            {(board.length > 0 ? board : Array(boardSize * boardSize).fill("")).map((typeId, index) => {
               const type = CANDY_TYPES.find(t => t.id === typeId);
               return (
                 <motion.button
-                  key={`${index}-${typeId}`}
+                  key={`${index}-${typeId || 'empty'}`}
                   layout
-                  whileHover={!isPaused ? { scale: 1.05 } : undefined}
-                  onClick={() => !isPaused && handleSquareClick(index)}
-                  disabled={isPaused}
+                  whileHover={!isPaused && hasStarted ? { scale: 1.05 } : undefined}
+                  onClick={() => !isPaused && hasStarted && handleSquareClick(index)}
+                  disabled={isPaused || !hasStarted}
                   className={cn(
                     "w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center relative bg-linear-to-br from-white/10 to-transparent border border-white/10",
-                    selectedSquare === index ? "ring-4 ring-primary z-20" : "",
-                    isPaused ? "opacity-50 cursor-not-allowed" : ""
+                    selectedSquare === index && hasStarted ? "ring-4 ring-primary z-20" : "",
+                    isPaused ? "opacity-50 cursor-not-allowed" : "",
+                    !hasStarted ? "invisible" : ""
                   )}
                   style={{
                     backgroundImage: `url(${iceBorder})`,
                   }}
                 >
                   <AnimatePresence>
-                    {type && (
+                    {type && hasStarted && (
                       <motion.img 
                         initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ opacity: 0 }}
                         src={type.icon} className="w-4/5 h-4/5 object-contain" 
@@ -596,6 +659,89 @@ export default function Match3Game() {
             })}
           </div>
 
+        {/* Start Game Overlay */}
+        {!hasStarted && !isInitializing && (
+          <motion.div
+            className="absolute inset-0 bg-muted/95 rounded-[2.5rem] flex items-center justify-center z-30"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <motion.div
+              className="text-center space-y-4 sm:space-y-6 px-4 sm:px-6 max-w-md w-full"
+              initial={{ scale: 0.8, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+            >
+              {/* Game Logo/Title */}
+              <motion.div
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="space-y-2"
+              >
+                <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-primary/10 rounded-3xl mb-2 sm:mb-4">
+                  <Trophy className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
+                </div>
+                <p className="text-sm sm:text-base text-muted-foreground font-medium">
+                  Ghép 3 kẹo cùng màu để ghi điểm!
+                </p>
+              </motion.div>
+
+              {/* Game Info Cards */}
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                className="grid grid-cols-2 gap-2 sm:gap-3"
+              >
+                <div className="bg-background/50 backdrop-blur-sm rounded-2xl p-3 sm:p-4 border border-border">
+                  <div className="flex flex-col items-center gap-1 sm:gap-2">
+                    {gameMode === "time" ? (
+                      <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                    ) : gameMode === "rounds" ? (
+                      <Target className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                    ) : (
+                      <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                    )}
+                    <p className="text-xs sm:text-sm text-muted-foreground font-medium">Chế độ</p>
+                    <p className="text-sm sm:text-base font-bold text-foreground">
+                      {gameMode === "time" ? "Thời gian" : gameMode === "rounds" ? "Lượt chơi" : "Vô tận"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-background/50 backdrop-blur-sm rounded-2xl p-3 sm:p-4 border border-border">
+                  <div className="flex flex-col items-center gap-1 sm:gap-2">
+                    <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                    <p className="text-xs sm:text-sm text-muted-foreground font-medium">Mục tiêu</p>
+                    <p className="text-sm sm:text-base font-bold text-foreground">
+                      {gameMode === "time" ? `${timeLimit}s` : gameMode === "rounds" ? `${targetMatches} lượt` : "Không giới hạn"}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Start Button */}
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                <RoundButton
+                  size="large"
+                  variant="primary"
+                  onClick={handleStartGame}
+                  className="w-full text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 shadow-2xl hover:scale-105 transition-transform font-bold"
+                >
+                  <PlayCircle className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
+                  BẮT ĐẦU CHƠI
+                </RoundButton>
+              </motion.div>
+
+            </motion.div>
+          </motion.div>
+        )}
+
         {/* Game Over Modal */}
         {showGameOver && (
           <GameOverOverlay 
@@ -605,26 +751,6 @@ export default function Match3Game() {
             onExit={() => navigate("/")}
           />
         )}
-
-        {/* Settings Dialog (inline mode) */}
-        <SettingsDialog
-          open={showSettingsDialog}
-          onOpenChange={setShowSettingsDialog}
-          gameMode={gameMode}
-          timeLimit={timeLimit}
-          targetMatches={targetMatches}
-          numCandyTypes={numCandyTypes}
-          boardSize={boardSize}
-          onApply={async (settings) => {
-            await restartGameWithSettings(settings);
-            setGameMode(settings.gameMode);
-            setTimeLimit(settings.timeLimit);
-            setTargetMatches(settings.targetMatches);
-            setNumCandyTypes(settings.numCandyTypes);
-            setBoardSize(settings.boardSize);
-          }}
-          inline
-        />
       </div>
         {isPaused && (
           <PauseMenu 
@@ -636,14 +762,33 @@ export default function Match3Game() {
         
       </div>
 
-        <div className="mt-8 px-4 max-w-2xl">
-          <div className="space-y-2 text-center">
-            <p className="text-muted-foreground text-sm font-medium animate-pulse">
-              💡 Mẹo: Chọn 2 ô cạnh nhau để tráo đổi vị trí!
-            </p>
-          </div>
+      <div className="mt-8 px-4 max-w-2xl">
+        <div className="space-y-2 text-center">
+          <p className="text-muted-foreground text-sm font-medium animate-pulse">
+            💡 Mẹo: Chọn 2 ô cạnh nhau để tráo đổi vị trí!
+          </p>
         </div>
       </div>
+      </div>
+
+      {/* Settings Dialog */}
+      <SettingsDialog
+        open={showSettingsDialog}
+        onOpenChange={setShowSettingsDialog}
+        gameMode={gameMode}
+        timeLimit={timeLimit}
+        targetMatches={targetMatches}
+        numCandyTypes={numCandyTypes}
+        boardSize={boardSize}
+        onApply={async (settings) => {
+          await restartGameWithSettings(settings);
+          setGameMode(settings.gameMode);
+          setTimeLimit(settings.timeLimit);
+          setTargetMatches(settings.targetMatches);
+          setNumCandyTypes(settings.numCandyTypes);
+          setBoardSize(settings.boardSize);
+        }}
+      />
     </GameLayout>
   );
 }

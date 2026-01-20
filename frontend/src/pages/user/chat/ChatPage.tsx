@@ -7,6 +7,8 @@ import {
   Trash2,
   Check,
   CheckCheck,
+  ArrowLeft,
+  ChevronLeft,
 } from "lucide-react";
 import { useAuthStore } from "@/stores/useAuthStore";
 import {
@@ -46,12 +48,13 @@ const ChatPage = () => {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [messageInput, setMessageInput] = useState("");
   const [page, setPage] = useState(1);
+  const [showChatOnMobile, setShowChatOnMobile] = useState(false);
 
   const [cachedConversation, setCachedConversation] = useState<any>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: conversations, isLoading: loadingList } = useConversations(page, 5); // Limit 5 items
+  const { data: conversations, isLoading: loadingList } = useConversations(page, 5);
   const { data: messagesData, isLoading: loadingMessages } =
     useChatMessages(selectedUserId);
   const { data: globalUnread } = useUnreadCount();
@@ -65,6 +68,7 @@ const ChatPage = () => {
   useEffect(() => {
     if (location.state?.selectedUser) {
       setSelectedUserId(location.state.selectedUser.id);
+      setShowChatOnMobile(true);
     }
   }, [location.state]);
 
@@ -88,7 +92,6 @@ const ChatPage = () => {
     if (activeConversation) {
       setCachedConversation(activeConversation);
     } else if (location.state?.selectedUser && location.state.selectedUser.id === selectedUserId) {
-      // Trường hợp load từ trang khác qua (ví dụ từ profile)
       setCachedConversation(location.state.selectedUser);
     }
   }, [activeConversation, selectedUserId, location.state]);
@@ -105,21 +108,32 @@ const ChatPage = () => {
     setMessageInput("");
   };
 
+  const handleSelectChat = (userId: string, conversation: any) => {
+    setSelectedUserId(userId);
+    setCachedConversation(conversation);
+    setShowChatOnMobile(true);
+  };
+
+  const handleBackToList = () => {
+    setShowChatOnMobile(false);
+  };
+
   const filteredConversations =
     conversations?.data.filter((conv) =>
       conv.username.toLowerCase().includes(searchTerm.toLowerCase())
     ) || [];
 
-    console.log(conversations);
-
   return (
     <div className="flex h-[calc(100vh-5rem)] bg-background border-t">
-      {/* === SIDEBAR === */}
-      <div className="w-full md:w-80 lg:w-96 border-r flex flex-col bg-muted/10 overflow-hidden">
+      {/* SIDEBAR */}
+      <div className={cn(
+        "w-full md:w-80 lg:w-96 border-r flex flex-col bg-muted/10 overflow-hidden",
+        "md:flex",
+        showChatOnMobile ? "hidden" : "flex"
+      )}>
         <div className="p-4 border-b space-y-4">
           <h2 className="text-xl font-bold flex items-center gap-2">
             <MessageSquare className="w-5 h-5" /> Tin nhắn{" "}
-            {/* --- LOGIC 2: HIỂN THỊ TỔNG TIN CHƯA ĐỌC TOÀN CỤC --- */}
             {globalUnread?.unread && globalUnread.unread > 0 && (
               <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full animate-pulse">
                 {globalUnread?.unread} mới
@@ -147,10 +161,7 @@ const ChatPage = () => {
               filteredConversations.map((conv) => (
                 <button
                   key={conv.id}
-                  onClick={() => {
-                    setSelectedUserId(conv.id);
-                    setCachedConversation(conv);
-                  }}
+                  onClick={() => handleSelectChat(conv.id, conv)}
                   className={cn(
                     "flex items-center gap-3 p-3 rounded-lg transition-colors text-left",
                     selectedUserId === conv.id
@@ -165,7 +176,6 @@ const ChatPage = () => {
                         {conv.username[0].toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    {/* Badge unread từng conversation */}
                     {conv.unread_count > 0 && (
                       <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold shadow-sm">
                         {conv.unread_count}
@@ -211,7 +221,7 @@ const ChatPage = () => {
             )}
           </div>
         </ScrollArea>
-        {/* Pagination Controls */}
+
         {conversations && conversations.totalPages > 1 && (
           <div className="p-2 border-t mt-auto">
             <PaginationCustom
@@ -223,13 +233,27 @@ const ChatPage = () => {
         )}
       </div>
 
-      {/* === CHAT WINDOW === */}
-      <div className="flex-1 flex flex-col min-w-0 bg-background">
+      {/* CHAT */}
+      <div className={cn(
+        "flex-1 flex flex-col min-w-0 bg-background",
+        "md:flex",
+        showChatOnMobile ? "flex" : "hidden"
+      )}>
         {selectedUserId ? (
           <>
-            {/* Header */}
-            <div className="h-16 border-b flex items-center justify-between px-6 bg-card/50 backdrop-blur">
+            {/* Header with Back Button */}
+            <div className="h-16 border-b flex items-center justify-between px-4 md:px-6 bg-card/50 backdrop-blur">
               <div className="flex items-center gap-3">
+                {/* Back Button - Only on mobile */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="md:hidden h-9 w-9 shrink-0"
+                  onClick={handleBackToList}
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </Button>
+                
                 <Avatar className="h-10 w-10 border">
                   <AvatarImage src={currentChatUser?.avatar_url || ""} />
                   <AvatarFallback>
@@ -265,7 +289,6 @@ const ChatPage = () => {
                           isMe ? "justify-end" : "justify-start"
                         )}
                       >
-                        {/* --- DELETE (GIỮ NGUYÊN AlertDialog) --- */}
                         {isMe && (
                           <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center mr-2">
                             <AlertDialog>
@@ -306,12 +329,12 @@ const ChatPage = () => {
                           </div>
                         )}
 
-                        {/* --- MESSAGE + META --- */}
-                        <div className="flex flex-col items-end gap-1 max-w-[70%]">
+                        {/* MESSAGE + META */}
+                        <div className="flex flex-col items-end gap-1 max-w-[85%] sm:max-w-[70%]">
                           {/* Bubble */}
                           <div
                             className={cn(
-                              "px-4 py-2 rounded-2xl shadow-sm break-words text-sm",
+                              "px-3 py-2 sm:px-4 sm:py-2 rounded-2xl shadow-sm break-words text-sm",
                               isMe
                                 ? "bg-primary text-primary-foreground rounded-br-none"
                                 : "bg-white dark:bg-muted border rounded-bl-none"
@@ -327,7 +350,6 @@ const ChatPage = () => {
                               isMe ? "text-primary" : "text-muted-foreground"
                             )}
                           >
-                            {/* Time luôn hiển thị */}
                             <span>
                               {new Date(msg.created_at).toLocaleTimeString([], {
                                 hour: "2-digit",
@@ -335,7 +357,6 @@ const ChatPage = () => {
                               })}
                             </span>
 
-                            {/* Status */}
                             {isMe && (
                               <>
                                 {msg.is_read && isLastMessage ? (
@@ -365,13 +386,13 @@ const ChatPage = () => {
             </ScrollArea>
 
             {/* Input */}
-            <div className="p-4 border-t bg-background">
+            <div className="p-3 sm:p-4 border-t bg-background">
               <form onSubmit={handleSendMessage} className="flex gap-2">
                 <Input
                   value={messageInput}
                   onChange={(e) => setMessageInput(e.target.value)}
                   placeholder="Nhập tin nhắn..."
-                  className="flex-1 rounded-full bg-muted/50 border-transparent focus:bg-background focus:border-primary"
+                  className="flex-1 rounded-full bg-muted/50 border-transparent focus:bg-background focus:border-primary text-sm sm:text-base"
                   disabled={sendMessageMutation.isPending}
                 />
                 <EmojiPickerButton
@@ -382,7 +403,7 @@ const ChatPage = () => {
                 <Button
                   type="submit"
                   size="icon"
-                  className="rounded-full h-10 w-10 shrink-0"
+                  className="rounded-full h-9 w-9 sm:h-10 sm:w-10 shrink-0"
                   disabled={
                     sendMessageMutation.isPending || !messageInput.trim()
                   }

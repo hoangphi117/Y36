@@ -25,6 +25,7 @@ import { AdminUsersPage } from "@/pages/admin/AdminUsersPage";
 import { AdminGamesPage } from "@/pages/admin/AdminGamesPage";
 import { AdminLoginPage } from "@/pages/admin/AdminLoginPage";
 import AdminStatsPage from "@/pages/admin/AdminStatsPage";
+import DrawingGame from "@/pages/games/DrawingGame";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { token } = useAuthStore();
@@ -96,6 +97,10 @@ const router = createBrowserRouter([
   {
     path: "/memory-free",
     element: <MemoryFreeGame />,
+  },
+  {
+    path: "drawing",
+    element: <DrawingGame />,
   },
   {
     path: "/auth/login",
