@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { TrendingUp } from 'lucide-react';
 import { Toaster } from 'react-hot-toast';
 import { DashboardStats } from '@/components/admin/stats/DashboardStats';
@@ -8,7 +9,12 @@ import { ExportButton } from '@/components/admin/stats/ExportButton';
 import { useDailyStats } from '@/hooks/admin/useStats';
 import { exportToCSV, exportToJSON } from '@/lib/admin/statsUtils';
 
+interface AdminLayoutContext {
+  isAnimating: boolean;
+}
+
 const AdminStatsPage = () => {
+  const { isAnimating } = useOutletContext<AdminLayoutContext>();
   const [dateRange, setDateRange] = useState({
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     endDate: new Date().toISOString().split('T')[0]
@@ -16,7 +22,7 @@ const AdminStatsPage = () => {
 
   const { data: dailyStats, isLoading, error } = useDailyStats(dateRange.startDate, dateRange.endDate);
 
-  const handleExportCSV = () => {
+  const handleExportCSV = useCallback(() => {
     if (!dailyStats) return;
 
     const allDates = new Set([
@@ -35,12 +41,16 @@ const AdminStatsPage = () => {
       }));
 
     exportToCSV(csvData, `thong-ke-${dateRange.startDate}-den-${dateRange.endDate}`);
-  };
+  }, [dailyStats, dateRange]);
 
-  const handleExportJSON = () => {
+  const handleExportJSON = useCallback(() => {
     if (!dailyStats) return;
     exportToJSON(dailyStats, `thong-ke-${dateRange.startDate}-den-${dateRange.endDate}`);
-  };
+  }, [dailyStats, dateRange]);
+
+  const handleDateRangeChange = useCallback((start: string, end: string) => {
+    setDateRange({ startDate: start, endDate: end });
+  }, []);
 
   return (
     <>
@@ -82,7 +92,7 @@ const AdminStatsPage = () => {
           <DateRangePicker
             startDate={dateRange.startDate}
             endDate={dateRange.endDate}
-            onRangeChange={(start, end) => setDateRange({ startDate: start, endDate: end })}
+            onRangeChange={handleDateRangeChange}
           />
         </div>
         <ExportButton 
@@ -110,7 +120,15 @@ const AdminStatsPage = () => {
         </div>
       )}
 
-      {dailyStats && !isLoading && <DailyStatsChart data={dailyStats} />}
+      {dailyStats && !isLoading && !isAnimating && <DailyStatsChart data={dailyStats} />}
+      
+      {isAnimating && (
+        <div className="bg-card/30 backdrop-blur-sm border border-border/50 rounded-2xl p-6 h-96 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-muted-foreground font-mono text-sm">Đang điều chỉnh bố cục...</p>
+          </div>
+        </div>
+      )}
       </div>
     </>
   );

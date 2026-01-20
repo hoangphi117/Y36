@@ -2,7 +2,8 @@ import { Search } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
-import { cn } from '@/lib/utils';
+import { AdminInput } from '@/components/admin/ui/AdminInput';
+import { AdminSelect } from '@/components/admin/ui/AdminSelect';
 
 interface GameFiltersProps {
   filters: any;
@@ -25,33 +26,28 @@ export const GameFilters = ({ filters, onChange }: GameFiltersProps) => {
     >
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 admin-primary" />
-          <input
-            type="text"
-            placeholder="Tìm theo tên, mã game..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            className="admin-input pl-10"
-          />
-        </div>
+        <AdminInput
+          type="text"
+          placeholder="Tìm theo tên, mã game..."
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          icon={<Search className="w-4 h-4 text-foreground opacity-60" strokeWidth={2.5} />}
+        />
 
         {/* Active Status Filter */}
-        <select
+        <AdminSelect
           value={filters.is_active ?? ''}
           onChange={(e) => onChange('is_active', e.target.value === '' ? undefined : e.target.value === 'true')}
-          className="admin-input cursor-pointer"
         >
           <option value="">Tất cả trạng thái</option>
           <option value="true">Đang hoạt động</option>
           <option value="false">Tạm dừng</option>
-        </select>
+        </AdminSelect>
 
         {/* Sort */}
-        <select
+        <AdminSelect
           value={filters.sort || '-created_at'}
           onChange={(e) => onChange('sort', e.target.value)}
-          className="admin-input cursor-pointer"
         >
           <option value="-created_at">Mới nhất</option>
           <option value="created_at">Cũ nhất</option>
@@ -59,7 +55,7 @@ export const GameFilters = ({ filters, onChange }: GameFiltersProps) => {
           <option value="-name">Tên (Z-A)</option>
           <option value="-id">ID (Cao → Thấp)</option>
           <option value="id">ID (Thấp → Cao)</option>
-        </select>
+        </AdminSelect>
 
         {/* Clear Filters */}
         <motion.button
