@@ -483,7 +483,17 @@ export default function TicTacToe({ onBack }: { onBack?: () => void }) {
 
         {/* Board Area */}
         <div className="relative z-10">
-          <div className="grid grid-cols-3 gap-2 bg-muted p-3 rounded-2xl shadow-inner border-2 border-border/50">
+          <div className="grid grid-cols-3 bg-muted p-3 rounded-2xl shadow-inner border-2 border-border/50 gap-0 overflow-hidden relative">
+            {/* Grid dividers */}
+            <div className="absolute inset-0 pointer-events-none z-0">
+               {/* Vertical lines */}
+               <div className="absolute top-3 bottom-3 left-1/3 w-1 bg-border/50 rounded-full"></div>
+               <div className="absolute top-3 bottom-3 right-1/3 w-1 bg-border/50 rounded-full"></div>
+               {/* Horizontal lines */}
+               <div className="absolute left-3 right-3 top-1/3 h-1 bg-border/50 rounded-full"></div>
+               <div className="absolute left-3 right-3 bottom-1/3 h-1 bg-border/50 rounded-full"></div>
+            </div>
+
             {squares.map((square, i) => (
               <motion.button
                 key={i}
@@ -499,14 +509,16 @@ export default function TicTacToe({ onBack }: { onBack?: () => void }) {
                   (session?.status !== "playing" && session?.status !== "saved")
                 }
                 className={cn(
-                  "w-20 h-20 md:w-24 md:h-24 bg-surface rounded-xl text-5xl font-extrabold flex items-center justify-center shadow-sm border border-border/20 transition-colors",
-                  square === "X" && "text-red-500 bg-red-50 dark:bg-red-950/20",
-                  square === "O" &&
-                    "text-blue-500 bg-blue-50 dark:bg-blue-950/20",
+                  "w-20 h-20 md:w-24 md:h-24 rounded-xl text-5xl font-extrabold flex items-center justify-center transition-colors relative z-10",
+                  // Remove default bg and border to use grid lines instead
+                  "bg-transparent hover:bg-black/5 dark:hover:bg-white/5",
+                  
+                  square === "X" && "text-red-500",
+                  square === "O" && "text-blue-500",
                   !square &&
                     !winner &&
                     !isTimeOut &&
-                    "hover:bg-accent/10 cursor-pointer",
+                    "cursor-pointer",
                 )}
               >
                 <AnimatePresence>

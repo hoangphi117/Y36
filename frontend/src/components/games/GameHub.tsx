@@ -38,7 +38,7 @@ const GAME_ASSETS: {
     instructionKey: "caro",
   },
   {
-    id: 3,
+    id: 4,
     title: "TIC TAC TOE",
     image:
       "https://img.freepik.com/premium-vector/tic-tac-toe-game-illustration-tic-tac-toe-game-with-hearts-cross-valentines-day-background_411588-2024.jpg?semt=ais_hybrid&w=740&q=80",
@@ -47,7 +47,7 @@ const GAME_ASSETS: {
     instructionKey: "tictactoe",
   },
   {
-    id: 4,
+    id: 3,
     title: "Rắn Săn Mồi",
     image:
       "https://s3-api.fpt.vn/fptvn-storage/2025-12-01/1764574515_tro-ran-san-moi-tren-google-11.jpg",
@@ -150,6 +150,41 @@ export const GameHub = () => {
 
   const selectedGame = games[selectedIndex];
 
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Prevent default scrolling for arrows
+      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(e.code)) {
+        // e.preventDefault(); // Optional: prevent scrolling if desired
+      }
+
+      if (e.key === "Escape") {
+        if (isPlaying || showHelp) {
+          handleBack();
+          setShowHelp(false);
+          return;
+        }
+      }
+
+      if (isPlaying) return; // Disable other keys while playing
+
+      switch (e.key) {
+        case "ArrowRight":
+          handleNext();
+          break;
+        case "ArrowLeft":
+          handlePrev();
+          break;
+        case "Enter":
+          handleEnter();
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isPlaying, games, selectedIndex, showHelp]); // Add dependencies needed for handlers
+
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -198,7 +233,7 @@ export const GameHub = () => {
                Game Center
              </h1>
              <p className="text-sm text-muted-foreground font-medium">
-               Chọn trò chơi và nhấn ENTER để bắt đầu
+               Chọn trò chơi và nhấn CHƠI NGAY để bắt đầu
              </p>
            </div>
            

@@ -23,10 +23,10 @@ export const GameControlPanel = ({
   gameLocked,
 }: GameControlPanelProps) => {
   return (
-    <div className="flex flex-col items-center gap-6 mt-4 w-full max-w-md mx-auto">
+    <div className="flex flex-col items-center gap-6 mt-3 w-full max-w-md mx-auto">
       {/* ROW 1: NAVIGATION */}
       {!isPlaying && (
-        <div className="flex items-center justify-center gap-2 mt-4 w-full">
+        <div className="flex items-center justify-center gap-2 w-full">
           <RoundButton
             variant="neutral"
             size="medium"

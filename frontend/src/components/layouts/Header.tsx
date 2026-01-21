@@ -75,6 +75,13 @@ export const Header = () => {
   const displayName = user?.username || "User";
   const firstLetter = displayName.charAt(0).toUpperCase();
 
+  const NAV_ITEMS = [
+  { to: "/", label: "Trang chủ", icon: Home, color: "hover:text-blue-500", bgColor: "hover:bg-blue-500/10", decoration: "bg-blue-500" },
+  { to: "/ranking", label: "Xếp hạng", icon: Trophy, color: "hover:text-yellow-500", bgColor: "hover:bg-yellow-500/10", decoration: "bg-yellow-500" },
+  { to: "/messages", label: "Tin nhắn", icon: MessageSquare, color: "hover:text-purple-500", bgColor: "hover:bg-purple-500/10", decoration: "bg-purple-500" },
+  { to: "/profile?tab=friends", label: "Bạn bè", icon: Users, color: "hover:text-pink-500", bgColor: "hover:bg-pink-500/10", decoration: "bg-pink-500" },
+];
+
   return (
     <>
       {/* Mobile Top Bar */}
@@ -100,7 +107,7 @@ export const Header = () => {
       {/* Sidebar - Desktop */}
       <aside 
         className={cn(
-          "hidden md:flex sticky top-0 h-screen flex-col border-r border-border bg-card py-6 transition-all duration-300 ease-in-out",
+          "hidden md:flex sticky top-0 h-screen flex-col border-r border-border bg-card pt-3 transition-all duration-300 ease-in-out",
           isCollapsed ? "w-20 px-2" : "w-46 px-1"
         )}
       >
@@ -129,51 +136,38 @@ export const Header = () => {
         </Link>
 
         {/* Navigation */}
-        <nav className="flex-1 flex flex-col gap-2">
-          <Link
-            to="/"
-            title="Trang chủ"
-            className={cn(
-               "flex items-center gap-4 py-3 rounded-xl font-bold text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all text-[15px]",
-               isCollapsed ? "justify-center px-0" : "px-4"
-            )}
-          >
-            <Home className="w-6 h-6 shrink-0" />
-            {!isCollapsed && <span>Trang chủ</span>}
-          </Link>
-          <Link
-            to="/ranking"
-            title="Xếp hạng"
-            className={cn(
-               "flex items-center gap-4 py-3 rounded-xl font-bold text-muted-foreground hover:text-primary hover:bg-primary/5 group transition-all text-[15px]",
-               isCollapsed ? "justify-center px-0" : "px-4"
-            )}
-          >
-            <Trophy className="w-6 h-6 shrink-0 group-hover:text-yellow-500 transition-all" />
-            {!isCollapsed && <span>Xếp hạng</span>}
-          </Link>
-          <Link
-            to="/messages"
-            title="Tin nhắn"
-            className={cn(
-               "flex items-center gap-4 py-3 rounded-xl font-bold text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all text-[15px]",
-               isCollapsed ? "justify-center px-0" : "px-4"
-            )}
-          >
-            <MessageSquare className="w-6 h-6 shrink-0" />
-            {!isCollapsed && <span>Tin nhắn</span>}
-          </Link>
-          <Link
-            to="/profile?tab=friends"
-            title="Bạn bè"
-            className={cn(
-               "flex items-center gap-4 py-3 rounded-xl font-bold text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all text-[15px]",
-               isCollapsed ? "justify-center px-0" : "px-4"
-            )}
-          >
-            <Users className="w-6 h-6 shrink-0" />
-            {!isCollapsed && <span>Bạn bè</span>}
-          </Link>
+        <nav className="flex-1 flex flex-col gap-3">
+          {NAV_ITEMS.map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              title={item.label}
+              className={cn(
+                "relative flex items-center gap-4 py-3 rounded-xl font-bold text-muted-foreground transition-all duration-200 group overflow-hidden",
+                item.color,
+                item.bgColor,
+                isCollapsed ? "justify-center px-0" : "px-4"
+              )}
+            >
+              {/* Vệt màu trang trí bên cạnh (Chỉ xuất hiện khi hover hoặc active) */}
+              <div className={cn(
+                "absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full scale-y-0 group-hover:scale-y-100 transition-transform duration-200",
+                item.decoration
+              )} />
+
+              <item.icon className={cn(
+                "w-6 h-6 shrink-0 transition-transform duration-200 group-hover:scale-110 group-active:scale-95",
+                // Giữ màu icon nguyên bản hoặc đổi theo text hover
+              )} />
+              
+              {!isCollapsed && (
+                <span className="text-[15px] tracking-tight">{item.label}</span>
+              )}
+              
+              {/* Hiệu ứng bóng sáng chạy qua khi hover */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] pointer-events-none" />
+            </Link>
+          ))}
         </nav>
 
         {/* User / Bottom Section */}
@@ -228,7 +222,7 @@ export const Header = () => {
                 <DropdownMenuContent
                   align="start"
                   side="right"
-                  className="w-60 bg-background rounded-xl p-2 ml-2 shadow-xl"
+                  className="w-60 bg-card rounded-xl p-2 ml-2 shadow-xl"
                 >
                   <DropdownMenuLabel className="font-bold text-muted-foreground text-xs uppercase tracking-wider px-2">
                     Cài đặt

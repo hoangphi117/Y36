@@ -261,6 +261,19 @@ export default function CaroGame({ gameId, winCondition, onBack }: CaroGameProps
     resetTimer();
   };
 
+  const handleUserClick = (index: number) => {
+    // Block clicks if:
+    // 1. Not player's turn
+    // 2. Game ended (winner/draw)
+    // 3. Game paused/settings open
+    if (!isPlayerTurn || winner || isTimeOut || isSettingsOpen) return;
+    
+    // Also block if cell is taken - though handleMove checks this, checking here saves a call
+    if (board[index]) return;
+
+    handleMove(index, playerPiece);
+  };
+
   const handleMove = useCallback(
     (index: number, piece: string) => {
       if (
@@ -615,10 +628,10 @@ export default function CaroGame({ gameId, winCondition, onBack }: CaroGameProps
                       !!cell ||
                       !!winner ||
                       isTimeOut ||
-                      isTimeOut ||
+                      !isPlayerTurn ||
                       (session?.status !== "playing" && session?.status !== "saved")
                     }
-                    onClick={() => handleMove(index, playerPiece)}
+                    onClick={() => handleUserClick(index)}
                     className={cn(
                       "aspect-square w-full flex items-center justify-center",
                       "bg-[var(--board-bg)] hover:bg-[var(--cell-hover)]",

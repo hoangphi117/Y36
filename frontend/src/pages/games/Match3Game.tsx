@@ -748,26 +748,7 @@ export default function Match3Game({ onBack }: { onBack?: () => void }) {
               <Download className="w-3.5 h-3.5 mr-1.5" /> Tải
             </RoundButton>
           </LoadGameDialog>
-          
-          {hasStarted && (
-            <RoundButton 
-              size="small" 
-              variant="accent" 
-              onClick={() => setIsPaused(!isPaused)}
-              className="text-xs py-1.5 px-3"
-
-            >
-              {isPaused ? (
-                <>
-                  <PlayCircle className="w-3.5 h-3.5 mr-1.5" /> TIẾP TỤC
-                </>
-              ) : (
-                <>
-                  <Pause className="w-3.5 h-3.5 mr-1.5" /> TẠM DỪNG
-                </>
-              )}
-            </RoundButton>
-          )}
+        
           {hasStarted && (
             <RoundButton 
               size="small" 
