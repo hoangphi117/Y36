@@ -242,9 +242,6 @@ export function AchievementsTab() {
                   </CardHeader>
                   <CardContent>
                     <div className="flex justify-between items-center text-xs text-muted-foreground mt-1 border-t pt-2 border-black/5 dark:border-white/5">
-                      <Badge variant="outline" className="bg-background/50">
-                        {ach.code}
-                      </Badge>
                       <span className="flex items-center gap-1">
                         <Award className="w-3 h-3" />
                         {format(new Date(ach.unlocked_at), "dd/MM/yyyy", {

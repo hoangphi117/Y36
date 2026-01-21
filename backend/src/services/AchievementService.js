@@ -37,7 +37,7 @@ class AchievementService {
           // Thỏa mãn -> Thêm vào danh sách cần insert
           newUnlocked.push({
             user_id: userId,
-            game_id: gameId,
+            game_id: rule.gameId !== undefined ? rule.gameId : gameId,
             code: rule.code,
             name: rule.name,
             description: rule.description,

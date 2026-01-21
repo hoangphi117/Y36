@@ -16,6 +16,7 @@ const ACHIEVEMENT_RULES = [
     code: "TEST_FIRST_PLAY",
     name: "Chào mừng đến với Y36!",
     description: "Hoàn thành ván đấu đầu tiên của bạn",
+    gameId: null, // System achievement
     check: (stats) => stats.total_matches >= 1,
   },
 
