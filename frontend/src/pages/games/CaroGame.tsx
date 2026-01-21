@@ -13,6 +13,8 @@ import {
   Bot,
   Zap,
   Settings,
+  Pause,
+  PlayCircle,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -22,6 +24,7 @@ import { useGameSession } from "@/hooks/useGameSession";
 import { LoadGameDialog } from "@/components/dialogs/LoadGameDialog";
 import { GameInstructions } from "@/components/games/GameInstructions";
 import { GameResultOverlay } from "@/components/games/GameResultOverlay";
+import { PauseMenu } from "@/components/games/memory/PauseMenu";
 
 import {
   GameSettingsDialog,
@@ -88,6 +91,9 @@ export default function CaroGame({ gameId, winCondition, onBack }: CaroGameProps
     null,
   );
 
+  const [isManualPaused, setIsManualPaused] = useState(false);
+  const isGamePaused = isManualPaused || isSettingsOpen;
+
   const boardRef = useRef(board);
   const boardSizeRef = useRef(boardSize);
   const playerPieceRef = useRef(playerPiece);
@@ -132,7 +138,7 @@ export default function CaroGame({ gameId, winCondition, onBack }: CaroGameProps
   } = useGameSession({
     gameId,
     getBoardState,
-    isPaused: isSettingsOpen || !!winner || isTimeOut,
+    isPaused: isGamePaused || !!winner || isTimeOut,
     autoCreate: false,
     onQuit: onBack,
   });
@@ -186,7 +192,7 @@ export default function CaroGame({ gameId, winCondition, onBack }: CaroGameProps
       !winner &&
       !isTimeOut &&
       turnTimeLimit > 0 &&
-      !isSettingsOpen
+      !isGamePaused
     ) {
       interval = window.setInterval(() => {
         setCurrentTurnCountdown((prev) => {
@@ -203,7 +209,7 @@ export default function CaroGame({ gameId, winCondition, onBack }: CaroGameProps
     }
 
     return () => clearInterval(interval);
-  }, [session?.status, winner, isTimeOut, turnTimeLimit, isSettingsOpen]);
+  }, [session?.status, winner, isTimeOut, turnTimeLimit, isGamePaused]);
 
   useEffect(() => {
     if (turnTimeLimit > 0) setCurrentTurnCountdown(turnTimeLimit);
@@ -309,7 +315,7 @@ export default function CaroGame({ gameId, winCondition, onBack }: CaroGameProps
       (session.status !== "playing" && session.status !== "saved") ||
       winner ||
       isTimeOut ||
-      isSettingsOpen
+      isGamePaused
     )
       return;
 
@@ -401,6 +407,7 @@ export default function CaroGame({ gameId, winCondition, onBack }: CaroGameProps
     setPlayerPiece("X");
     setIsTimeOut(false);
     setTimeOutReason(null);
+    setIsManualPaused(false);
     resetTimer();
     if (turnTimeLimit > 0) setCurrentTurnCountdown(turnTimeLimit);
 
@@ -409,6 +416,12 @@ export default function CaroGame({ gameId, winCondition, onBack }: CaroGameProps
 
   const handleStandardNewGame = async () => {
     setIsSettingsOpen(true);
+  };
+
+  const handleSaveAndExit = async () => {
+    setIsManualPaused(false);
+    await saveGame(true);
+    if (onBack) onBack();
   };
 
 
@@ -536,6 +549,24 @@ export default function CaroGame({ gameId, winCondition, onBack }: CaroGameProps
                 <Download className="w-4 h-4" /> Tải
               </RoundButton>
             </LoadGameDialog>
+
+            <RoundButton
+              size="small"
+              variant="neutral"
+              onClick={() => setIsManualPaused(!isManualPaused)}
+              disabled={!!winner || isTimeOut}
+              className="flex items-center gap-2 px-4"
+            >
+              {isManualPaused ? (
+                <>
+                  <PlayCircle className="w-4 h-4" /> 
+                </>
+              ) : (
+                <>
+                  <Pause className="w-4 h-4" /> 
+                </>
+              )}
+            </RoundButton>
 
 
             {/* Switch Side */}
@@ -693,6 +724,15 @@ export default function CaroGame({ gameId, winCondition, onBack }: CaroGameProps
           </div>
         </div>
       </div>
+
+      {/* Pause Menu */}
+      {isManualPaused && !winner && !isTimeOut && (
+        <PauseMenu
+          onContinue={() => setIsManualPaused(false)}
+          onSaveAndExit={handleSaveAndExit}
+          onRestart={() => handleRestart()}
+        />
+      )}
     </GameLayout>
   );
 }

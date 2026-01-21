@@ -28,19 +28,19 @@ const GAME_ASSETS = [
   },
   {
     id: 3,
-    title: "TIC TAC TOE",
-    image: "https://img.freepik.com/premium-vector/tic-tac-toe-game-illustration-tic-tac-toe-game-with-hearts-cross-valentines-day-background_411588-2024.jpg?semt=ais_hybrid&w=740&q=80",
-    variant: "accent" as const,
-    url: "/games/tic-tac-toe",
-    help_content: "Mục tiêu: Xếp 3 ký hiệu (X hoặc O) thẳng hàng trên bàn cờ 3x3. Cách chơi: Người chơi luân phiên đặt quân. Trò chơi kết thúc khi có người thắng hoặc bàn cờ đầy (hòa). Điều khiển: Phím Trái/Phải để chuyển ô, ENTER để đánh dấu. Nhấn BACK để thoát game, HINT để xem nước đi ngăn chặn đối thủ.",
-  },
-  {
-    id: 4,
     title: "Rắn Săn Mồi",
     image: "https://s3-api.fpt.vn/fptvn-storage/2025-12-01/1764574515_tro-ran-san-moi-tren-google-11.jpg",
     variant: "danger" as const,
     url: "/games/snake",
     help_content: "Mục tiêu: Điều khiển rắn ăn mồi để tăng chiều dài mà không đâm vào tường hoặc chính mình. Điều khiển: Sử dụng phím Trái/Phải để xoay hướng di chuyển. ENTER để bắt đầu hoặc tạm dừng. BACK để thoát ra ngoài. HINT sẽ hiển thị vị trí thức ăn tiếp theo hoặc đường đi an toàn nhất trong thời gian ngắn.",
+  },
+  {
+    id: 4,
+    title: "TIC TAC TOE",
+    image: "https://img.freepik.com/premium-vector/tic-tac-toe-game-illustration-tic-tac-toe-game-with-hearts-cross-valentines-day-background_411588-2024.jpg?semt=ais_hybrid&w=740&q=80",
+    variant: "accent" as const,
+    url: "/games/tic-tac-toe",
+    help_content: "Mục tiêu: Xếp 3 ký hiệu (X hoặc O) thẳng hàng trên bàn cờ 3x3. Cách chơi: Người chơi luân phiên đặt quân. Trò chơi kết thúc khi có người thắng hoặc bàn cờ đầy (hòa). Điều khiển: Phím Trái/Phải để chuyển ô, ENTER để đánh dấu. Nhấn BACK để thoát game, HINT để xem nước đi ngăn chặn đối thủ.",
   },
   {
     id: 5,

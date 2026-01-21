@@ -610,10 +610,9 @@ export default function Match3Game({ onBack }: { onBack?: () => void }) {
     
     try {
       await gameSession.saveGame(true);
-      navigate('/');
+      if(onBack) onBack();
     } catch (error) {
       console.error("Error saving game:", error);
-      navigate('/');
     }
   };
 
@@ -927,7 +926,7 @@ export default function Match3Game({ onBack }: { onBack?: () => void }) {
           />
         )}
       </div>
-        {isPaused && (
+        {isPaused && hasStarted && !showGameOver && (
           <PauseMenu 
             onContinue={() => setIsPaused(false)}
             onSaveAndExit={handleSaveGame}

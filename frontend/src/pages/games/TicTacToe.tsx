@@ -10,6 +10,8 @@ import {
   User,
   Settings,
   Bot,
+  Play,
+  Pause,
 } from "lucide-react";
 import { RoundButton } from "@/components/ui/round-button";
 import { cn } from "@/lib/utils";
@@ -19,6 +21,7 @@ import { useGameSession } from "@/hooks/useGameSession";
 import { GameInstructions } from "@/components/games/GameInstructions";
 import { GameResultOverlay } from "@/components/games/GameResultOverlay";
 import { LoadGameDialog } from "@/components/dialogs/LoadGameDialog";
+import { PauseMenu } from "@/components/games/memory/PauseMenu";
 
 import { getEasyMove, getMediumMove, getHardMove } from "@/lib/AI/tictactoeAI";
 import {
@@ -31,8 +34,6 @@ import axiosClient from "@/lib/axios";
 import { toast } from "sonner";
 import formatTime from "@/utils/formatTime";
 import { GameLayout } from "@/components/layouts/GameLayout";
-
-import { GamePauseControl } from "@/components/games/GamePauseControl";
 
 const GAME_ID = 4;
 const WIN_LINES = [
@@ -198,6 +199,7 @@ export default function TicTacToe({ onBack }: { onBack?: () => void }) {
     isDraw,
     isTimeOut,
     difficulty,
+    isGamePaused,
   ]);
 
   useEffect(() => {
@@ -282,6 +284,7 @@ export default function TicTacToe({ onBack }: { onBack?: () => void }) {
     setXIsNext(true);
     setUserSymbol("X");
     setIsTimeOut(false);
+    setIsManualPaused(false);
     resetTimer();
     setIsSettingsOpen(true);
   };
@@ -309,6 +312,17 @@ export default function TicTacToe({ onBack }: { onBack?: () => void }) {
     startGame(newConfig);
 
     setIsSettingsOpen(false);
+  };
+
+  const handleSaveAndExit = async () => {
+    setIsManualPaused(false);
+    try {
+      await saveGame(true);
+      if (onBack) onBack();
+    } catch (error) {
+      console.error("Save failed:", error);
+      if (onBack) onBack();
+    }
   };
 
   function calculateWinner(squares: SquareValue[]) {
@@ -346,7 +360,7 @@ export default function TicTacToe({ onBack }: { onBack?: () => void }) {
     <GameLayout gameId={GAME_ID}>
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] p-2 relative">
         
-        {/* HEADER REMOVED */}\n
+        {/* HEADER REMOVED */}
 
         {/* Control Bar */}
         <div className="flex flex-wrap justify-center gap-4 mb-4 z-20">
@@ -409,16 +423,6 @@ export default function TicTacToe({ onBack }: { onBack?: () => void }) {
             )}
           </div>
 
-
-          <div className="flex justify-center my-6">
-            <GamePauseControl
-              isPaused={isManualPaused}
-              onTogglePause={() => setIsManualPaused(!isManualPaused)}
-              onQuit={quitGame}
-              gameName="Tic Tac Toe"
-            />
-          </div>
-
           {/* Nút Hướng Dẫn */}
           <GameInstructions gameType="tictactoe" />
           
@@ -443,6 +447,21 @@ export default function TicTacToe({ onBack }: { onBack?: () => void }) {
             disabled={!!winner || !!isDraw || isTimeOut}
           >
             <Settings className="w-5 h-5" />
+          </RoundButton>
+
+          {/* Pause Button */}
+          <RoundButton
+            size="small"
+            variant="neutral"
+            onClick={() => setIsManualPaused(!isManualPaused)}
+            disabled={!!winner || !!isDraw || isTimeOut}
+            title={isManualPaused ? "Tiếp tục" : "Tạm dừng"}
+          >
+            {isManualPaused ? (
+              <Play className="w-5 h-5 fill-current" />
+            ) : (
+              <Pause className="w-5 h-5" />
+            )}
           </RoundButton>
 
           {canSwitchSide && (
@@ -562,6 +581,15 @@ export default function TicTacToe({ onBack }: { onBack?: () => void }) {
             />
           )}
         </div>
+
+        {/* Pause Menu */}
+        {isManualPaused && !winner && !isDraw && !isTimeOut && (
+          <PauseMenu
+            onContinue={() => setIsManualPaused(false)}
+            onSaveAndExit={handleSaveAndExit}
+            onRestart={handleRestart}
+          />
+        )}
       </div>
     </GameLayout>
   );
