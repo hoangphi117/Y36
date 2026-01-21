@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Trophy,
@@ -11,6 +11,7 @@ import {
   Download,
   Loader2,
   Upload,
+  Lightbulb,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -84,6 +85,12 @@ export default function Match3Game({ onBack }: { onBack?: () => void }) {
   
   // Dialog states
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
+
+  // Hint states
+  const [hintsRemaining, setHintsRemaining] = useState(3);
+  const [hintSquares, setHintSquares] = useState<number[]>([]);
+  const [isHintActive, setIsHintActive] = useState(false);
+  const hintTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const activeCandies = useMemo(() => CANDY_TYPES.slice(0, numCandyTypes), [numCandyTypes]);
 
@@ -246,6 +253,10 @@ export default function Match3Game({ onBack }: { onBack?: () => void }) {
       setShowGameOver(false);
       setIsInitializing(false);
       setHasStarted(true);
+      // Reset hints for new/loaded game
+      setHintsRemaining(3);
+      setHintSquares([]);
+      setIsHintActive(false);
     } catch (error) {
       console.error("Error loading session:", error);
       setIsInitializing(false);
@@ -314,6 +325,10 @@ export default function Match3Game({ onBack }: { onBack?: () => void }) {
     setTimeRemaining(gameMode === "time" ? timeLimit : 0);
     setIsPaused(false);
     setShowGameOver(false);
+    // Reset hints
+    setHintsRemaining(3);
+    setHintSquares([]);
+    setIsHintActive(false);
   }, [boardSize, numCandyTypes, createRandomBoard, gameMode, timeLimit]);
 
   // Check for matches (3, 4, 5)
@@ -462,9 +477,123 @@ export default function Match3Game({ onBack }: { onBack?: () => void }) {
         newBoard[selectedSquare] = newBoard[idx];
         newBoard[idx] = temp;
         setBoard(newBoard);
+        
+        // Clear hint if player swapped
+        if (hintSquares.length > 0) {
+          if (hintTimeoutRef.current) {
+            clearTimeout(hintTimeoutRef.current);
+            hintTimeoutRef.current = null;
+          }
+          setHintSquares([]);
+          setIsHintActive(false);
+        }
         setMatchesCount(prev => prev + 1);
       }
       setSelectedSquare(null);
+    }
+  };
+
+  // Find a valid hint - a swap that creates a match
+  const findHint = useCallback((): number[] | null => {
+    for (let i = 0; i < boardSize * boardSize; i++) {
+      const col = i % boardSize;
+      const row = Math.floor(i / boardSize);
+
+      // Try swapping with right neighbor
+      if (col < boardSize - 1) {
+        const rightIdx = i + 1;
+        // Simulate swap
+        const testBoard = [...board];
+        const temp = testBoard[i];
+        testBoard[i] = testBoard[rightIdx];
+        testBoard[rightIdx] = temp;
+
+        // Check if this creates a match
+        if (wouldCreateMatch(testBoard, i, boardSize) || wouldCreateMatch(testBoard, rightIdx, boardSize)) {
+          return [i, rightIdx];
+        }
+      }
+
+      // Try swapping with bottom neighbor
+      if (row < boardSize - 1) {
+        const bottomIdx = i + boardSize;
+        // Simulate swap
+        const testBoard = [...board];
+        const temp = testBoard[i];
+        testBoard[i] = testBoard[bottomIdx];
+        testBoard[bottomIdx] = temp;
+
+        // Check if this creates a match
+        if (wouldCreateMatch(testBoard, i, boardSize) || wouldCreateMatch(testBoard, bottomIdx, boardSize)) {
+          return [i, bottomIdx];
+        }
+      }
+    }
+    return null;
+  }, [board, boardSize]);
+
+  // Check if a position would create a match of 3+
+  const wouldCreateMatch = (testBoard: string[], idx: number, size: number): boolean => {
+    const color = testBoard[idx];
+    if (!color) return false;
+
+    const row = Math.floor(idx / size);
+    const col = idx % size;
+
+    // Check horizontal match
+    let horizontalCount = 1;
+    // Check left
+    for (let c = col - 1; c >= 0 && testBoard[row * size + c] === color; c--) {
+      horizontalCount++;
+    }
+    // Check right
+    for (let c = col + 1; c < size && testBoard[row * size + c] === color; c++) {
+      horizontalCount++;
+    }
+    if (horizontalCount >= 3) return true;
+
+    // Check vertical match
+    let verticalCount = 1;
+    // Check up
+    for (let r = row - 1; r >= 0 && testBoard[r * size + col] === color; r--) {
+      verticalCount++;
+    }
+    // Check down
+    for (let r = row + 1; r < size && testBoard[r * size + col] === color; r++) {
+      verticalCount++;
+    }
+    if (verticalCount >= 3) return true;
+
+    return false;
+  };
+
+  // Handle hint button click
+  const handleHintClick = () => {
+    if (hintsRemaining <= 0 || isPaused || !hasStarted || showGameOver || isHintActive) return;
+
+    const hint = findHint();
+    if (hint) {
+      // Clear any existing timeout
+      if (hintTimeoutRef.current) {
+        clearTimeout(hintTimeoutRef.current);
+      }
+      
+      setHintSquares(hint);
+      setIsHintActive(true);
+      setHintsRemaining(prev => prev - 1);
+      
+      // Deduct points for using hint
+      setScore(prev => Math.max(0, prev - 10));
+      playSound("pop");
+
+      // Clear hint after 3 seconds
+      hintTimeoutRef.current = setTimeout(() => {
+        setHintSquares([]);
+        setIsHintActive(false);
+        hintTimeoutRef.current = null;
+      }, 3000);
+    } else {
+      toast.info("Không tìm thấy nước đi hợp lệ!");
     }
   };
 
@@ -620,10 +749,52 @@ export default function Match3Game({ onBack }: { onBack?: () => void }) {
             </RoundButton>
           </LoadGameDialog>
           
+          {hasStarted && (
+            <RoundButton 
+              size="small" 
+              variant="accent" 
+              onClick={() => setIsPaused(!isPaused)}
+              className="text-xs py-1.5 px-3"
+
+            >
+              {isPaused ? (
+                <>
+                  <PlayCircle className="w-3.5 h-3.5 mr-1.5" /> TIẾP TỤC
+                </>
+              ) : (
+                <>
+                  <Pause className="w-3.5 h-3.5 mr-1.5" /> TẠM DỪNG
+                </>
+              )}
+            </RoundButton>
+          )}
+          {hasStarted && (
+            <RoundButton 
+              size="small" 
+              variant="accent" 
+              onClick={handleHintClick}
+              disabled={hintsRemaining <= 0 || isPaused || showGameOver || isHintActive}
+              className="text-xs py-1.5 px-3 relative"
+              title={`Gợi ý (${hintsRemaining} lần còn lại, -50 điểm)`}
+            >
+              <Lightbulb className="w-3.5 h-3.5 mr-1.5" />
+              gợi ý ({hintsRemaining})
+            </RoundButton>
+          )}
+          <RoundButton 
+            size="small" 
+            variant="primary" 
+            onClick={handleSaveGame} 
+            className="text-xs py-1.5 px-3"
+            disabled={gameSession.isSaving || !currentSessionId}
+          >
+            {gameSession.isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <Upload className="w-3.5 h-3.5 mr-1.5" />}
+            Lưu
+          </RoundButton>
           <GameInstructions gameType="match3" />
 
           <RoundButton size="small" variant="neutral" onClick={() => setShowSettingsDialog(true)} className="text-xs py-1.5 px-3">
-            <Settings className="w-3.5 h-3.5 mr-1.5" /> CÀI ĐẶT
+            <Settings className="w-3.5 h-3.5 mr-1.5" />
           </RoundButton>
         </div>
       </div>
@@ -644,6 +815,7 @@ export default function Match3Game({ onBack }: { onBack?: () => void }) {
           >
             {(board.length > 0 ? board : Array(boardSize * boardSize).fill("")).map((typeId, index) => {
               const type = CANDY_TYPES.find(t => t.id === typeId);
+              const isHintSquare = hintSquares.includes(index);
               return (
                 <motion.button
                   key={`${index}-${typeId || 'empty'}`}
@@ -651,9 +823,25 @@ export default function Match3Game({ onBack }: { onBack?: () => void }) {
                   whileHover={!isPaused && hasStarted ? { scale: 1.05 } : undefined}
                   onClick={() => !isPaused && hasStarted && handleSquareClick(index)}
                   disabled={isPaused || !hasStarted}
+                  animate={isHintSquare ? {
+                    scale: [1, 1.15, 1, 1.15, 1],
+                    boxShadow: [
+                      "0 0 0px rgba(250, 204, 21, 0)",
+                      "0 0 20px rgba(250, 204, 21, 0.8)",
+                      "0 0 0px rgba(250, 204, 21, 0)",
+                      "0 0 20px rgba(250, 204, 21, 0.8)",
+                      "0 0 0px rgba(250, 204, 21, 0)",
+                    ]
+                  } : {}}
+                  transition={isHintSquare ? {
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  } : {}}
                   className={cn(
                     "w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center relative bg-linear-to-br from-white/10 to-transparent border border-white/10",
                     selectedSquare === index && hasStarted ? "ring-4 ring-primary z-20" : "",
+                    isHintSquare ? "ring-4 ring-yellow-400 z-20" : "",
                     isPaused ? "opacity-50 cursor-not-allowed" : "",
                     !hasStarted ? "invisible" : ""
                   )}
