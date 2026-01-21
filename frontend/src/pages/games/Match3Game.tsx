@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Trophy,
@@ -90,6 +90,7 @@ export default function Match3Game({ onBack }: { onBack?: () => void }) {
   const [hintsRemaining, setHintsRemaining] = useState(3);
   const [hintSquares, setHintSquares] = useState<number[]>([]);
   const [isHintActive, setIsHintActive] = useState(false);
+  const hintTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const activeCandies = useMemo(() => CANDY_TYPES.slice(0, numCandyTypes), [numCandyTypes]);
 
@@ -477,6 +478,16 @@ export default function Match3Game({ onBack }: { onBack?: () => void }) {
         newBoard[selectedSquare] = newBoard[idx];
         newBoard[idx] = temp;
         setBoard(newBoard);
+        
+        // Clear hint if player swapped
+        if (hintSquares.length > 0) {
+          if (hintTimeoutRef.current) {
+            clearTimeout(hintTimeoutRef.current);
+            hintTimeoutRef.current = null;
+          }
+          setHintSquares([]);
+          setIsHintActive(false);
+        }
         setMatchesCount(prev => prev + 1);
       }
       setSelectedSquare(null);
@@ -563,18 +574,24 @@ export default function Match3Game({ onBack }: { onBack?: () => void }) {
 
     const hint = findHint();
     if (hint) {
+      // Clear any existing timeout
+      if (hintTimeoutRef.current) {
+        clearTimeout(hintTimeoutRef.current);
+      }
+      
       setHintSquares(hint);
       setIsHintActive(true);
       setHintsRemaining(prev => prev - 1);
       
       // Deduct points for using hint
-      setScore(prev => Math.max(0, prev - 50));
+      setScore(prev => Math.max(0, prev - 10));
       playSound("pop");
 
       // Clear hint after 3 seconds
-      setTimeout(() => {
+      hintTimeoutRef.current = setTimeout(() => {
         setHintSquares([]);
         setIsHintActive(false);
+        hintTimeoutRef.current = null;
       }, 3000);
     } else {
       toast.info("Không tìm thấy nước đi hợp lệ!");
@@ -726,14 +743,14 @@ export default function Match3Game({ onBack }: { onBack?: () => void }) {
           {hasStarted && (
             <RoundButton 
               size="small" 
-              variant="secondary" 
+              variant="accent" 
               onClick={handleHintClick}
               disabled={hintsRemaining <= 0 || isPaused || showGameOver || isHintActive}
               className="text-xs py-1.5 px-3 relative"
               title={`Gợi ý (${hintsRemaining} lần còn lại, -50 điểm)`}
             >
               <Lightbulb className="w-3.5 h-3.5 mr-1.5" />
-              HINT ({hintsRemaining})
+              gợi ý ({hintsRemaining})
             </RoundButton>
           )}
           <RoundButton 
@@ -748,7 +765,7 @@ export default function Match3Game({ onBack }: { onBack?: () => void }) {
           </RoundButton>
           <GameInstructions gameType="match3" />
           <RoundButton size="small" variant="neutral" onClick={() => setShowSettingsDialog(true)} className="text-xs py-1.5 px-3">
-            <Settings className="w-3.5 h-3.5 mr-1.5" /> CÀI ĐẶT
+            <Settings className="w-3.5 h-3.5 mr-1.5" />
           </RoundButton>
         </div>
       </div>
