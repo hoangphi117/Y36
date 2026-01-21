@@ -39,15 +39,6 @@ const GAME_ASSETS: {
   },
   {
     id: 3,
-    title: "TIC TAC TOE",
-    image:
-      "https://img.freepik.com/premium-vector/tic-tac-toe-game-illustration-tic-tac-toe-game-with-hearts-cross-valentines-day-background_411588-2024.jpg?semt=ais_hybrid&w=740&q=80",
-    variant: "accent",
-    url: "/games/tic-tac-toe",
-    instructionKey: "tictactoe",
-  },
-  {
-    id: 4,
     title: "Rắn Săn Mồi",
     image:
       "https://s3-api.fpt.vn/fptvn-storage/2025-12-01/1764574515_tro-ran-san-moi-tren-google-11.jpg",
@@ -58,10 +49,11 @@ const GAME_ASSETS: {
   {
     id: 4,
     title: "TIC TAC TOE",
-    image: "https://img.freepik.com/premium-vector/tic-tac-toe-game-illustration-tic-tac-toe-game-with-hearts-cross-valentines-day-background_411588-2024.jpg?semt=ais_hybrid&w=740&q=80",
-    variant: "accent" as const,
+    image:
+      "https://img.freepik.com/premium-vector/tic-tac-toe-game-illustration-tic-tac-toe-game-with-hearts-cross-valentines-day-background_411588-2024.jpg?semt=ais_hybrid&w=740&q=80",
+    variant: "accent",
     url: "/games/tic-tac-toe",
-    help_content: "Mục tiêu: Xếp 3 ký hiệu (X hoặc O) thẳng hàng trên bàn cờ 3x3. Cách chơi: Người chơi luân phiên đặt quân. Trò chơi kết thúc khi có người thắng hoặc bàn cờ đầy (hòa). Điều khiển: Phím Trái/Phải để chuyển ô, ENTER để đánh dấu. Nhấn BACK để thoát game, HINT để xem nước đi ngăn chặn đối thủ.",
+    instructionKey: "tictactoe",
   },
   {
     id: 5,
