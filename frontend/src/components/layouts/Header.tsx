@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useEffect, useState } from "react";
+import logo from "@/assets/logo.png";
 
 export const Header = () => {
   const { user: localUser, token, logout, setAuth } = useAuthStore();
@@ -112,7 +113,7 @@ export const Header = () => {
           )}
         >
           <div className="relative w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg transition-transform group-hover:-translate-y-1 shrink-0">
-            <Leaf className="text-white w-7 h-7 fill-white/20" />
+            <img src={logo} alt="Logo" className="w-10 h-10" />
             <div className="absolute inset-0 bg-green-900/20 rounded-2xl -z-10 translate-y-1" />
           </div>
           {!isCollapsed && (

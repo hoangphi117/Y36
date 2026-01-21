@@ -344,12 +344,12 @@ export default function TicTacToe({ onBack }: { onBack?: () => void }) {
   }
   return (
     <GameLayout gameId={GAME_ID}>
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] p-2 relative">
+      <div className="flex flex-col items-center min-h-[500px] p-2 relative">
         
-        {/* HEADER REMOVED */}\n
+        {/* HEADER REMOVED */}
 
         {/* Control Bar */}
-        <div className="flex flex-wrap justify-center gap-4 mb-4 z-20">
+        <div className="flex flex-wrap justify-center gap-4 mb-2 z-20">
           <RoundButton
             onClick={handleManualSave}
             disabled={

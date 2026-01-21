@@ -96,9 +96,8 @@ export default function DrawingGame({ onBack }: { onBack?: () => void }) {
     onQuit: onBack,
   });
 
-  // Scroll to top and initial loading delay
+  // Initial loading delay
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' });
     const timer = setTimeout(() => {
       setIsInitializing(false);
     }, 300);

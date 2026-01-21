@@ -105,7 +105,6 @@ export default function Match3Game({ onBack }: { onBack?: () => void }) {
 
   // Scroll to top when component mounts
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' });
     // Set isInitializing to false after a short delay to show loading
     const timer = setTimeout(() => {
       setIsInitializing(false);
@@ -558,7 +557,6 @@ export default function Match3Game({ onBack }: { onBack?: () => void }) {
         </motion.div>
       </div>
 
-      {/* Controls */}
       <div className="w-full max-w-6xl px-4 mb-8">
         <div className="flex gap-2 justify-center mb-4 flex-wrap">
           {hasStarted && (
@@ -566,7 +564,38 @@ export default function Match3Game({ onBack }: { onBack?: () => void }) {
               <RotateCcw className="w-3.5 h-3.5 mr-1.5" /> Chơi lại
             </RoundButton>
           )}
-          
+
+          {hasStarted && (
+            <RoundButton 
+              size="small" 
+              variant="accent" 
+              onClick={() => setIsPaused(!isPaused)}
+              className="text-xs py-1.5 px-3"
+
+            >
+              {isPaused ? (
+                <>
+                  <PlayCircle className="w-3.5 h-3.5 mr-1.5" /> TIẾP TỤC
+                </>
+              ) : (
+                <>
+                  <Pause className="w-3.5 h-3.5 mr-1.5" /> TẠM DỪNG
+                </>
+              )}
+            </RoundButton>
+          )}
+
+          <RoundButton 
+            size="small" 
+            variant="primary" 
+            onClick={handleSaveGame} 
+            className="text-xs py-1.5 px-3"
+            disabled={gameSession.isSaving || !currentSessionId}
+          >
+            {gameSession.isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <Upload className="w-3.5 h-3.5 mr-1.5" />}
+            Lưu
+          </RoundButton>
+
           <LoadGameDialog
             open={gameSession.showLoadDialog}
             onOpenChange={gameSession.setShowLoadDialog}
@@ -589,39 +618,10 @@ export default function Match3Game({ onBack }: { onBack?: () => void }) {
             >
               <Download className="w-3.5 h-3.5 mr-1.5" /> Tải
             </RoundButton>
-            
           </LoadGameDialog>
           
-          {hasStarted && (
-            <RoundButton 
-              size="small" 
-              variant="accent" 
-              onClick={() => setIsPaused(!isPaused)}
-              className="text-xs py-1.5 px-3"
-
-            >
-              {isPaused ? (
-                <>
-                  <PlayCircle className="w-3.5 h-3.5 mr-1.5" /> TIẾP TỤC
-                </>
-              ) : (
-                <>
-                  <Pause className="w-3.5 h-3.5 mr-1.5" /> TẠM DỪNG
-                </>
-              )}
-            </RoundButton>
-          )}
-          <RoundButton 
-            size="small" 
-            variant="primary" 
-            onClick={handleSaveGame} 
-            className="text-xs py-1.5 px-3"
-            disabled={gameSession.isSaving || !currentSessionId}
-          >
-            {gameSession.isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <Upload className="w-3.5 h-3.5 mr-1.5" />}
-            Lưu
-          </RoundButton>
           <GameInstructions gameType="match3" />
+
           <RoundButton size="small" variant="neutral" onClick={() => setShowSettingsDialog(true)} className="text-xs py-1.5 px-3">
             <Settings className="w-3.5 h-3.5 mr-1.5" /> CÀI ĐẶT
           </RoundButton>

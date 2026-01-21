@@ -9,7 +9,7 @@ import { RoundButton } from "@/components/ui/round-button";
 import { HelpCircle, Info } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-type GameType = "snake" | "caro" | "tictactoe" | "match3" | "memory" | "drawing";
+export type GameType = "snake" | "caro" | "tictactoe" | "match3" | "memory" | "drawing";
 
 interface GameInstructionsProps {
   gameType: GameType;
@@ -87,7 +87,7 @@ export function GameInstructions({
   );
 }
 
-const GAME_INSTRUCTIONS = {
+export const GAME_INSTRUCTIONS = {
   snake: {
     title: "Rắn Săn Mồi",
     goal: "Điều khiển rắn ăn mồi để dài ra và đạt điểm cao nhất mà không bị đâm vào tường hoặc chính mình.",

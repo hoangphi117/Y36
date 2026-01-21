@@ -390,11 +390,11 @@ export default function SnakeGame({ onBack }: { onBack?: () => void }) {
 
   return (
     <GameLayout gameId={GAME_ID}>
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background">
+      <div className="min-h-[500px] flex flex-col items-center p-2 bg-background">
         {/* HEADER REMOVED */}
         
         {/* INFO */}
-        <div className="flex justify-between items-center w-full max-w-md px-4 py-2 mb-6 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border">
+        <div className="flex justify-between items-center w-full max-w-md px-4 py-2 mb-4 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border">
           <div className="flex items-center gap-2">
             <Trophy className="w-5 h-5 text-yellow-500" />
             <span className="font-bold text-xl">{score}</span>
