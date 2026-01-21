@@ -338,12 +338,11 @@ export default function MemoryLevelGame({ onBack, onGoHome }: { onBack?: () => v
       
       // Save game session
       await saveGameSession(true);
-
-      navigate("/");
+      if(onBack) onBack();
     } catch (error) {
       console.error("Error saving game:", error);
       // Still navigate back even if save fails
-      navigate("/");
+      if(onBack) onBack();
     }
   };
 
@@ -499,7 +498,7 @@ export default function MemoryLevelGame({ onBack, onGoHome }: { onBack?: () => v
             <RoundButton 
               size="small" 
               variant="primary" 
-              onClick={handleSaveAndExit}
+              onClick={() => saveGameSession(true)}
               className="text-[0.8rem] sm:py-2 rounded-md"
               disabled={isSessionSaving}
             >

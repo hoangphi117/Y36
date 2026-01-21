@@ -39,7 +39,7 @@ export function PauseMenu({ onContinue, onSaveAndExit, onRestart }: PauseMenuPro
             className="flex items-center justify-center gap-3 w-full p-4 bg-accent text-accent-foreground rounded-lg font-bold text-sm hover:bg-accent/90 transition-colors"
           >
             <Save className="w-6 h-6" />
-            Lưu
+            Lưu và thoát
           </RoundButton>
 
           {/* Restart Button */}

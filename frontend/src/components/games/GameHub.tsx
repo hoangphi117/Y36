@@ -38,6 +38,15 @@ const GAME_ASSETS: {
     instructionKey: "caro",
   },
   {
+    id: 3,
+    title: "Rắn Săn Mồi",
+    image:
+      "https://s3-api.fpt.vn/fptvn-storage/2025-12-01/1764574515_tro-ran-san-moi-tren-google-11.jpg",
+    variant: "danger",
+    url: "/games/snake",
+    instructionKey: "snake",
+  },
+  {
     id: 4,
     title: "TIC TAC TOE",
     image:

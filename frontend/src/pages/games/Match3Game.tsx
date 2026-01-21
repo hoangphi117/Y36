@@ -609,10 +609,9 @@ export default function Match3Game({ onBack }: { onBack?: () => void }) {
     
     try {
       await gameSession.saveGame(true);
-      navigate('/');
+      if(onBack) onBack();
     } catch (error) {
       console.error("Error saving game:", error);
-      navigate('/');
     }
   };
 
@@ -694,37 +693,6 @@ export default function Match3Game({ onBack }: { onBack?: () => void }) {
             </RoundButton>
           )}
 
-          {hasStarted && (
-            <RoundButton 
-              size="small" 
-              variant="accent" 
-              onClick={() => setIsPaused(!isPaused)}
-              className="text-xs py-1.5 px-3"
-
-            >
-              {isPaused ? (
-                <>
-                  <PlayCircle className="w-3.5 h-3.5 mr-1.5" /> TIẾP TỤC
-                </>
-              ) : (
-                <>
-                  <Pause className="w-3.5 h-3.5 mr-1.5" /> TẠM DỪNG
-                </>
-              )}
-            </RoundButton>
-          )}
-
-          <RoundButton 
-            size="small" 
-            variant="primary" 
-            onClick={handleSaveGame} 
-            className="text-xs py-1.5 px-3"
-            disabled={gameSession.isSaving || !currentSessionId}
-          >
-            {gameSession.isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <Upload className="w-3.5 h-3.5 mr-1.5" />}
-            Lưu
-          </RoundButton>
-
           <LoadGameDialog
             open={gameSession.showLoadDialog}
             onOpenChange={gameSession.setShowLoadDialog}
@@ -765,7 +733,7 @@ export default function Match3Game({ onBack }: { onBack?: () => void }) {
           <RoundButton 
             size="small" 
             variant="primary" 
-            onClick={handleSaveGame} 
+            onClick={() => gameSession.saveGame(true)} 
             className="text-xs py-1.5 px-3"
             disabled={gameSession.isSaving || !currentSessionId}
           >
@@ -937,7 +905,7 @@ export default function Match3Game({ onBack }: { onBack?: () => void }) {
           />
         )}
       </div>
-        {isPaused && (
+        {isPaused && hasStarted && !showGameOver && (
           <PauseMenu 
             onContinue={() => setIsPaused(false)}
             onSaveAndExit={handleSaveGame}

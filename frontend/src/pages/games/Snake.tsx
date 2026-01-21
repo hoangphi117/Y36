@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { GameInstructions } from "@/components/games/GameInstructions";
 import { GameResultOverlay } from "@/components/games/GameResultOverlay";
+import { PauseMenu } from "@/components/games/memory/PauseMenu";
 import { AnimatePresence } from "framer-motion";
 import { RoundButton } from "@/components/ui/round-button";
 import {
@@ -346,6 +347,12 @@ export default function SnakeGame({ onBack }: { onBack?: () => void }) {
     }
   };
 
+  const handleSaveAndExit = async () => {
+    setIsPaused(false);
+    await saveGame(true);
+    if (onBack) onBack();
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === " ") {
@@ -513,13 +520,6 @@ export default function SnakeGame({ onBack }: { onBack?: () => void }) {
             })}
 
             <AnimatePresence>
-              {isPaused && !isGameOver && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[1px]">
-                  <div className="bg-secondary px-4 py-1 rounded font-bold">
-                    PAUSED
-                  </div>
-                </div>
-              )}
               {isGameOver && (
                 <GameResultOverlay
                   status="lose"
@@ -594,6 +594,15 @@ export default function SnakeGame({ onBack }: { onBack?: () => void }) {
           </RoundButton>
         </div>
       </div>
+
+      {/* Pause Menu */}
+      {isPaused && !isGameOver && !isSettingsOpen && session && (
+        <PauseMenu
+          onContinue={() => setIsPaused(false)}
+          onSaveAndExit={handleSaveAndExit}
+          onRestart={handleRestart}
+        />
+      )}
     </GameLayout>
   );
 }
