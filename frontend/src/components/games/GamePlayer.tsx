@@ -43,7 +43,7 @@ export const GamePlayer = ({ game, onBack }: GamePlayerProps) => {
   };
 
   return (
-    <div className="w-full h-full min-h-[600px] flex items-center justify-center animate-in fade-in zoom-in-95 duration-500">
+    <div className="w-full h-full min-h-[600px] flex flex-col items-center justify-start pt-4 animate-in fade-in zoom-in-95 duration-500">
       <Suspense
         fallback={
           <div className="flex flex-col items-center justify-center gap-4 text-primary">

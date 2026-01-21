@@ -1,4 +1,4 @@
-// src/components/layouts/GameLayout.tsx
+import { useEffect } from "react";
 import { GameRating } from "@/components/ratings/GameRating";
 import { GameComments } from "@/components/comments/GameComments";
 import { AchievementPopup } from "../dialogs/AchievementPopup";
@@ -14,6 +14,10 @@ interface GameLayoutProps {
  * - Phần dưới: Rating và Comments
  */
 export function GameLayout({ gameId, children }: GameLayoutProps) {
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+
   return (
     <div className="flex flex-col w-full">
       {/* Phần hiển thị Game */}
