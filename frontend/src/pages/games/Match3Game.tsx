@@ -39,6 +39,7 @@ import axiosClient from "@/lib/axios";
 import { GameLayout } from "@/components/layouts/GameLayout";
 
 import { useGameSound } from "@/hooks/useGameSound";
+import { GameInstructions } from "@/components/games/GameInstructions";
 
 
 const BOARD_SIZE = 6;
@@ -475,11 +476,15 @@ export default function Match3Game({ onBack }: { onBack?: () => void }) {
       return;
     }
     
+    // Close pause menu first
+    setIsPaused(false);
+    
     try {
       await gameSession.saveGame(true);
       navigate('/');
     } catch (error) {
       console.error("Error saving game:", error);
+      navigate('/');
     }
   };
 
@@ -614,8 +619,9 @@ export default function Match3Game({ onBack }: { onBack?: () => void }) {
             disabled={gameSession.isSaving || !currentSessionId}
           >
             {gameSession.isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <Upload className="w-3.5 h-3.5 mr-1.5" />}
-            Lưu Game
+            Lưu
           </RoundButton>
+          <GameInstructions gameType="match3" />
           <RoundButton size="small" variant="neutral" onClick={() => setShowSettingsDialog(true)} className="text-xs py-1.5 px-3">
             <Settings className="w-3.5 h-3.5 mr-1.5" /> CÀI ĐẶT
           </RoundButton>
@@ -770,14 +776,6 @@ export default function Match3Game({ onBack }: { onBack?: () => void }) {
           />
         )}
         
-      </div>
-
-      <div className="mt-8 px-4 max-w-2xl">
-        <div className="space-y-2 text-center">
-          <p className="text-muted-foreground text-sm font-medium animate-pulse">
-            💡 Mẹo: Chọn 2 ô cạnh nhau để tráo đổi vị trí!
-          </p>
-        </div>
       </div>
       </div>
 

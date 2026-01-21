@@ -10,6 +10,7 @@ import { Slider } from "@/components/ui/slider"
 import axiosClient from "@/lib/axios";
 import { toast } from "react-hot-toast";
 import { GameLayout } from "@/components/layouts/GameLayout";
+import { GameInstructions } from "@/components/games/GameInstructions";
 
 const GAME_ID = 7; // Drawing game ID
 
@@ -601,6 +602,7 @@ export default function DrawingGame({ onBack }: { onBack?: () => void }) {
                   <FolderOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   <span className="hidden sm:inline ml-1.5">Tải ảnh về máy</span>
                 </RoundButton>
+                <GameInstructions gameType="drawing" />
               </div>
             </div>
           </div>

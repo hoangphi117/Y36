@@ -32,6 +32,7 @@ import { LoadGameDialog } from "@/components/dialogs/LoadGameDialog";
 import { toast } from "react-hot-toast";
 import axiosClient from "@/lib/axios";
 import { GameLayout } from "@/components/layouts/GameLayout";
+import { GameInstructions } from "@/components/games/GameInstructions";
 
 const ICONS = [icon1, icon2, icon3, icon4, icon5, icon6, icon7, icon8, icon9, icon10, icon11, icon12, icon13, icon14, icon15, icon16];
 
@@ -332,14 +333,17 @@ export default function MemoryLevelGame({ onBack, onGoHome }: { onBack?: () => v
   // Handle pause menu - save game session
   const handleSaveAndExit = async () => {
     try {
+      // Close pause menu first
+      setIsPaused(false);
+      
       // Save game session
       await saveGameSession(true);
-      // Navigate back to selection
-      navigate("/memory");
+
+      navigate("/");
     } catch (error) {
       console.error("Error saving game:", error);
       // Still navigate back even if save fails
-      navigate("/memory");
+      navigate("/");
     }
   };
 
@@ -529,6 +533,7 @@ export default function MemoryLevelGame({ onBack, onGoHome }: { onBack?: () => v
               <Download className="mr-1.5" /> Tải
             </RoundButton>
             </LoadGameDialog> 
+            <GameInstructions gameType="memory" />
           </div>
 
           {/* Game board */}

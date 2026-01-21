@@ -9,7 +9,7 @@ import { RoundButton } from "@/components/ui/round-button";
 import { HelpCircle, Info } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-type GameType = "snake" | "caro" | "tictactoe";
+type GameType = "snake" | "caro" | "tictactoe" | "match3" | "memory" | "drawing";
 
 interface GameInstructionsProps {
   gameType: GameType;
@@ -133,6 +133,65 @@ const GAME_INSTRUCTIONS = {
     tips: [
       "Chiếm ô trung tâm là một lợi thế lớn.",
       "Nếu đối thủ đánh vào góc, hãy cẩn thận bẫy.",
+    ],
+  },
+  match3: {
+    title: "Xếp Kẹo Match-3",
+    goal: "Hoán đổi vị trí các viên kẹo để tạo thành hàng ngang hoặc dọc có từ 3 viên kẹo giống nhau trở lên để ghi điểm và hoàn thành mục tiêu của màn chơi.",
+    controls: [
+      "Nhấp chuột vào một viên kẹo, sau đó nhấp vào viên kẹo kế bên (trên, dưới, trái, phải) để hoán đổi vị trí.",
+      "Chỉ có thể hoán đổi 2 viên kẹo kề nhau và tạo thành hàng từ 3 viên trở lên.",
+    ],
+    rules: [
+      "Khi tạo được 3 viên kẹo giống nhau thẳng hàng, chúng sẽ biến mất và bạn được cộng điểm.",
+      "Các viên kẹo phía trên sẽ rơi xuống lấp chỗ trống và viên kẹo mới sẽ xuất hiện từ trên xuống.",
+      "Bạn có số lượng nước đi giới hạn hoặc thời gian giới hạn để hoàn thành mục tiêu.",
+    ],
+    tips: [
+      "Tìm kiếm cơ hội tạo combo đặc biệt (4 hoặc 5 viên) thay vì chỉ xếp 3 viên đơn giản.",
+      "Ưu tiên các nước đi ở vị trí dưới để tạo nhiều hiệu ứng dây chuyền.",
+      "Quan sát toàn bộ bàn chơi trước khi di chuyển để tìm nước đi tối ưu nhất.",
+    ],
+  },
+  memory: {
+    title: "Trò Chơi Trí Nhớ",
+    goal: "Tìm tất cả các cặp thẻ giống nhau bằng cách lật các thẻ úp và ghi nhớ vị trí của chúng.",
+    controls: [
+      "Nhấp chuột vào các thẻ úp để lật mở và xem hình ảnh bên dưới.",
+      "Mỗi lượt chơi, bạn được lật 2 thẻ.",
+    ],
+    rules: [
+      "Tất cả các thẻ được úp ngửa và xếp ngẫu nhiên trên bàn chơi.",
+      "Mỗi lần bạn lật 2 thẻ, nếu chúng giống nhau, cặp thẻ đó sẽ được giữ mở và bạn được cộng điểm.",
+      "Nếu 2 thẻ không giống nhau, chúng sẽ tự động úp lại sau vài giây.",
+      "Trò chơi kết thúc khi bạn tìm được tất cả các cặp thẻ.",
+      "Số lần lật càng ít và thời gian hoàn thành càng nhanh thì điểm số càng cao.",
+    ],
+    tips: [
+      "Tập trung ghi nhớ vị trí của các thẻ đã được lật để tìm cặp nhanh hơn.",
+      "Bắt đầu từ một góc và lật có hệ thống để dễ nhớ vị trí.",
+      "Đừng vội vàng, hãy dành thời gian để ghi nhớ trước khi lật thẻ tiếp theo.",
+    ],
+  },
+  drawing: {
+    title: "Vẽ Tự Do",
+    goal: "Sáng tạo và vẽ những bức tranh độc đáo của riêng bạn với các công cụ vẽ đa dạng.",
+    controls: [
+      "Di chuyển chuột hoặc chạm và kéo trên màn hình để vẽ.",
+      "Chọn màu sắc từ bảng màu để thay đổi màu vẽ.",
+      "Điều chỉnh độ dày của nét vẽ bằng thanh trượt kích thước.",
+      "Sử dụng nút Tẩy để xóa những phần không mong muốn.",
+      "Nhấn nút Xóa tất cả để bắt đầu lại từ đầu.",
+    ],
+    rules: [
+      "Không có giới hạn về thời gian hoặc số lần vẽ.",
+      "Bạn có thể vẽ bất cứ thứ gì bạn muốn.",
+      "Sử dụng các công cụ có sẵn để tạo ra tác phẩm của riêng bạn.",
+      "Lưu lại bức vẽ của bạn bằng cách nhấn nút Tải xuống hoặc Lưu.",
+    ],
+    tips: [
+      "Thử nghiệm với nhiều màu sắc và kích thước nét vẽ khác nhau.",
+      "Sử dụng công cụ tẩy để tinh chỉnh các chi tiết nhỏ.",
     ],
   },
 };
