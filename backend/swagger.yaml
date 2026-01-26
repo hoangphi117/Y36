@@ -218,6 +218,53 @@ components:
           type: string
           example: Server error
 
+    Achievement:
+      type: object
+      properties:
+        id:
+          type: integer
+        game_id:
+          type: integer
+        code:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        condition_type:
+          type: string
+          enum: [win_count, play_count, score, rank]
+        condition_value:
+          type: integer
+        image_url:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          
+    UserAchievement:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        game_id:
+          type: integer
+          nullable: true
+        code:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        unlocked_at:
+          type: string
+          format: date-time
+
 # --- ĐƯỜNG DẪN API ---
 paths:
   # 1. AUTHENTICATION
@@ -2063,6 +2110,9 @@ paths:
     get:
       tags: [Ranking]
       summary: Lấy bảng xếp hạng (Global hoặc Friends)
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
       parameters:
         - name: gameId
           in: query
@@ -2086,6 +2136,9 @@ paths:
     get:
       tags: [Ranking]
       summary: Lấy thứ hạng cá nhân trong game cụ thể
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
       parameters:
         - name: gameId
           in: query
@@ -2104,3 +2157,93 @@ paths:
                     properties:
                       rank: { type: integer, example: 5 }
                       score: { type: integer, example: 1200 }
+
+  /achievements/available/{gameId}:
+    get:
+      tags: [Achievements]
+      summary: Lấy danh sách thành tựu có sẵn của game
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: gameId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/Achievement' } }
+
+  /achievements/{userId}:
+    get:
+      tags: [Achievements]
+      summary: Lấy danh sách thành tựu đã đạt được của user
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        200:
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/UserAchievement' } }
+  
+  /achievements/unlock:
+    post:
+      tags: [Achievements]
+      summary: Mở khóa thành tựu
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [achievement_code]
+              properties:
+                achievement_code: { type: string }
+                game_id: { type: integer }
+      responses:
+        200:
+          description: Mở khóa thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  data: { $ref: '#/components/schemas/UserAchievement' }
+                  new_unlock: { type: boolean }
+
+  /achievements:
+    get:
+      tags: [Achievements]
+      summary: Lấy danh sách thành tựu của user hiện tại (Me)
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      responses:
+        200:
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/UserAchievement' } }
