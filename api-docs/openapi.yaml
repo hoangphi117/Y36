@@ -1,0 +1,2249 @@
+openapi: 3.0.0
+info:
+  title: Board Game API Documentation
+  version: 1.0.0
+  description: Tài liệu API cho dự án Board Game.
+  contact:
+    name: Y36 Dev Team
+    email: vquan27112005@gmail.com
+
+servers:
+  - url: http://localhost:3000/api
+    description: Local Development Server
+
+security:
+  - ApiKeyAuth: []
+
+# --- CẤU HÌNH BẢO MẬT ---
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: API Key bảo mật
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  # --- ĐỊNH NGHĨA CÁC SCHEMA DÙNG CHUNG (TÁI SỬ DỤNG) ---
+  schemas:
+    Game:
+      type: object
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        is_active:
+          type: boolean
+        default_config:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+    
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        username:
+          type: string
+        role:
+          type: string
+          enum: [admin, customer]
+        avatar_url:
+          type: string
+        dark_mode:
+          type: boolean
+        status:
+          type: string
+          enum: [active, banned]
+        created_at:
+          type: string
+          format: date-time
+
+    GameSession:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+
+        user_id:
+          type: string
+          format: uuid
+
+        game_id:
+          type: integer
+
+        status:
+          type: string
+          enum: [playing, completed, saved]
+
+        score:
+          type: integer
+
+        play_time_seconds:
+          type: integer
+
+        board_state:
+          type: object
+          nullable: true
+
+        session_config:
+          type: object
+          nullable: true
+
+        created_at:
+          type: string
+          format: date-time
+
+        updated_at:
+          type: string
+          format: date-time
+    
+    Friendship:
+      type: object
+      properties:
+        user_id_1:
+          type: string
+          format: uuid
+        user_id_2:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+            - pending
+            - accepted
+            - blocked
+          default: pending
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - user_id_1
+        - user_id_2
+        - status
+        - created_at
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        sender_id:
+          type: string
+          format: uuid
+        receiver_id:
+          type: string
+          format: uuid
+        content:
+          type: string
+        is_read:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+      
+    Comment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        game_id:
+          type: integer
+        content:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    GameRating:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        game_id:
+          type: integer
+          example: 1
+        rating:
+          type: number
+          format: float
+          example: 4.5
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    RankingEntry:
+      type: object
+      properties:
+        user_id: { type: string, format: uuid }
+        username: { type: string }
+        avatar_url: { type: string, nullable: true }
+        high_score: { type: integer }
+        rank_points: { type: integer }
+        total_wins: { type: integer }
+        total_matches: { type: integer }
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Server error
+
+    Achievement:
+      type: object
+      properties:
+        id:
+          type: integer
+        game_id:
+          type: integer
+        code:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        condition_type:
+          type: string
+          enum: [win_count, play_count, score, rank]
+        condition_value:
+          type: integer
+        image_url:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          
+    UserAchievement:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        game_id:
+          type: integer
+          nullable: true
+        code:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        unlocked_at:
+          type: string
+          format: date-time
+
+# --- ĐƯỜNG DẪN API ---
+paths:
+  # 1. AUTHENTICATION
+  /auth/login:
+    post:
+      summary: Đăng nhập hệ thống
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  default: admin@game.com
+                password:
+                  type: string
+                  default: 123456
+      responses:
+        200:
+          description: Đăng nhập thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+        400:
+          description: Sai thông tin đăng nhập
+
+  # 2. ADMIN - GAMES
+  /admin/games:
+    get:
+      summary: Lấy danh sách Game
+      tags: [Admin-Games]
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Tìm kiếm game theo tên hoặc mã
+        - in: query
+          name: is_active
+          schema:
+            type: boolean
+          description: Lọc game theo trạng thái hoạt động
+        - in: query
+          name: id[gte]
+          schema:
+            type: integer
+          description: Lọc game có ID lớn hơn hoặc bằng
+        - in: query
+          name: id[gt]
+          schema:
+            type: integer
+          description: Lọc game có ID lớn hơn
+        - in: query
+          name: id[lte]
+          schema:
+            type: integer
+          description: Lọc game có ID nhỏ hơn hoặc bằng
+        - in: query
+          name: id[lt]
+          schema:
+            type: integer
+          description: Lọc game có ID nhỏ hơn
+        - in: query
+          name: id[neq]
+          schema:
+            type: integer
+          description: Lọc game có ID khác
+        - in: query
+          name: created_at[gte]
+          schema:
+            type: string
+            format: date-time
+          description: Lọc game tạo từ ngày trở đi
+        - in: query
+          name: created_at[gt]
+          schema:
+            type: string
+            format: date-time
+          description: Lọc game tạo sau ngày
+        - in: query
+          name: created_at[lte]
+          schema:
+            type: string
+            format: date-time
+          description: Lọc game tạo đến ngày
+        - in: query
+          name: created_at[lt]
+          schema:
+            type: string
+            format: date-time
+          description: Lọc game tạo trước ngày
+        - in: query
+          name: created_at[neq]
+          schema:
+            type: string
+            format: date-time
+          description: Lọc game tạo không phải ngày này
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+          description: Số trang
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+          description: Số lượng mục trên mỗi trang
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [id, name, code, created_at, -id, -name, -code, -created_at]
+          description: Sắp xếp theo trường (vd: sort=name,-created_at)
+        - in: query
+          name: fields
+          schema:
+            type: string
+          description: Chọn các trường cần hiển thị, cách nhau bởi dấu phẩy (vd: fields=name,code)
+      responses:
+        200:
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  paginate:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      totalGames:
+                        type: integer
+                      totalPages:
+                        type: integer
+                  games:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Game'
+        401:
+          description: Không được phép
+
+  /admin/games/{id}:
+    put:
+      summary: Cập nhật Game
+      tags: [Admin-Games]
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: ID của Game cần cập nhật
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                is_active:
+                  type: boolean
+                  description: Trạng thái hoạt động của Game
+                default_config:
+                  type: object
+                  description: Cấu hình mặc định của Game (JSONB)
+      responses:
+        200:
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Game'
+        400:
+          description: Yêu cầu không hợp lệ
+        401:
+          description: Không được phép
+        404:
+          description: Không tìm thấy Game
+
+  # 3. ADMIN - USERS
+  /admin/users:
+    get:
+      summary: Lấy danh sách User
+      tags: [Admin-Users]
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Tìm kiếm người dùng theo email hoặc username
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [active, banned]
+          description: Lọc người dùng theo trạng thái
+        - in: query
+          name: role
+          schema:
+            type: string
+            enum: [admin, customer]
+          description: Lọc người dùng theo vai trò
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+          description: Số trang
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+          description: Số lượng mục trên mỗi trang
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [id, email, username, role, status, created_at, -id, -email, -username, -role, -status, -created_at]
+          description: Sắp xếp theo trường (vd: sort=email,-created_at)
+        - in: query
+          name: fields
+          schema:
+            type: string
+          description: Chọn các trường cần hiển thị, cách nhau bởi dấu phẩy (vd: fields=id,email,username)
+        - in: query
+          name: id[gte]
+          schema:
+            type: string
+            format: uuid
+          description: Lọc người dùng có ID lớn hơn hoặc bằng
+        - in: query
+          name: id[gt]
+          schema:
+            type: string
+            format: uuid
+          description: Lọc người dùng có ID lớn hơn
+        - in: query
+          name: id[lte]
+          schema:
+            type: string
+            format: uuid
+          description: Lọc người dùng có ID nhỏ hơn hoặc bằng
+        - in: query
+          name: id[lt]
+          schema:
+            type: string
+            format: uuid
+          description: Lọc người dùng có ID nhỏ hơn
+        - in: query
+          name: id[neq]
+          schema:
+            type: string
+            format: uuid
+          description: Lọc người dùng có ID khác
+        - in: query
+          name: created_at[gte]
+          schema:
+            type: string
+            format: date-time
+          description: Lọc người dùng tạo từ ngày trở đi
+        - in: query
+          name: created_at[gt]
+          schema:
+            type: string
+            format: date-time
+          description: Lọc người dùng tạo sau ngày
+        - in: query
+          name: created_at[lte]
+          schema:
+            type: string
+            format: date-time
+          description: Lọc người dùng tạo đến ngày
+        - in: query
+          name: created_at[lt]
+          schema:
+            type: string
+            format: date-time
+          description: Lọc người dùng tạo trước ngày
+        - in: query
+          name: created_at[neq]
+          schema:
+            type: string
+            format: date-time
+          description: Lọc người dùng tạo không phải ngày này
+      responses:
+        200:
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  paginate:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      totalUsers:
+                        type: integer
+                      totalPages:
+                        type: integer
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+        401:
+          description: Không được phép
+
+  /admin/users/{id}:
+    put:
+      summary: Cập nhật trạng thái người dùng
+      tags: [Admin-Users]
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID của người dùng
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [active, banned]
+      responses:
+        200:
+          description: Cập nhật trạng thái thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User status updated successfully
+        400:
+          description: Yêu cầu không hợp lệ
+        401:
+          description: Không được phép
+        404:
+          description: Không tìm thấy người dùng
+    delete:
+      summary: Xóa User
+      tags: [Admin-Users]
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID của người dùng cần xóa
+      responses:
+        200:
+          description: Xóa thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User deleted successfully
+        401:
+          description: Không được phép
+        404:
+          description: Không tìm thấy người dùng
+
+  # 4. ADMIN - STATS
+  /admin/stats/dashboard:
+    get:
+      summary: Thống kê Dashboard
+      tags: [Admin-Stats]
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      responses:
+        200:
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalUsers:
+                    type: integer
+                  totalGames:
+                    type: integer
+                  totalGameSessions:
+                    type: integer
+        401:
+          description: Không được phép
+  
+  /admin/stats/daily:
+    post:
+      summary: Thống kê hàng ngày theo khoảng thời gian
+      tags: [Admin-Stats]
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        description: Khoảng thời gian thống kê
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - startDate
+                - endDate
+              properties:
+                startDate:
+                  type: string
+                  format: date
+                  example: 2023-01-01
+                endDate:
+                  type: string
+                  format: date
+                  example: 2023-01-31
+      responses:
+        200:
+          description: Thống kê hàng ngày thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  newUsers:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        date:
+                          type: string
+                          format: date
+                        count:
+                          type: integer
+                  newGameSessions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        date:
+                          type: string
+                          format: date
+                        count:
+                          type: integer
+                  totalPlayTime:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        date:
+                          type: string
+                          format: date
+                        total_play_time:
+                          type: integer
+        400:
+          description: Dữ liệu đầu vào không hợp lệ
+  
+  /auth/register:
+    post:
+      summary: Đăng ký tài khoản người dùng
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - username
+                - password
+              properties:
+                email:
+                  type: string
+                  default: test1@gmail.com
+                username:
+                  type: string
+                  default: testuser1
+                password:
+                  type: string
+                  default: 123456
+      responses:
+        201:
+          description: Đăng ký thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User registered successfully
+
+        400:
+          description: Yêu cầu không hợp lệ hoặc người dùng đã tồn tại 
+
+  /games:
+    get:
+      tags:
+        - Games
+      summary: Get all active games
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      description: Get list of active games with optional search
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Search game by name or code
+      responses:
+        200:
+          description: List of active games
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                    example: 7
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Game'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+                  
+  /games/{id}:
+    get:
+      tags:
+        - Games
+      summary: Get game by ID
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      description: Retrieve an active game by its ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Game ID
+      responses:
+        200:
+          description: Successfully retrieved game
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Game'
+        404:
+          description: Game not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /sessions/start:
+    post:
+      summary: Start or continue a game session
+      tags: [GameSession]
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - gameId
+              properties:
+                gameId:
+                  type: integer
+                  example: 1
+      responses:
+        201:
+          description: New session started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: New game session started
+                  session:
+                    $ref: '#/components/schemas/GameSession'
+        200:
+          description: Continue existing session
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Continue existing session
+                  session:
+                    $ref: '#/components/schemas/GameSession'
+
+  /sessions/{id}/save:
+    put:
+      summary: Save current game session
+      tags: [GameSession]
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                board_state:
+                  type: object
+                score:
+                  type: integer
+                play_time_seconds:
+                  type: integer
+      responses:
+        200:
+          description: Session saved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Session saved
+                  session:
+                    $ref: '#/components/schemas/GameSession'
+
+  /sessions/{id}/complete:
+    put:
+      summary: Complete a game session
+      tags: [GameSession]
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                score:
+                  type: integer
+                play_time_seconds:
+                  type: integer
+      responses:
+        200:
+          description: Session completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Session completed
+                  session:
+                    $ref: '#/components/schemas/GameSession'
+
+  /sessions/{id}/load:
+    get:
+      summary: Load a saved game session
+      tags: [GameSession]
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Game session loaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Game session loaded successfully
+                  session:
+                    $ref: '#/components/schemas/GameSession'
+
+
+  /sessions/{id}:
+    delete:
+      summary: Delete a game session
+      tags: [GameSession]
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Session deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Game session deleted successfully
+
+
+  /sessions/history:
+    get:
+      summary: Get game session history
+      tags: [GameSession]
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: gameId
+          in: query
+          description: Filter session history by game ID
+          schema:
+            type: integer
+            example: 3
+      responses:
+        200:
+          description: Session history fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Session history fetched successfully
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      total:
+                        type: integer
+                      totalPages:
+                        type: integer
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/GameSession'
+
+  /users/me:
+    get:
+      tags:
+        - User
+      summary: Get current user profile
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      responses:
+        200:
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  username:
+                    type: string
+                  email:
+                    type: string
+                  avatar_url:
+                    type: string
+                    nullable: true
+                  dark_mode:
+                    type: boolean
+        401:
+          description: Unauthorized
+        404:
+          description: User not found
+        500:
+          description: Server error
+
+    put:
+      tags:
+        - User
+      summary: Update current user information
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: quannguyen
+                avatar_url:
+                  type: string
+                  example: https://example.com/avatar.png
+                dark_mode:
+                  type: boolean
+                  example: true
+      responses:
+        200:
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User updated successfully
+                  user:
+                    $ref: '#/components/schemas/User'
+        400:
+          description: Invalid input
+        401:
+          description: Unauthorized
+        404:
+          description: User not found
+        500:
+          description: Server error
+
+  /users/me/password:
+    put:
+      tags:
+        - User
+      summary: Change current user password
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - currentPassword
+                - newPassword
+              properties:
+                currentPassword:
+                  type: string
+                  example: oldPassword123
+                newPassword:
+                  type: string
+                  example: newPassword123
+      responses:
+        200:
+          description: Password changed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Password changed successfully
+        400:
+          description: Current password is incorrect or invalid input
+        401:
+          description: Unauthorized
+        404:
+          description: User not found
+        500:
+          description: Server error
+
+  /users/search:
+    get:
+      tags:
+        - User
+      summary: Search users by username
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: username
+          required: true
+          schema:
+            type: string
+          description: Username to search for
+      responses:
+        200:
+          description: Users retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: integer
+                  page: 
+                    type: integer
+                  limit:
+                    type: integer
+                  total:
+                    type: integer
+                  totalPages:
+                    type: integer
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        username:
+                          type: string
+                        avatar_url:
+                          type: string
+                        friend_status:
+                          type: string
+        400:
+          description: Invalid input
+        401:
+          description: Unauthorized
+        500:
+          description: Server error
+
+  /friends/request/{userId}:
+    post:
+      summary: Send friend request
+      tags: [Friends]
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        201:
+          description: Friend request sent
+          content:
+            application/json:
+              example:
+                message: Friend request sent successfully
+        400:
+          description: Invalid request
+        404:
+          description: User not found
+        500:
+          description: Server error
+
+  /friends/accept/{userId}:
+    post:
+      summary: Accept friend request
+      tags: [Friends]
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          description: ID of user who sent request
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Accepted
+          content:
+            application/json:
+              example:
+                message: Friend request accepted
+        400:
+          description: No pending request
+        500:
+          description: Server error
+
+  /friends/reject/{userId}:
+    post:
+      summary: Reject friend request
+      tags: [Friends]
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Rejected
+          content:
+            application/json:
+              example:
+                message: Friend request rejected
+        400:
+          description: No pending request
+        500:
+          description: Server error
+
+  /friends/unfriend/{userId}:
+    delete:
+      summary: Unfriend a user
+      tags: [Friends]
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Unfriended
+          content:
+            application/json:
+              example:
+                message: Unfriended successfully
+        400:
+          description: No friendship found
+        500:
+          description: Server error
+
+  /friends/block/{userId}:
+    post:
+      summary: Block a user
+      tags: [Friends]
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Blocked
+          content:
+            application/json:
+              example:
+                message: User blocked successfully
+        400:
+          description: Cannot block yourself
+        500:
+          description: Server error
+
+  /friends/list:
+    get:
+      summary: Get friends list
+      tags: [Friends]
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            example: 1
+        - name: limit
+          in: query
+          description: Number of items per page
+          schema:
+            type: integer
+            example: 10
+        - name: search
+          in: query
+          description: Search by username
+          schema:
+            type: string
+            example: john
+      responses:
+        200:
+          description: Get friends successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: integer
+                    example: 1
+                  limit:
+                    type: integer
+                    example: 10
+                  total:
+                    type: integer
+                    example: 25
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        username:
+                          type: string
+                        avatar_url:
+                          type: string
+
+
+  /friends/requests/incoming:
+    get:
+      summary: Get incoming friend requests
+      tags: [Friends]
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            example: 1
+        - name: limit
+          in: query
+          description: Items per page
+          schema:
+            type: integer
+            example: 10
+      responses:
+        200:
+          description: Get incoming friend requests successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  page:
+                    type: integer
+                  limit:
+                    type: integer
+                  total:
+                    type: integer
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        created_at:
+                          type: string
+                          format: date-time
+                        id:
+                          type: string
+                          format: uuid
+                        username:
+                          type: string
+                        avatar_url:
+                          type: string
+
+  /friends/requests/outgoing:
+    get:
+      summary: Get outgoing friend requests
+      tags: [Friends]
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          description: Items per page
+          schema:
+            type: integer
+            example: 10
+      responses:
+        200:
+          description: Get outgoing friend requests successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  page:
+                    type: integer
+                  limit:
+                    type: integer
+                  total:
+                    type: integer
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        created_at:
+                          type: string
+                          format: date-time
+                        id:
+                          type: string
+                          format: uuid
+                        username:
+                          type: string
+                        avatar_url:
+                          type: string
+
+
+  /messages/{userId}:
+    post:
+      tags: [Messages]
+      summary: Send message to a friend
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content:
+                  type: string
+      responses:
+        201:
+          description: Message sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    $ref: "#/components/schemas/Message"
+        400:
+          description: Bad request
+        401:
+          description: Unauthorized
+        500:
+          description: Server error
+
+    get:
+      tags: [Messages]
+      summary: Get conversation with a user
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          schema:
+            type: integer
+            example: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            example: 20
+      responses:
+        200:
+          description: Conversation messages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: integer
+                    example: 1
+                  limit:
+                    type: integer
+                    example: 20
+                  total:
+                    type: integer
+                    example: 45
+                  totalPages:
+                    type: integer
+                    example: 3
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Message"
+        400:
+          description: Invalid input
+        401:
+          description: Unauthorized
+        500:
+          description: Server error
+    
+  /messages:
+    get:
+      tags: [Messages]
+      summary: Get all conversations
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      responses:
+        200:
+          description: Conversations list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                    example: 2
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        username:
+                          type: string
+                          example: "alice"
+                        avatar_url:
+                          type: string
+                          example: "https://cdn.app/avatar.png"
+                        last_message:
+                          type: string
+                          example: "See you later"
+                        last_sender_id:
+                          type: string
+                          format: uuid
+                        last_time:
+                          type: string
+                          format: date-time
+                        unread_count:
+                          type: integer
+                          example: 3
+        401:
+          description: Unauthorized
+        500:
+          description: Server error
+
+  /messages/read/{userId}:
+    patch:
+      tags: [Messages]
+      summary: Mark messages as read
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Messages marked as read
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Messages marked as read"
+                  updated:
+                    type: integer
+                    example: 5
+        401:
+          description: Unauthorized
+        500:
+          description: Server error
+          
+  /messages/unread/count:
+    get:
+      tags: [Messages]
+      summary: Count unread messages
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      responses:
+        200:
+          description: Unread messages count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  unread:
+                    type: integer
+                    example: 7
+        401:
+          description: Unauthorized
+        500:
+          description: Server error
+
+  /messages/{messageId}:
+    delete:
+      tags: [Messages]
+      summary: Delete a message
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: messageId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Message deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Message deleted successfully"
+                  deleted:
+                    type: boolean
+                    example: true
+        401:
+          description: Unauthorized
+        500:
+          description: Server error
+
+
+  /comments/game/{gameId}:
+    post:
+      tags:
+        - Comments
+      summary: Tạo comment cho game
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      parameters:
+        - name: gameId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - content
+              properties:
+                content:
+                  type: string
+                  example: "Game này chơi cuốn thật sự!"
+      responses:
+        201:
+          description: Comment created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Comment created successfully
+                  data:
+                    $ref: "#/components/schemas/Comment"
+
+
+    get:
+      tags:
+        - Comments
+      summary: Lấy comment theo game (phân trang)
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: gameId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        200:
+          description: Danh sách comment
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  comments:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Comment"
+                  total:
+                    type: integer
+                    example: 20
+                  page:
+                    type: integer
+                    example: 1
+                  limit:
+                    type: integer
+                    example: 10
+                  totalPages:
+                    type: integer
+                    example: 2
+
+  /comments/{id}:
+    put:
+      tags:
+        - Comments
+      summary: Sửa comment
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - content
+              properties:
+                content:
+                  type: string
+                  example: "Update lại nội dung comment"
+      responses:
+        200:
+          description: Comment updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Comment updated successfully
+                  data:
+                    $ref: "#/components/schemas/Comment"
+
+    delete:
+      tags:
+        - Comments
+      summary: Xóa comment
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Comment deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Comment deleted successfully
+
+              
+
+  /rating/{gameId}:
+    post:
+      tags:
+        - Game Ratings
+      summary: Rate hoặc update rating cho game
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: gameId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - rating
+              properties:
+                rating:
+                  type: number
+                  format: float
+                  minimum: 1
+                  maximum: 5
+                  example: 4.5
+      responses:
+        200:
+          description: Rating saved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameRating"
+        400:
+          description: Invalid rating
+        401:
+          description: Unauthorized
+        404:
+          description: Game not found
+
+    delete:
+      tags:
+        - Game Ratings
+      summary: Xóa rating của user cho game
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: gameId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        200:
+          description: Rating deleted successfully
+        401:
+          description: Unauthorized
+        404:
+          description: Rating not found
+
+  /rating/{gameId}/me:
+    get:
+      tags:
+        - Game Ratings
+      summary: Lấy rating của user hiện tại cho game
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: gameId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        200:
+          description: User rating
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameRating"
+        401:
+          description: Unauthorized
+        404:
+          description: Rating not found
+
+  /rating/{gameId}/average:
+    get:
+      tags:
+        - Game Ratings
+      summary: Lấy rating trung bình của game
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: gameId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        200:
+          description: Average rating of game
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  game_id:
+                    type: integer
+                    example: 1
+                  average_rating:
+                    type: number
+                    format: float
+                    example: 4.2
+                  total_ratings:
+                    type: integer
+                    example: 25
+                    
+  /rankings:
+    get:
+      tags: [Ranking]
+      summary: Lấy bảng xếp hạng (Global hoặc Friends)
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: gameId
+          in: query
+          required: true
+          schema: { type: integer, enum: [1, 2, 3, 4, 5, 6] }
+        - name: scope
+          in: query
+          schema: { type: string, enum: [global, friends], default: global }
+      responses:
+        200:
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/RankingEntry' } }
+                  type: { type: string, example: "rank_points" }
+
+  /rankings/me:
+    get:
+      tags: [Ranking]
+      summary: Lấy thứ hạng cá nhân trong game cụ thể
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: gameId
+          in: query
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      rank: { type: integer, example: 5 }
+                      score: { type: integer, example: 1200 }
+
+  /achievements/available/{gameId}:
+    get:
+      tags: [Achievements]
+      summary: Lấy danh sách thành tựu có sẵn của game
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: gameId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/Achievement' } }
+
+  /achievements/{userId}:
+    get:
+      tags: [Achievements]
+      summary: Lấy danh sách thành tựu đã đạt được của user
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        200:
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/UserAchievement' } }
+  
+  /achievements/unlock:
+    post:
+      tags: [Achievements]
+      summary: Mở khóa thành tựu
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [achievement_code]
+              properties:
+                achievement_code: { type: string }
+                game_id: { type: integer }
+      responses:
+        200:
+          description: Mở khóa thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  data: { $ref: '#/components/schemas/UserAchievement' }
+                  new_unlock: { type: boolean }
+
+  /achievements:
+    get:
+      tags: [Achievements]
+      summary: Lấy danh sách thành tựu của user hiện tại (Me)
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      responses:
+        200:
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/UserAchievement' } }
